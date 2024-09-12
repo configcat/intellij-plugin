@@ -1,7 +1,11 @@
 <!-- Keep a Changelog guide -> https://keepachangelog.com -->
 
-# configcat-inellij-plugin Changelog
+# ConfigCat IntelliJ Plugin Changelog
 
-## [Unreleased]
+## [1.0.0] - 2024-09-12
+
 ### Added
-- Initial scaffold created from [IntelliJ Platform Plugin Template](https://github.com/JetBrains/intellij-platform-plugin-template)
+
+- Initial release of the ConfigCat IntelliJ Plugin. 
+
+[1.0.0]: /commits/v1.0.0

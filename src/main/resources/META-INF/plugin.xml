@@ -1,12 +1,8 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
-    <id>com.configcat.intelljplugin</id>
+    <id>com.configcat.intellijplugin</id>
     <name>ConfigCat Feature Flags</name>
     <vendor>ConfigCat</vendor>
-    <description>
-        ConfigCat IntelliJ IDEA Plugin to manage feature flags from your IDE.
-        Connect your Product and Config to your IDE. Find your Feature Flag's usages in your code easily.
-    </description>
 
     <depends>com.intellij.modules.platform</depends>
 
