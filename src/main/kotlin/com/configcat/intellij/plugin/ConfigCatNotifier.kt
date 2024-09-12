@@ -5,7 +5,7 @@ import com.intellij.notification.NotificationType
 
 
 private const val CONFIGCAT_NOTIFICATION_GROUP = "ConfigCat Notification Group"
-private const val CONFIGCAT_TITLE = "ConfigCat Plugin"
+private const val CONFIGCAT_TITLE = "ConfigCat Feature Flags"
 
 class ConfigCatNotifier {
 
