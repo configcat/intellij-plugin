@@ -45,7 +45,7 @@ class ConfigCatConfigurable: Configurable {
                 }
             }
             group("Plugin Settings" , true) {
-                row("Dashboard base url") {
+                row("Dashboard Base URL") {
                     cell(dashboardBaseUrlField)
                         .columns(COLUMNS_MEDIUM)
                 }
@@ -53,7 +53,7 @@ class ConfigCatConfigurable: Configurable {
                     comment("ConfigCat Dashboard Base URL. Defaults to <a href=\"$DEFAULT_DASHBOARD_BASE_URL\">$DEFAULT_DASHBOARD_BASE_URL</a>.")
                 }
 
-                row("Public API base url") {
+                row("Public API Base URL") {
                     cell(publicApiBaseUrlField)
                         .columns(COLUMNS_MEDIUM)
                 }
@@ -82,19 +82,21 @@ class ConfigCatConfigurable: Configurable {
             ConfigCatNotifier.Notify.error("Public API base url cannot be empty.")
             return
         }
-
         val credentials = PublicApiConfiguration(authUserNameField.text, String(authPasswordField.password))
 
-        val meService = ConfigCatService.createMeService(credentials, publicApiBaseUrlField.text)
-        try {
-            val me = meService.me
-            ConfigCatNotifier.Notify.info("Logged in to ConfigCat. Email: ${me.email}")
-        } catch (exception: ApiException) {
-            ConfigCatNotifier.Notify.error("Authentication failed.")
-            thisLogger().error("ConfigCat authorization failed.", exception)
-            return
+        if(authUserNameField.text.isEmpty() && authPasswordField.password.isEmpty()) {
+            ConfigCatNotifier.Notify.info("Logged out from ConfigCat.")
+        } else {
+            val meService = ConfigCatService.createMeService(credentials, publicApiBaseUrlField.text)
+            try {
+                val me = meService.me
+                ConfigCatNotifier.Notify.info("Logged in to ConfigCat. Email: ${me.email}")
+            } catch (exception: ApiException) {
+                ConfigCatNotifier.Notify.error("Authentication failed. For more information check the logs.")
+                thisLogger().error("ConfigCat authorization failed.", exception)
+                return
+            }
         }
-
         stateConfig.authConfiguration = Constants.encodePublicApiConfiguration(credentials)
         stateConfig.dashboardBaseUrl = dashboardBaseUrlField.text
         stateConfig.publicApiBaseUrl = publicApiBaseUrlField.text

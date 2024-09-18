@@ -76,7 +76,7 @@ class CreateConfigDialog(val product: ProductModel): DialogWrapper(true) {
             val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
             configCatNodeDataService.loadConfigs(productId)
         }catch (e:Exception){
-            ConfigCatNotifier.Notify.error("Config create failed.")
+            ConfigCatNotifier.Notify.error("Config create failed. For more information check the logs.")
             thisLogger().error("Config create failed.", e)
         }
         super.doOKAction()

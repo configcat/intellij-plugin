@@ -8,7 +8,7 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <notificationGroup id="ConfigCat Notification Group" displayType="BALLOON"/>
-        <toolWindow factoryClass="com.configcat.intellij.plugin.toolWindow.ConfigCatToolWindowFactory" id="ConfigCat - Feature Flags" icon="/META-INF/cat.svg"/>
+        <toolWindow factoryClass="com.configcat.intellij.plugin.toolWindow.ConfigCatToolWindowFactory" id="ConfigCat - Feature Flags" icon="/META-INF/pluginIcon.svg"/>
         <applicationConfigurable parentId="tools" instance="com.configcat.intellij.plugin.settings.ConfigCatConfigurable" id="com.configcat.intellij.plugin.settings.ConfigCatConfigurable" displayName="ConfigCat Feature Flags"/>
         <applicationService serviceImplementation="com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig"/>
     </extensions>

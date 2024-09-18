@@ -11,7 +11,6 @@ import javax.swing.JPanel
 
 class HelpPanel : SimpleToolWindowPanel(false, false), Disposable {
 
-    // TODO fix the link to valid links!
     init {
         alignmentX = Component.LEFT_ALIGNMENT
         alignmentY = Component.TOP_ALIGNMENT
@@ -27,14 +26,13 @@ class HelpPanel : SimpleToolWindowPanel(false, false), Disposable {
                         add(LinkLabel("ConfigCat Docs", "https://configcat.com/docs"), gbc)
                         gbc.gridx = 0
                         gbc.gridy = 1
-                        add(LinkLabel("ConfigCat Dashboard", "https://app.configcat.com/"), gbc)
+                        add(LinkLabel("How to use the plugin", "https://configcat.com/docs/integrations/intellij/"), gbc)
                         gbc.gridx = 0
                         gbc.gridy = 2
-                        add(LinkLabel("ConfigCat Intellij Plugin docs", "https://configcat.com/docs"), gbc)
+                        add(LinkLabel("Report issues", "https://github.com/configcat/intellij-plugin/issues"), gbc)
                         gbc.gridx = 0
                         gbc.gridy = 3
-                        add(LinkLabel("Report Issue", "https://configcat.com/docs"), gbc)
-
+                        add(LinkLabel("ConfigCat Dashboard", "https://app.configcat.com/"), gbc)
                     }
         )
     }

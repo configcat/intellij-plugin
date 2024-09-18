@@ -11,6 +11,7 @@ import com.configcat.intellij.plugin.settings.ConfigCatConfigurable
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.*
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.ui.PopupHandler
@@ -43,13 +44,14 @@ class ConfigCatPanel : SimpleToolWindowPanel(false, false), Disposable {
 
     private val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigSate = ConfigCatApplicationConfig.getInstance().state
     private val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
-    private lateinit var tree: Tree
-    private lateinit var treeModel: StructureTreeModel<FlagTreeStructure>
+    private var tree: Tree? = null
+    private var treeModel: StructureTreeModel<FlagTreeStructure>? = null
 
     init {
-        setContent(initContent())
+        setContent( initContent())
         val handleConfigChange = object : ConfigChangeNotifier {
             override fun notifyConfigChange() {
+                //TODO check if the loaded list of flags are cleared here or not
                 setContent(initContent())
             }
         }
@@ -101,17 +103,18 @@ class ConfigCatPanel : SimpleToolWindowPanel(false, false), Disposable {
             initTree()
             val scrollPanel = ScrollPaneFactory.createScrollPane(tree, true)
             content.add(scrollPanel)
-            initToolbar(content)
+            tree?.let { initToolbar(this, it) }
         }
         return content
     }
 
-    private fun initToolbar(panel: JComponent){
+    private fun initToolbar(panel: JComponent, tree: Tree){
         val actionManager: ActionManager = ActionManager.getInstance()
         val toolbarActionGroup = DefaultActionGroup()
         val actionToolbar: ActionToolbar = actionManager.createActionToolbar("CONFIGCAT_PANEL_ACTION_TOOLBAR", toolbarActionGroup, false)
         actionToolbar.targetComponent = panel
         toolbar = actionToolbar.component
+        thisLogger().warn("This is initToolbar $toolbar")
 
         val refreshAction = actionManager.getAction(RefreshAction.CONFIGCAT_REFRESH_ACTION_ID)
         val createAction = actionManager.getAction(CreateAction.CONFIGCAT_CREATE_ACTION_ID)
@@ -144,11 +147,13 @@ class ConfigCatPanel : SimpleToolWindowPanel(false, false), Disposable {
     private fun initTree() {
         val productsService = ConfigCatService.createProductsService(Constants.decodePublicApiConfiguration(stateConfig.authConfiguration), stateConfig.publicApiBaseUrl)
         val products = productsService.products
+        configCatNodeDataService.resetData()
 
         val treeStructure = FlagTreeStructure(RootNode(products))
-        treeModel = StructureTreeModel(treeStructure, this)
+        val treeModel: StructureTreeModel<FlagTreeStructure> = StructureTreeModel(treeStructure, this)
+        this.treeModel = treeModel
         val treeBuilder = AsyncTreeModel(treeModel, this)
-        tree = Tree()
+        val tree = Tree()
         tree.model = treeBuilder
 
         tree.setRootVisible(true)
@@ -174,27 +179,31 @@ class ConfigCatPanel : SimpleToolWindowPanel(false, false), Disposable {
             }
 
         })
+        this.tree = tree
     }
 
     override fun dispose() {
     }
 
     private fun refreshTree() {
-        val productsService = ConfigCatService.createProductsService(Constants.decodePublicApiConfiguration(stateConfig.authConfiguration), stateConfig.publicApiBaseUrl)
-        val products = productsService.products
-        val treeStructure = FlagTreeStructure(RootNode(products))
-        treeModel = StructureTreeModel(treeStructure, this)
-        val treeBuilder = AsyncTreeModel(treeModel, this)
-        tree.model = treeBuilder
-        tree.invalidate()
+        tree?.let {
+            val productsService = ConfigCatService.createProductsService(Constants.decodePublicApiConfiguration(stateConfig.authConfiguration), stateConfig.publicApiBaseUrl)
+            val products = productsService.products
+            val treeStructure = FlagTreeStructure(RootNode(products))
+            val treeModel = StructureTreeModel(treeStructure, this)
+            val treeBuilder = AsyncTreeModel(treeModel, this)
+            this.treeModel = treeModel
+            it.model = treeBuilder
+            it.invalidate()
+        }
     }
 
     private fun refreshTreeNode(node: DefaultMutableTreeNode) {
-        treeModel.invalidate(TreePath(node), true)
+        treeModel?.invalidate(TreePath(node), true)
     }
 
     private fun getSelectedNode(): DefaultMutableTreeNode? {
-        val paths: Array<TreePath>? = tree.selectionPaths
+        val paths: Array<TreePath>? = tree?.selectionPaths
         if (paths == null || paths.size != 1) return null
         val treeNode = paths[0].lastPathComponent as DefaultMutableTreeNode
         return treeNode

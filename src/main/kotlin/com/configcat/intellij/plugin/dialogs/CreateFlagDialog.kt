@@ -110,7 +110,7 @@ class CreateFlagDialog(val config: ConfigModel): DialogWrapper(true) {
             val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
             configCatNodeDataService.loadFlags(configId)
         }catch (e:Exception){
-            ConfigCatNotifier.Notify.error("Flag create failed.")
+            ConfigCatNotifier.Notify.error("Flag create failed. For more information check the logs.")
             thisLogger().error("Flag create failed.", e)
         }
         super.doOKAction()
