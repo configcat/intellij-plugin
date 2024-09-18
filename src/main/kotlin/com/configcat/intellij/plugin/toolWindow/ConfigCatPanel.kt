@@ -51,7 +51,6 @@ class ConfigCatPanel : SimpleToolWindowPanel(false, false), Disposable {
         setContent( initContent())
         val handleConfigChange = object : ConfigChangeNotifier {
             override fun notifyConfigChange() {
-                //TODO check if the loaded list of flags are cleared here or not
                 setContent(initContent())
             }
         }
