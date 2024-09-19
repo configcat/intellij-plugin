@@ -2,7 +2,7 @@
 <idea-plugin>
     <id>com.configcat.intellijplugin</id>
     <name>ConfigCat Feature Flags</name>
-    <vendor>ConfigCat</vendor>
+    <vendor url="https://www.configcat.com" email="developer@configcat.com">ConfigCat Kft.</vendor>
 
     <depends>com.intellij.modules.platform</depends>
 
