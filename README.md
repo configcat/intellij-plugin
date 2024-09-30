@@ -5,10 +5,9 @@
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
 
 <!-- Plugin description -->
-ConfigCat IntelliJ Plugin to manage feature flags from IntelliJ IDEAs.
+ConfigCat IntelliJ Plugin to manage feature flags from JetBrains/IntelliJ IDEAs.
 
 Connect your Product and Config to your IDE. Find your Feature Flag's usages in your code easily.
-<!-- Plugin description end -->
 
 ## About ConfigCat
 ConfigCat is a hosted feature flag service: https://configcat.com. Manage feature toggles across frontend, backend, mobile, and desktop apps. Alternative to LaunchDarkly. Management app + feature flag SDKs.
@@ -16,11 +15,13 @@ ConfigCat is a hosted feature flag service: https://configcat.com. Manage featur
 ## Feature overview
 
 - Find Feature Flag usages in your code.
-- Create Feature Flags within Visual Studio Code.
+- Create Feature Flags within JetBrains/IntelliJ IDE.
 - Copy a Feature Flag's key to the clipboard.
 - View your Products & Configs.
-- Create Configs within Visual Studio Code.
+- Create Configs within JetBrains/IntelliJ IDE.
 - Open a Config on ConfigCat Dashboard.
+
+<!-- Plugin description end -->
 
 ## Installation
 
