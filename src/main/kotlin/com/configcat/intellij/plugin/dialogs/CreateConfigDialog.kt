@@ -35,6 +35,13 @@ class CreateConfigDialog(val product: ProductModel): DialogWrapper(true) {
             }
             row("Name"){
                 cell(nameTextField)
+                    .validationOnInput {
+                        if(nameTextField.text.isNullOrEmpty() ){
+                            return@validationOnInput ValidationInfo("Invalid name", nameTextField)
+                        }
+                        myOKAction.isEnabled = true
+                        null
+                    }
                     .columns(COLUMNS_MEDIUM)
             }
             row("Description"){
@@ -49,9 +56,6 @@ class CreateConfigDialog(val product: ProductModel): DialogWrapper(true) {
     override fun doValidate(): ValidationInfo? {
         if(nameTextField.text.isNullOrEmpty()){
             return ValidationInfo("Invalid name", nameTextField)
-        }
-        if(descriptionTextField.text.isNullOrEmpty()){
-            return ValidationInfo("Invalid description", descriptionTextField)
         }
         return null
     }

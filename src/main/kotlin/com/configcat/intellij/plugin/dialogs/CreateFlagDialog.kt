@@ -14,6 +14,7 @@ import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.ui.ValidationInfo
 import com.intellij.ui.SortedComboBoxModel
 import com.intellij.ui.dsl.builder.COLUMNS_MEDIUM
+import com.intellij.ui.dsl.builder.Panel
 import com.intellij.ui.dsl.builder.columns
 import com.intellij.ui.dsl.builder.panel
 import javax.swing.JComponent
@@ -45,21 +46,42 @@ class CreateFlagDialog(val config: ConfigModel): DialogWrapper(true) {
         sortedComboBoxModel.addAll(settingTypes)
         flagTypeDropDown.model = sortedComboBoxModel
 
-        val dialogPanel : DialogPanel = panel {
+        val dialogPanel  = panel {
             row{
                 text("Create a new Setting in the ${config.name} Config.")
             }
             row("Setting type"){
                 cell(flagTypeDropDown)
+                    .validationOnInput {
+                        if(flagTypeDropDown.model.selectedItem ==  null){
+                            return@validationOnInput ValidationInfo("Invalid Flag type", flagTypeDropDown)
+                        }
+                        myOKAction.isEnabled = true
+                        null
+                    }
                     .columns(COLUMNS_MEDIUM)
 
             }
             row("Name for hoomans"){
                 cell(nameTextField)
+                    .validationOnInput {
+                        if(nameTextField.text.isNullOrEmpty() ){
+                            return@validationOnInput ValidationInfo("Invalid name", nameTextField)
+                        }
+                        myOKAction.isEnabled = true
+                        null
+                    }
                     .columns(COLUMNS_MEDIUM)
             }
             row("Key for programs"){
                 cell(keyTextField)
+                    .validationOnInput {
+                        if(keyTextField.text.isNullOrEmpty() ){
+                            return@validationOnInput ValidationInfo("Invalid key", keyTextField)
+                        }
+                        myOKAction.isEnabled = true
+                        null
+                    }
                     .columns(COLUMNS_MEDIUM)
             }
             row("Hint"){
@@ -79,16 +101,16 @@ class CreateFlagDialog(val config: ConfigModel): DialogWrapper(true) {
         if(keyTextField.text.isNullOrEmpty()){
             return ValidationInfo("Invalid key", keyTextField)
         }
-        if(hintTextField.text.isNullOrEmpty()){
-            return ValidationInfo("Invalid hint", hintTextField)
-        }
         if(flagTypeDropDown.model.selectedItem ==  null){
             return ValidationInfo("Invalid Flag type", flagTypeDropDown)
         }
         return null
     }
 
+
     override fun doOKAction() {
+        super.doOKAction()
+
         val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigSate = ConfigCatApplicationConfig.getInstance().state
 
         val configId = config.configId
@@ -113,7 +135,7 @@ class CreateFlagDialog(val config: ConfigModel): DialogWrapper(true) {
             ConfigCatNotifier.Notify.error("Flag create failed. For more information check the logs.")
             thisLogger().error("Flag create failed.", e)
         }
-        super.doOKAction()
+
     }
 
     data class SettingTypeDropDown(val name: String, val type: CreateSettingInitialValues.SettingTypeEnum) : Comparable<SettingTypeDropDown>{
