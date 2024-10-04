@@ -25,15 +25,15 @@ class CreateAction: AnAction() {
         val selectedElement: DefaultMutableTreeNode? = e.getData(ConfigCatPanel.CONFIGCAT_TREE_SELECTED_NODE_DATA_KEY)
         val selectedNode = selectedElement?.userObject
         if(selectedNode == null || (selectedNode !is ProductNode && selectedNode !is ConfigNode)) {
-            ConfigCatNotifier.Notify.error("Create action could not be executed without a selected Product or Config Node.")
+            ConfigCatNotifier.Notify.error(e.project, "Create action could not be executed without a selected Product or Config Node.")
             return
         }
         if (selectedNode is ProductNode) {
-            CreateConfigDialog(selectedNode.product).showAndGet()
+            CreateConfigDialog(e.project, selectedNode.product).showAndGet()
             nodeRefreshPublish(selectedElement)
         }
         if (selectedNode is ConfigNode) {
-            CreateFlagDialog(selectedNode.config).showAndGet()
+            CreateFlagDialog(e.project, selectedNode.config).showAndGet()
             nodeRefreshPublish(selectedElement)
         }
 

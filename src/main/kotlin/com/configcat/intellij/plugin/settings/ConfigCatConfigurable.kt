@@ -8,16 +8,22 @@ import com.configcat.intellij.plugin.services.PublicApiConfiguration
 import com.configcat.publicapi.java.client.ApiException
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.thisLogger
+import com.intellij.openapi.options.BoundConfigurable
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.ui.DialogPanel
+import com.intellij.openapi.ui.ValidationInfo
+import com.intellij.openapi.ui.validation.CHECK_NON_EMPTY
+import com.intellij.openapi.ui.validation.DialogValidation
 import com.intellij.ui.dsl.builder.COLUMNS_MEDIUM
 import com.intellij.ui.dsl.builder.columns
 import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.layout.ValidationInfoBuilder
+import javax.swing.JComponent
 import javax.swing.JPasswordField
 import javax.swing.JTextField
 
 
-class ConfigCatConfigurable: Configurable {
+class ConfigCatConfigurable: BoundConfigurable(displayName = "ConfigCat Feature Flags OVER") {
 
     private var stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigSate = ConfigCatApplicationConfig.getInstance().state
     private val authUserNameField = JTextField()
@@ -25,7 +31,7 @@ class ConfigCatConfigurable: Configurable {
     private val dashboardBaseUrlField = JTextField()
     private val publicApiBaseUrlField = JTextField()
 
-    override fun createComponent(): DialogPanel {
+    override fun createPanel(): DialogPanel {
         return panel {
             group("Authentication" , true)  {
                 row {
@@ -48,6 +54,9 @@ class ConfigCatConfigurable: Configurable {
                 row("Dashboard Base URL") {
                     cell(dashboardBaseUrlField)
                         .columns(COLUMNS_MEDIUM)
+                        .validationOnApply(urlValidation())
+                        .validationOnInput(urlValidation())
+
                 }
                 row {
                     comment("ConfigCat Dashboard Base URL. Defaults to <a href=\"$DEFAULT_DASHBOARD_BASE_URL\">$DEFAULT_DASHBOARD_BASE_URL</a>.")
@@ -56,11 +65,21 @@ class ConfigCatConfigurable: Configurable {
                 row("Public API Base URL") {
                     cell(publicApiBaseUrlField)
                         .columns(COLUMNS_MEDIUM)
+                        .validationOnInput(urlValidation())
+                        .validationOnApply(urlValidation())
                 }
                 row {
                     comment("ConfigCat Public Management Base URL. Defaults to <a href=\"$DEFAULT_PUBLIC_API_BASE_URL\">$DEFAULT_PUBLIC_API_BASE_URL</a>.")
                 }
             }
+        }
+    }
+
+    private fun urlValidation(): ValidationInfoBuilder.(JTextField) -> ValidationInfo? = {
+        if (it.text.isEmpty()) {
+            error("The URL cannot be empty.")
+        } else {
+            null
         }
     }
 
@@ -73,13 +92,15 @@ class ConfigCatConfigurable: Configurable {
     }
 
     override fun apply() {
+        super.apply()
+
         if(dashboardBaseUrlField.text.isEmpty()){
-            ConfigCatNotifier.Notify.error("Dashboard base url cannot be empty.")
+            ConfigCatNotifier.Notify.error("Dashboard Base URL cannot be empty.")
             return
         }
 
         if(publicApiBaseUrlField.text.isEmpty()){
-            ConfigCatNotifier.Notify.error("Public API base url cannot be empty.")
+            ConfigCatNotifier.Notify.error("Public API Base URL cannot be empty.")
             return
         }
         val credentials = PublicApiConfiguration(authUserNameField.text, String(authPasswordField.password))

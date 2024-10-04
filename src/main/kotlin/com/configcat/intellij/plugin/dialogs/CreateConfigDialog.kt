@@ -8,6 +8,7 @@ import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.publicapi.java.client.model.CreateConfigRequest
 import com.configcat.publicapi.java.client.model.ProductModel
 import com.intellij.openapi.diagnostic.thisLogger
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.ui.ValidationInfo
@@ -17,7 +18,7 @@ import com.intellij.ui.dsl.builder.panel
 import javax.swing.JComponent
 import javax.swing.JTextField
 
-class CreateConfigDialog(val product: ProductModel): DialogWrapper(true) {
+class CreateConfigDialog(val project: Project?, val product: ProductModel): DialogWrapper(true) {
 
     private val nameTextField = JTextField()
     private val descriptionTextField = JTextField()
@@ -65,7 +66,7 @@ class CreateConfigDialog(val product: ProductModel): DialogWrapper(true) {
 
         val productId = product.productId
         if(productId == null) {
-            ConfigCatNotifier.Notify.error("Config create failed. Missing product ID.")
+            ConfigCatNotifier.Notify.error(project,"Config create failed. Missing product ID.")
             return
         }
 
@@ -80,7 +81,7 @@ class CreateConfigDialog(val product: ProductModel): DialogWrapper(true) {
             val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
             configCatNodeDataService.loadConfigs(productId)
         }catch (e:Exception){
-            ConfigCatNotifier.Notify.error("Config create failed. For more information check the logs.")
+            ConfigCatNotifier.Notify.error(project,"Config create failed. For more information check the logs.")
             thisLogger().error("Config create failed.", e)
         }
         super.doOKAction()

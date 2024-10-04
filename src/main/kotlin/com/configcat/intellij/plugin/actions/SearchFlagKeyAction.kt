@@ -24,12 +24,12 @@ class SearchFlagKeyAction: AnAction() {
       val selectedElement: DefaultMutableTreeNode? = e.getData(ConfigCatPanel.CONFIGCAT_TREE_SELECTED_NODE_DATA_KEY)
         val selectedNode =  selectedElement?.userObject
         if(selectedNode == null || selectedNode !is FlagNode ) {
-            ConfigCatNotifier.Notify.error("Search Flag key action could not be executed without a selected Flag Node.")
+            ConfigCatNotifier.Notify.error(e.project, "Search Flag key action could not be executed without a selected Flag Node.")
             return
         }
         val settingKey = selectedNode.setting.key
         if(settingKey == null) {
-            ConfigCatNotifier.Notify.error("Search Flag key action could not be executed. Missing Setting Key.")
+            ConfigCatNotifier.Notify.error(e.project, "Search Flag key action could not be executed. Missing Setting Key.")
             return
         }
         val findModel = FindModel()

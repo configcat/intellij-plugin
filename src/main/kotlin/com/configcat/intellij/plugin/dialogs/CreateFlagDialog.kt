@@ -8,6 +8,7 @@ import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.publicapi.java.client.model.ConfigModel
 import com.configcat.publicapi.java.client.model.CreateSettingInitialValues
 import com.intellij.openapi.diagnostic.thisLogger
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.openapi.ui.DialogWrapper
@@ -20,7 +21,7 @@ import com.intellij.ui.dsl.builder.panel
 import javax.swing.JComponent
 import javax.swing.JTextField
 
-class CreateFlagDialog(val config: ConfigModel): DialogWrapper(true) {
+class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWrapper(true) {
 
   private val nameTextField = JTextField()
     private val keyTextField = JTextField()
@@ -115,7 +116,7 @@ class CreateFlagDialog(val config: ConfigModel): DialogWrapper(true) {
 
         val configId = config.configId
         if(configId == null) {
-            ConfigCatNotifier.Notify.error("Flag create failed. Missing config ID.")
+            ConfigCatNotifier.Notify.error(project,"Flag create failed. Missing config ID.")
             return
         }
 
@@ -132,7 +133,7 @@ class CreateFlagDialog(val config: ConfigModel): DialogWrapper(true) {
             val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
             configCatNodeDataService.loadFlags(configId)
         }catch (e:Exception){
-            ConfigCatNotifier.Notify.error("Flag create failed. For more information check the logs.")
+            ConfigCatNotifier.Notify.error(project,"Flag create failed. For more information check the logs.")
             thisLogger().error("Flag create failed.", e)
         }
 

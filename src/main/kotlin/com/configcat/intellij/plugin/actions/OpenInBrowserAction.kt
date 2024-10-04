@@ -30,7 +30,7 @@ class OpenInBrowserAction: AnAction() {
         val selectedElement: DefaultMutableTreeNode? = e.getData(ConfigCatPanel.CONFIGCAT_TREE_SELECTED_NODE_DATA_KEY)
         val selectedNode = selectedElement?.userObject
         if(selectedNode == null || (selectedNode !is FlagNode && selectedNode !is ConfigNode)) {
-            ConfigCatNotifier.Notify.error("Open in Dashboard action could not be executed without a selected Config or Flag Node.")
+            ConfigCatNotifier.Notify.error(e.project, "Open in Dashboard action could not be executed without a selected Config or Flag Node.")
             return
         }
         var url: String? = null
@@ -63,7 +63,7 @@ class OpenInBrowserAction: AnAction() {
 
         }
         if(url == null) {
-            ConfigCatNotifier.Notify.error("Open in Dashboard action could not be executed. Missing information to create a valid URL.")
+            ConfigCatNotifier.Notify.error(e.project, "Open in Dashboard action could not be executed. Missing information to create a valid URL.")
             return
         }
         BrowserLauncher.instance.open(url)

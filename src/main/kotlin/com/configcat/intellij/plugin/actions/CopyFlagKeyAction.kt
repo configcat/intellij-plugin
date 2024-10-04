@@ -22,7 +22,7 @@ class CopyFlagKeyAction: AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val selectedElement: DefaultMutableTreeNode? = e.getData(ConfigCatPanel.CONFIGCAT_TREE_SELECTED_NODE_DATA_KEY)
         if(selectedElement == null || selectedElement.userObject !is FlagNode) {
-            ConfigCatNotifier.Notify.error("Copy action could not be executed without a selected Flag Node.")
+            ConfigCatNotifier.Notify.error(e.project,"Copy action could not be executed without a selected Flag Node.")
             return
         }
         val selectedNode =  selectedElement.userObject as FlagNode
