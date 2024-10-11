@@ -11,8 +11,10 @@ import com.configcat.intellij.plugin.settings.ConfigCatConfigurable
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.*
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.options.ShowSettingsUtil
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.ui.PopupHandler
 import com.intellij.ui.ScrollPaneFactory
@@ -35,10 +37,12 @@ import javax.swing.tree.TreePath
 import javax.swing.tree.TreeSelectionModel
 
 
+@Service(Service.Level.PROJECT)
 class ConfigCatPanel : SimpleToolWindowPanel(false, false), Disposable {
 
     companion object{
-        val CONFIGCAT_TREE_SELECTED_NODE_DATA_KEY: DataKey<DefaultMutableTreeNode> = DataKey.create("com.configcat.intellij.plugin.toolWindow.ConfigCatPanel.SelectedNode")
+        fun getInstance(project: Project): ConfigCatPanel =
+            project.getService(ConfigCatPanel::class.java)
     }
 
 
@@ -46,6 +50,7 @@ class ConfigCatPanel : SimpleToolWindowPanel(false, false), Disposable {
     private val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
     private var tree: Tree? = null
     private var treeModel: StructureTreeModel<FlagTreeStructure>? = null
+
 
     init {
         setContent( initContent())
@@ -68,13 +73,6 @@ class ConfigCatPanel : SimpleToolWindowPanel(false, false), Disposable {
         }
         ApplicationManager.getApplication().messageBus.connect()
             .subscribe(TreeChangeNotifier.TREE_CHANGE_TOPIC, handleTreeNotify)
-    }
-
-    override fun getData(dataId: String): Any? {
-        if (CONFIGCAT_TREE_SELECTED_NODE_DATA_KEY.`is`(dataId)) {
-            return getSelectedNode()
-        }
-        return super.getData(dataId)
     }
 
     private fun initContent() : JComponent {
@@ -113,7 +111,6 @@ class ConfigCatPanel : SimpleToolWindowPanel(false, false), Disposable {
         val actionToolbar: ActionToolbar = actionManager.createActionToolbar("CONFIGCAT_PANEL_ACTION_TOOLBAR", toolbarActionGroup, false)
         actionToolbar.targetComponent = panel
         toolbar = actionToolbar.component
-        thisLogger().warn("This is initToolbar $toolbar")
 
         val refreshAction = actionManager.getAction(RefreshAction.CONFIGCAT_REFRESH_ACTION_ID)
         val createAction = actionManager.getAction(CreateAction.CONFIGCAT_CREATE_ACTION_ID)
@@ -201,7 +198,7 @@ class ConfigCatPanel : SimpleToolWindowPanel(false, false), Disposable {
         treeModel?.invalidate(TreePath(node), true)
     }
 
-    private fun getSelectedNode(): DefaultMutableTreeNode? {
+    fun getSelectedNode(): DefaultMutableTreeNode? {
         val paths: Array<TreePath>? = tree?.selectionPaths
         if (paths == null || paths.size != 1) return null
         val treeNode = paths[0].lastPathComponent as DefaultMutableTreeNode

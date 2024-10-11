@@ -9,6 +9,7 @@ import com.configcat.intellij.plugin.toolWindow.ConfigNode
 import com.configcat.intellij.plugin.toolWindow.ProductNode
 import com.intellij.openapi.actionSystem.*
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.components.service
 import javax.swing.tree.DefaultMutableTreeNode
 
 
@@ -22,7 +23,8 @@ class CreateAction: AnAction() {
     }
 
     override fun actionPerformed(e: AnActionEvent) {
-        val selectedElement: DefaultMutableTreeNode? = e.getData(ConfigCatPanel.CONFIGCAT_TREE_SELECTED_NODE_DATA_KEY)
+        val selectedElement: DefaultMutableTreeNode? = e.project?.service<ConfigCatPanel>()?.getSelectedNode()
+
         val selectedNode = selectedElement?.userObject
         if(selectedNode == null || (selectedNode !is ProductNode && selectedNode !is ConfigNode)) {
             ConfigCatNotifier.Notify.error(e.project, "Create action could not be executed without a selected Product or Config Node.")
@@ -40,7 +42,8 @@ class CreateAction: AnAction() {
     }
 
     override fun update(e: AnActionEvent) {
-        val selectedElement: DefaultMutableTreeNode? = e.getData(ConfigCatPanel.CONFIGCAT_TREE_SELECTED_NODE_DATA_KEY)
+     val selectedElement: DefaultMutableTreeNode? = e.project?.service<ConfigCatPanel>()?.getSelectedNode()
+
         val selectedNode = selectedElement?.userObject
         e.presentation.isEnabled = selectedNode != null && (selectedNode is ConfigNode || selectedNode is ProductNode)
         e.presentation.isVisible = true

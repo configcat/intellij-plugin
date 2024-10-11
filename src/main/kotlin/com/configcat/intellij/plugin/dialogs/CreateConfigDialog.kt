@@ -6,6 +6,7 @@ import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
 import com.configcat.intellij.plugin.services.ConfigCatService
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.publicapi.java.client.model.CreateConfigRequest
+import com.configcat.publicapi.java.client.model.EvaluationVersion
 import com.configcat.publicapi.java.client.model.ProductModel
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.project.Project
@@ -74,7 +75,7 @@ class CreateConfigDialog(val project: Project?, val product: ProductModel): Dial
         val createConfigRequest =  CreateConfigRequest()
         createConfigRequest.name = nameTextField.text
         createConfigRequest.description = descriptionTextField.text
-        createConfigRequest.evaluationVersion = CreateConfigRequest.EvaluationVersionEnum.V2
+        createConfigRequest.evaluationVersion = EvaluationVersion.V2
 
         try {
             configsService.createConfig(productId, createConfigRequest)

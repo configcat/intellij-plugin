@@ -9,11 +9,14 @@ import com.configcat.intellij.plugin.toolWindow.ConfigNode
 import com.configcat.intellij.plugin.toolWindow.FlagNode
 import com.configcat.intellij.plugin.toolWindow.ProductNode
 import com.configcat.publicapi.java.client.model.ConfigModel
+import com.configcat.publicapi.java.client.model.EvaluationVersion
 
 import com.intellij.ide.browsers.BrowserLauncher
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.DataKey
+import com.intellij.openapi.components.service
 import javax.swing.tree.DefaultMutableTreeNode
 
 
@@ -27,7 +30,8 @@ class OpenInBrowserAction: AnAction() {
     }
 
     override fun actionPerformed(e: AnActionEvent) {
-        val selectedElement: DefaultMutableTreeNode? = e.getData(ConfigCatPanel.CONFIGCAT_TREE_SELECTED_NODE_DATA_KEY)
+        val selectedElement: DefaultMutableTreeNode? = e.project?.service<ConfigCatPanel>()?.getSelectedNode()
+
         val selectedNode = selectedElement?.userObject
         if(selectedNode == null || (selectedNode !is FlagNode && selectedNode !is ConfigNode)) {
             ConfigCatNotifier.Notify.error(e.project, "Open in Dashboard action could not be executed without a selected Config or Flag Node.")
@@ -45,9 +49,9 @@ class OpenInBrowserAction: AnAction() {
 
             val environmentsService = ConfigCatService.createEnvironmentsService(Constants.decodePublicApiConfiguration(stateConfig.authConfiguration), stateConfig.publicApiBaseUrl)
             val environments = environmentsService.getEnvironments(productParent.product.productId)
-            val evaluationVersion = configParent.config.evaluationVersion ?: ConfigModel.EvaluationVersionEnum.V1
+            val evaluationVersion = configParent.config.evaluationVersion ?: EvaluationVersion.V1
             val orgId = productParent.product.organization?.organizationId
-            url = if(evaluationVersion == ConfigModel.EvaluationVersionEnum.V1) {
+            url = if(evaluationVersion == EvaluationVersion.V1) {
                 if(environments.size < 1) {
                     null
                 } else {
@@ -71,7 +75,8 @@ class OpenInBrowserAction: AnAction() {
 
     override fun update(e: AnActionEvent) {
         super.update(e)
-        val selectedElement: DefaultMutableTreeNode? = e.getData(ConfigCatPanel.CONFIGCAT_TREE_SELECTED_NODE_DATA_KEY)
+        val selectedElement: DefaultMutableTreeNode? = e.project?.service<ConfigCatPanel>()?.getSelectedNode()
+
         val selectedNode = selectedElement?.userObject
         val isEnabled  = selectedNode != null && (selectedNode is ConfigNode || selectedNode is FlagNode)
         e.presentation.isEnabled = isEnabled

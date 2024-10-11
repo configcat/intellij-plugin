@@ -27,7 +27,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.configcat:configcat-publicapi-java-client:1.0.0")
+    implementation("com.configcat:configcat-publicapi-java-client:1.0.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.7.2")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.2")
 

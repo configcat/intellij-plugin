@@ -7,6 +7,7 @@ import com.configcat.intellij.plugin.services.ConfigCatService
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.publicapi.java.client.model.ConfigModel
 import com.configcat.publicapi.java.client.model.CreateSettingInitialValues
+import com.configcat.publicapi.java.client.model.SettingType
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
@@ -35,10 +36,10 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWr
 
     override fun createCenterPanel(): JComponent {
         val settingTypes: List<SettingTypeDropDown> =  listOf(
-            SettingTypeDropDown("Feature Flag (boolean)", CreateSettingInitialValues.SettingTypeEnum.BOOLEAN),
-            SettingTypeDropDown("Text (string)", CreateSettingInitialValues.SettingTypeEnum.STRING),
-            SettingTypeDropDown("Whole number (integer)", CreateSettingInitialValues.SettingTypeEnum.INT),
-            SettingTypeDropDown("Decimal number (double)", CreateSettingInitialValues.SettingTypeEnum.DOUBLE),
+            SettingTypeDropDown("Feature Flag (boolean)", SettingType.BOOLEAN),
+            SettingTypeDropDown("Text (string)", SettingType.STRING),
+            SettingTypeDropDown("Whole number (integer)", SettingType.INT),
+            SettingTypeDropDown("Decimal number (double)", SettingType.DOUBLE),
         )
 
         val settingTypeDropDownComparator =
@@ -139,7 +140,7 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWr
 
     }
 
-    data class SettingTypeDropDown(val name: String, val type: CreateSettingInitialValues.SettingTypeEnum) : Comparable<SettingTypeDropDown>{
+    data class SettingTypeDropDown(val name: String, val type: SettingType) : Comparable<SettingTypeDropDown>{
 
         override fun compareTo(other: SettingTypeDropDown): Int {
             return this.type.compareTo(other.type)

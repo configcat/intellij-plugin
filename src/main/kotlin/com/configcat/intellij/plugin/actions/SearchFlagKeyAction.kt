@@ -8,6 +8,8 @@ import com.intellij.find.FindModel
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.DataKey
+import com.intellij.openapi.components.service
 import javax.swing.tree.DefaultMutableTreeNode
 
 
@@ -21,7 +23,8 @@ class SearchFlagKeyAction: AnAction() {
     }
 
     override fun actionPerformed(e: AnActionEvent) {
-      val selectedElement: DefaultMutableTreeNode? = e.getData(ConfigCatPanel.CONFIGCAT_TREE_SELECTED_NODE_DATA_KEY)
+        val selectedElement: DefaultMutableTreeNode? = e.project?.service<ConfigCatPanel>()?.getSelectedNode()
+
         val selectedNode =  selectedElement?.userObject
         if(selectedNode == null || selectedNode !is FlagNode ) {
             ConfigCatNotifier.Notify.error(e.project, "Search Flag key action could not be executed without a selected Flag Node.")
@@ -42,12 +45,9 @@ class SearchFlagKeyAction: AnAction() {
 
     override fun update(e: AnActionEvent) {
         super.update(e)
-        val selectedElement: DefaultMutableTreeNode? = e.getData(ConfigCatPanel.CONFIGCAT_TREE_SELECTED_NODE_DATA_KEY)
-        if (selectedElement != null &&  selectedElement.userObject is FlagNode) {
-            e.presentation.isEnabled = true
-        } else {
-            e.presentation.isEnabled = false
-        }
+        val selectedElement: DefaultMutableTreeNode? = e.project?.service<ConfigCatPanel>()?.getSelectedNode()
+
+        e.presentation.isEnabled = selectedElement != null &&  selectedElement.userObject is FlagNode
         e.presentation.isVisible = true
     }
 

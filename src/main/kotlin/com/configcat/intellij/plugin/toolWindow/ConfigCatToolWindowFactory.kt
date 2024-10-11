@@ -12,21 +12,21 @@ import java.awt.BorderLayout
 class ConfigCatToolWindowFactory : ToolWindowFactory {
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        val myToolWindow = ConfigCatToolWindow(toolWindow)
+        val myToolWindow = ConfigCatToolWindow(project, toolWindow)
         val content = ContentFactory.getInstance().createContent(myToolWindow.getContent(), null, false)
         toolWindow.contentManager.addContent(content)
     }
 
     override fun shouldBeAvailable(project: Project) = true
 
-    class ConfigCatToolWindow(toolWindow: ToolWindow) {
+    class ConfigCatToolWindow(project: Project, toolWindow: ToolWindow) {
 
         init {
             toolWindow.title = "ConfigCat Feature Flags"
         }
 
         private val helpPanel = HelpPanel()
-        private val configCatPanel = ConfigCatPanel()
+        private val configCatPanel = ConfigCatPanel.getInstance(project)
 
         fun getContent() = JBPanel<JBPanel<*>>().apply {
 
