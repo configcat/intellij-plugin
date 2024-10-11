@@ -47,6 +47,7 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWr
         val sortedComboBoxModel = SortedComboBoxModel(settingTypeDropDownComparator)
         sortedComboBoxModel.addAll(settingTypes)
         flagTypeDropDown.model = sortedComboBoxModel
+        flagTypeDropDown.selectedItem = settingTypes[0]
 
         val dialogPanel  = panel {
             row{
