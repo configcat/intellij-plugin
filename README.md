@@ -5,7 +5,7 @@
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
 
 <!-- Plugin description -->
-ConfigCat IntelliJ Plugin to manage feature flags from JetBrains/IntelliJ IDEAs.
+ConfigCat IntelliJ Plugin to manage feature flags from JetBrains/IntelliJ IDEs.
 
 Connect your Product and Config to your IDE. Find your Feature Flag's usages in your code easily.
 
