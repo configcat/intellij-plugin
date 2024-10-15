@@ -10,6 +10,8 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.options.BoundConfigurable
 import com.intellij.openapi.options.Configurable
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.openapi.ui.ValidationInfo
 import com.intellij.openapi.ui.validation.CHECK_NON_EMPTY
@@ -23,7 +25,7 @@ import javax.swing.JPasswordField
 import javax.swing.JTextField
 
 
-class ConfigCatConfigurable: BoundConfigurable(displayName = "ConfigCat Feature Flags OVER") {
+class ConfigCatConfigurable(): BoundConfigurable(displayName = "ConfigCat Feature Flags") {
 
     private var stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigSate = ConfigCatApplicationConfig.getInstance().state
     private val authUserNameField = JTextField()

@@ -7,6 +7,7 @@ import com.configcat.publicapi.java.client.model.ConfigModel
 import com.configcat.publicapi.java.client.model.SettingModel
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.diagnostic.thisLogger
 import java.util.*
 
 @Service(Service.Level.APP)
@@ -28,14 +29,13 @@ class ConfigCatNodeDataService {
     fun checkAndLoadConfigs(productId: UUID?) : Boolean {
         if(productId == null){
             ConfigCatNotifier.Notify.error("Couldn't load the configs: Missing product ID.")
+            thisLogger().error("Couldn't load the configs: Missing product ID.")
             return false
         }
-        if(productConfigs.containsKey(productId)){
-            return false
-        } else {
+        if(!productConfigs.containsKey(productId)){
             loadConfigs(productId)
-            return true
         }
+        return true
     }
 
     fun loadConfigs(productId: UUID) {
@@ -51,14 +51,14 @@ class ConfigCatNodeDataService {
     fun checkAndLoadFlags(configId: UUID?) : Boolean {
         if(configId == null){
             ConfigCatNotifier.Notify.error("Couldn't load the flags: Missing config ID.")
+            thisLogger().error("Couldn't load the flags: Missing config ID.")
             return false
         }
-        if(configFlags.containsKey(configId)){
-            return false
-        } else {
+        if(!configFlags.containsKey(configId)){
             loadFlags(configId)
-            return true
         }
+        return true
+
     }
 
     fun loadFlags(configId: UUID) {
