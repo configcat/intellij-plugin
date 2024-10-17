@@ -1,6 +1,8 @@
 package com.configcat.intellij.plugin.toolWindow
 
+import com.configcat.intellij.plugin.ConfigCatNotifier
 import com.configcat.intellij.plugin.Constants
+import com.configcat.intellij.plugin.ErrorHandler
 import com.configcat.intellij.plugin.actions.*
 import com.configcat.intellij.plugin.messaging.ConfigChangeNotifier
 import com.configcat.intellij.plugin.messaging.TreeChangeNotifier
@@ -8,10 +10,12 @@ import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
 import com.configcat.intellij.plugin.services.ConfigCatService
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.intellij.plugin.settings.ConfigCatConfigurable
+import com.configcat.publicapi.java.client.ApiException
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.*
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
@@ -84,7 +88,7 @@ class ConfigCatPanel : SimpleToolWindowPanel(false, false), Disposable {
                     gbc.insets = JBUI.insets(1)
                     gbc.gridx = 0
                     gbc.gridy = 0
-                    add(JLabel("Please configure the ConfigCat plugin. "), gbc)
+                    add(JLabel("Please configure the ConfigCat plugin."), gbc)
                     gbc.gridx = 0
                     gbc.gridy = 1
 
@@ -95,12 +99,17 @@ class ConfigCatPanel : SimpleToolWindowPanel(false, false), Disposable {
                     },  gbc)
                 }
             )
+            return content
         } else {
             initTree()
-            val scrollPanel = ScrollPaneFactory.createScrollPane(tree, true)
-            content.add(scrollPanel)
-            tree?.let { initToolbar(this, it) }
+            tree?.let{
+                val scrollPanel = ScrollPaneFactory.createScrollPane(tree, true)
+                content.add(scrollPanel)
+                initToolbar(this, it)
+                return content
+            }
         }
+        content.add(JLabel("ConfigCat Plugin - Loading..."))
         return content
     }
 
@@ -141,7 +150,12 @@ class ConfigCatPanel : SimpleToolWindowPanel(false, false), Disposable {
 
     private fun initTree() {
         val productsService = ConfigCatService.createProductsService(Constants.decodePublicApiConfiguration(stateConfig.authConfiguration), stateConfig.publicApiBaseUrl)
-        val products = productsService.products
+        val products = try {
+            productsService.products
+        } catch (exception: ApiException) {
+            ErrorHandler.errorNotify(exception)
+            return
+        }
         configCatNodeDataService.resetData()
 
         val treeStructure = FlagTreeStructure(RootNode(products))
@@ -183,7 +197,12 @@ class ConfigCatPanel : SimpleToolWindowPanel(false, false), Disposable {
     private fun refreshTree() {
         tree?.let {
             val productsService = ConfigCatService.createProductsService(Constants.decodePublicApiConfiguration(stateConfig.authConfiguration), stateConfig.publicApiBaseUrl)
-            val products = productsService.products
+            val products = try {
+                productsService.products
+            } catch (exception: ApiException) {
+                ErrorHandler.errorNotify(exception)
+                return
+            }
             val treeStructure = FlagTreeStructure(RootNode(products))
             val treeModel = StructureTreeModel(treeStructure, this)
             val treeBuilder = AsyncTreeModel(treeModel, this)

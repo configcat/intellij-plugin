@@ -2,6 +2,7 @@ package com.configcat.intellij.plugin.settings
 
 import com.configcat.intellij.plugin.ConfigCatNotifier
 import com.configcat.intellij.plugin.Constants
+import com.configcat.intellij.plugin.ErrorHandler
 import com.configcat.intellij.plugin.messaging.ConfigChangeNotifier
 import com.configcat.intellij.plugin.services.ConfigCatService
 import com.configcat.intellij.plugin.services.PublicApiConfiguration
@@ -115,7 +116,7 @@ class ConfigCatConfigurable(): BoundConfigurable(displayName = "ConfigCat Featur
                 val me = meService.me
                 ConfigCatNotifier.Notify.info("Logged in to ConfigCat. Email: ${me.email}")
             } catch (exception: ApiException) {
-                ConfigCatNotifier.Notify.error("Authentication failed. For more information check the logs.")
+                ErrorHandler.errorNotify(exception)
                 thisLogger().error("ConfigCat authorization failed.", exception)
                 return
             }

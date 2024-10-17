@@ -2,9 +2,11 @@ package com.configcat.intellij.plugin.dialogs
 
 import com.configcat.intellij.plugin.ConfigCatNotifier
 import com.configcat.intellij.plugin.Constants
+import com.configcat.intellij.plugin.ErrorHandler
 import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
 import com.configcat.intellij.plugin.services.ConfigCatService
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
+import com.configcat.publicapi.java.client.ApiException
 import com.configcat.publicapi.java.client.model.CreateConfigRequest
 import com.configcat.publicapi.java.client.model.EvaluationVersion
 import com.configcat.publicapi.java.client.model.ProductModel
@@ -81,9 +83,8 @@ class CreateConfigDialog(val project: Project?, val product: ProductModel): Dial
             configsService.createConfig(productId, createConfigRequest)
             val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
             configCatNodeDataService.loadConfigs(productId)
-        }catch (e:Exception){
-            ConfigCatNotifier.Notify.error(project,"Config create failed. For more information check the logs.")
-            thisLogger().error("Config create failed.", e)
+        }catch (e:ApiException){
+            ErrorHandler.errorNotify(e, "Config create failed. For more information check the logs.", project)
         }
         super.doOKAction()
     }

@@ -2,9 +2,11 @@ package com.configcat.intellij.plugin.dialogs
 
 import com.configcat.intellij.plugin.ConfigCatNotifier
 import com.configcat.intellij.plugin.Constants
+import com.configcat.intellij.plugin.ErrorHandler
 import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
 import com.configcat.intellij.plugin.services.ConfigCatService
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
+import com.configcat.publicapi.java.client.ApiException
 import com.configcat.publicapi.java.client.model.ConfigModel
 import com.configcat.publicapi.java.client.model.CreateSettingInitialValues
 import com.configcat.publicapi.java.client.model.SettingType
@@ -134,9 +136,8 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWr
             settingService.createSetting(configId, createSettingInitialValues)
             val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
             configCatNodeDataService.loadFlags(configId)
-        }catch (e:Exception){
-            ConfigCatNotifier.Notify.error(project,"Flag create failed. For more information check the logs.")
-            thisLogger().error("Flag create failed.", e)
+        }catch (e:ApiException){
+            ErrorHandler.errorNotify(e, "Flag create failed. For more information check the logs.", project)
         }
 
     }

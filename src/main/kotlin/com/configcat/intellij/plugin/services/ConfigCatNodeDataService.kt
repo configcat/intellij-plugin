@@ -2,7 +2,9 @@ package com.configcat.intellij.plugin.services
 
 import com.configcat.intellij.plugin.ConfigCatNotifier
 import com.configcat.intellij.plugin.Constants
+import com.configcat.intellij.plugin.ErrorHandler
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
+import com.configcat.publicapi.java.client.ApiException
 import com.configcat.publicapi.java.client.model.ConfigModel
 import com.configcat.publicapi.java.client.model.SettingModel
 import com.intellij.openapi.application.ApplicationManager
@@ -40,7 +42,12 @@ class ConfigCatNodeDataService {
 
     fun loadConfigs(productId: UUID) {
         val configsService = ConfigCatService.createConfigsService(Constants.decodePublicApiConfiguration(stateConfig.authConfiguration), stateConfig.publicApiBaseUrl)
-        val configs = configsService.getConfigs(productId)
+        val configs = try {
+            configsService.getConfigs(productId)
+        } catch (exception: ApiException) {
+            ErrorHandler.errorNotify(exception)
+            return
+        }
         productConfigs[productId] = configs
     }
 
@@ -63,7 +70,12 @@ class ConfigCatNodeDataService {
 
     fun loadFlags(configId: UUID) {
         val featureFlagsSettingsService = ConfigCatService.createFeatureFlagsSettingsService(Constants.decodePublicApiConfiguration(stateConfig.authConfiguration), stateConfig.publicApiBaseUrl)
-        val settings = featureFlagsSettingsService.getSettings(configId)
+        val settings = try {
+            featureFlagsSettingsService.getSettings(configId)
+        } catch (exception: ApiException) {
+            ErrorHandler.errorNotify(exception)
+            return
+        }
         configFlags[configId] = settings
     }
 
