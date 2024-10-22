@@ -1,5 +1,6 @@
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
+import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 
 fun properties(key: String) = providers.gradleProperty(key)
 fun environment(key: String) = providers.environmentVariable(key)
@@ -139,6 +140,8 @@ tasks {
 intellijPlatformTesting {
     runIde {
         register("runIdeForUiTests") {
+            type = IntelliJPlatformType.IntellijIdeaCommunity
+            version = "2024.1"
             task {
                 jvmArgumentProviders += CommandLineArgumentProvider {
                     listOf(
