@@ -71,7 +71,7 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWr
                 cell(nameTextField)
                     .validationOnInput {
                         if(nameTextField.text.isNullOrEmpty() ){
-                            return@validationOnInput ValidationInfo("Invalid name", nameTextField)
+                            return@validationOnInput ValidationInfo("Empty name", nameTextField)
                         }
                         myOKAction.isEnabled = true
                         null
@@ -82,7 +82,7 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWr
                 cell(keyTextField)
                     .validationOnInput {
                         if(keyTextField.text.isNullOrEmpty() ){
-                            return@validationOnInput ValidationInfo("Invalid key", keyTextField)
+                            return@validationOnInput ValidationInfo("Empty key", keyTextField)
                         }
                         myOKAction.isEnabled = true
                         null

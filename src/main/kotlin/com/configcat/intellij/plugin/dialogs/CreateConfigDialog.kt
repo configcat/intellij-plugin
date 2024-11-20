@@ -59,7 +59,7 @@ class CreateConfigDialog(val project: Project?, val product: ProductModel): Dial
 
     override fun doValidate(): ValidationInfo? {
         if(nameTextField.text.isNullOrEmpty()){
-            return ValidationInfo("Invalid name", nameTextField)
+            return ValidationInfo("Empty name", nameTextField)
         }
         return null
     }
