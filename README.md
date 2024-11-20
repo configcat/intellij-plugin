@@ -15,9 +15,8 @@ ConfigCat is a hosted feature flag service: https://configcat.com. Manage featur
 ## Feature overview
 
 - View all of your Products, Configs and Feature Flags.
-- Create Configs within JetBrains/IntelliJ IDE.
+- Create Configs and Feature Flags within JetBrains/IntelliJ IDE.
 - Open your Configs and Feature Flags on the ConfigCat Dashboard.
-- Create new Feature Flags within JetBrains/IntelliJ IDE.
 - Copy a Feature Flag's key to the clipboard.
 - Find your Feature Flag's usages in your code.
 
