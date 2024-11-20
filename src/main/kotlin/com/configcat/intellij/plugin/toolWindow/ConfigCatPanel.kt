@@ -1,6 +1,5 @@
 package com.configcat.intellij.plugin.toolWindow
 
-import com.configcat.intellij.plugin.ConfigCatNotifier
 import com.configcat.intellij.plugin.Constants
 import com.configcat.intellij.plugin.ErrorHandler
 import com.configcat.intellij.plugin.actions.*
@@ -15,7 +14,6 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.*
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
-import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
@@ -99,6 +97,7 @@ class ConfigCatPanel : SimpleToolWindowPanel(false, false), Disposable {
                     },  gbc)
                 }
             )
+            resetTreeView()
             return content
         } else {
             initTree()
@@ -113,7 +112,13 @@ class ConfigCatPanel : SimpleToolWindowPanel(false, false), Disposable {
         return content
     }
 
-    private fun initToolbar(panel: JComponent, tree: Tree){
+    private fun resetTreeView() {
+        tree = null
+        treeModel = null
+        toolbar = null
+    }
+
+    private fun initToolbar(panel: JComponent, tree: Tree) {
         val actionManager: ActionManager = ActionManager.getInstance()
         val toolbarActionGroup = DefaultActionGroup()
         val actionToolbar: ActionToolbar = actionManager.createActionToolbar("CONFIGCAT_PANEL_ACTION_TOOLBAR", toolbarActionGroup, false)
