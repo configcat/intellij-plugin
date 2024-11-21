@@ -10,18 +10,12 @@ import com.configcat.publicapi.java.client.ApiException
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.options.BoundConfigurable
-import com.intellij.openapi.options.Configurable
-import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.openapi.ui.ValidationInfo
-import com.intellij.openapi.ui.validation.CHECK_NON_EMPTY
-import com.intellij.openapi.ui.validation.DialogValidation
 import com.intellij.ui.dsl.builder.COLUMNS_MEDIUM
 import com.intellij.ui.dsl.builder.columns
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.layout.ValidationInfoBuilder
-import javax.swing.JComponent
 import javax.swing.JPasswordField
 import javax.swing.JTextField
 

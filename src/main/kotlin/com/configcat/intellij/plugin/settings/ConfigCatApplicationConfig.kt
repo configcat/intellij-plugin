@@ -10,11 +10,11 @@ import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 
 
-const val DEFAULT_DASHBOARD_BASE_URL = "https://app.configcat.com";
-const val DEFAULT_PUBLIC_API_BASE_URL = "https://api.configcat.com";
-const val EMPTY_CREDENTIALS = "{\"basicAuthUserName\":\"\",\"basicAuthPassword\":\"\"}";
+const val DEFAULT_DASHBOARD_BASE_URL = "https://app.configcat.com"
+const val DEFAULT_PUBLIC_API_BASE_URL = "https://api.configcat.com"
+const val EMPTY_CREDENTIALS = "{\"basicAuthUserName\":\"\",\"basicAuthPassword\":\"\"}"
 
-@State( name = "ConfigCatApplicationConfig", storages = [Storage("configcat-inellij-plugin.xml")])
+@State( name = "ConfigCatApplicationConfig", storages = [Storage("configcat-intellij-plugin.xml")])
 open class ConfigCatApplicationConfig : PersistentStateComponent<ConfigCatApplicationConfig.ConfigCatApplicationConfigSate> {
     private var appState: ConfigCatApplicationConfigSate = ConfigCatApplicationConfigSate()
 
