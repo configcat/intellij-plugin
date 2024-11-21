@@ -115,7 +115,9 @@ class ConfigCatPanel : SimpleToolWindowPanel(false, false), Disposable {
     private fun resetTreeView() {
         tree = null
         treeModel = null
-        toolbar = null
+        if(toolbar != null) {
+            toolbar = null
+        }
     }
 
     private fun initToolbar(panel: JComponent, tree: Tree) {
