@@ -10,15 +10,12 @@ import com.configcat.publicapi.java.client.ApiException
 import com.configcat.publicapi.java.client.model.ConfigModel
 import com.configcat.publicapi.java.client.model.CreateSettingInitialValues
 import com.configcat.publicapi.java.client.model.SettingType
-import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
-import com.intellij.openapi.ui.DialogPanel
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.ui.ValidationInfo
 import com.intellij.ui.SortedComboBoxModel
 import com.intellij.ui.dsl.builder.COLUMNS_MEDIUM
-import com.intellij.ui.dsl.builder.Panel
 import com.intellij.ui.dsl.builder.columns
 import com.intellij.ui.dsl.builder.panel
 import javax.swing.JComponent
@@ -71,7 +68,7 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWr
                 cell(nameTextField)
                     .validationOnInput {
                         if(nameTextField.text.isNullOrEmpty() ){
-                            return@validationOnInput ValidationInfo("Invalid name", nameTextField)
+                            return@validationOnInput ValidationInfo("Empty name", nameTextField)
                         }
                         myOKAction.isEnabled = true
                         null
@@ -82,7 +79,7 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWr
                 cell(keyTextField)
                     .validationOnInput {
                         if(keyTextField.text.isNullOrEmpty() ){
-                            return@validationOnInput ValidationInfo("Invalid key", keyTextField)
+                            return@validationOnInput ValidationInfo("Empty key", keyTextField)
                         }
                         myOKAction.isEnabled = true
                         null

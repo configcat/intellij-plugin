@@ -29,5 +29,4 @@ class RefreshAction: RefreshAction() {
         e.presentation.isEnabledAndVisible = true
     }
 
-
 }

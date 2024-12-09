@@ -10,7 +10,6 @@ import com.configcat.publicapi.java.client.ApiException
 import com.configcat.publicapi.java.client.model.CreateConfigRequest
 import com.configcat.publicapi.java.client.model.EvaluationVersion
 import com.configcat.publicapi.java.client.model.ProductModel
-import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.openapi.ui.DialogWrapper
@@ -59,7 +58,7 @@ class CreateConfigDialog(val project: Project?, val product: ProductModel): Dial
 
     override fun doValidate(): ValidationInfo? {
         if(nameTextField.text.isNullOrEmpty()){
-            return ValidationInfo("Invalid name", nameTextField)
+            return ValidationInfo("Empty name", nameTextField)
         }
         return null
     }
