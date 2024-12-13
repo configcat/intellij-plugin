@@ -1,8 +1,7 @@
 # ConfigCat IntelliJ Plugin
-
-![Build](https://github.com/configcat/intellij-plugin/workflows/Build/badge.svg)
-[![Version](https://img.shields.io/jetbrains/plugin/v/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
-[![Downloads](https://img.shields.io/jetbrains/plugin/d/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
+![Build](https://github.com/configcat/intellij-plugin/actions/workflows/build.yml/badge.svg)
+[![Version](https://img.shields.io/jetbrains/plugin/v/26096-configcat-feature-flags.svg)](https://plugins.jetbrains.com/plugin/26096-configcat-feature-flags)
+[![Downloads](https://img.shields.io/jetbrains/plugin/d/26096-configcat-feature-flags.svg)](https://plugins.jetbrains.com/plugin/26096-configcat-feature-flags)
 
 <!-- Plugin description -->
 ConfigCat IntelliJ Plugin to manage feature flags from JetBrains/IntelliJ IDEs.
