@@ -114,6 +114,10 @@ jobs:
         with:
           gradle-home-cache-cleanup: true
 
+      # Gradle permission
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
       # Cache Plugin Verifier IDEs
       - name: Setup Plugin Verifier IDEs Cache
         uses: actions/cache@v4
