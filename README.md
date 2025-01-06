@@ -4,7 +4,7 @@
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/26096-configcat-feature-flags.svg)](https://plugins.jetbrains.com/plugin/26096-configcat-feature-flags)
 
 <!-- Plugin description -->
-ConfigCat IntelliJ Plugin to manage feature flags from JetBrains/IntelliJ IDEs.
+[ConfigCat IntelliJ Plugin](https://plugins.jetbrains.com/plugin/26096-configcat-feature-flags/edit) to manage feature flags from JetBrains/IntelliJ IDEs.
 
 Connect your Product and Config to your IDE. Find your Feature Flag's usages in your code easily.
 
