@@ -135,53 +135,47 @@ jobs:
           name: pluginVerifier-result
           path: ${{ github.workspace }}/build/reports/pluginVerifier
 
-# Release - the first release of the plugin must be done by hand, this section should be commented out until that
-#  release:
-#    name: Publish Plugin
-#    needs: [ build, verify ]
-#    if: startsWith(github.ref, 'refs/tags')
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#      # Check out the current repository
-#      - name: Fetch Sources
-#        uses: actions/checkout@v4
-#        with:
-#          ref: ${{ github.event.release.tag_name }}
-#
-#      # Set up Java environment for the next steps
-#      - name: Setup Java
-#        uses: actions/setup-java@v4
-#        with:
-#          distribution: zulu
-#          java-version: 17
-#
-#      # Setup Gradle
-#      - name: Setup Gradle
-#        uses: gradle/actions/setup-gradle@v4
-#        with:
-#          gradle-home-cache-cleanup: true
-#
-#      # Update Unreleased section with the current release note
-#      - name: Patch Changelog
-#        if: ${{ steps.properties.outputs.changelog != '' }}
-#        env:
-#          CHANGELOG: ${{ steps.properties.outputs.changelog }}
-#        run: |
-#          ./gradlew patchChangelog --release-note="$CHANGELOG"
-#
-#      # Publish the plugin to JetBrains Marketplace
-#      - name: Publish Plugin
-#        env:
-#          PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
-#          CERTIFICATE_CHAIN: ${{ secrets.CERTIFICATE_CHAIN }}
-#          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
-#          PRIVATE_KEY_PASSWORD: ${{ secrets.PRIVATE_KEY_PASSWORD }}
-#        run: ./gradlew publishPlugin
-#
-#      # Upload artifact as a release asset
-#      - name: Upload Release Asset
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        run: gh release upload ${{ github.event.release.tag_name }} ./build/distributions/*
+  # Release
+  release:
+    name: Publish Plugin
+    needs: [ build, verify ]
+    if: startsWith(github.ref, 'refs/tags')
+    runs-on: ubuntu-latest
+
+    steps:
+      # Check out the current repository
+      - name: Fetch Sources
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      # Set up Java environment for the next steps
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 17
+
+      # Setup Gradle
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-home-cache-cleanup: true
+
+      # ChangeLog updated as part of the release process. See the DEPLOY.md for details.
+
+      # Publish the plugin to JetBrains Marketplace
+      - name: Publish Plugin
+        env:
+          PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
+          CERTIFICATE_CHAIN: ${{ secrets.CERTIFICATE_CHAIN }}
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          PRIVATE_KEY_PASSWORD: ${{ secrets.PRIVATE_KEY_PASSWORD }}
+        run: ./gradlew publishPlugin
+
+      # Upload artifact as a release asset
+      - name: Upload Release Asset
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload ${{ github.event.release.tag_name }} ./build/distributions/*
 
