@@ -1,10 +1,12 @@
 [versions]
-
 # plugins
 kotlin = "2.1.0"
 changelog = "2.2.1"
 intellijPlatform = "2.1.0"
 kover = "0.8.3"
+#libraries
+configcat = "1.0.1"
+kotlinx-serialization = "1.7.3"
 
 
 [plugins]
@@ -12,3 +14,9 @@ changelog = { id = "org.jetbrains.changelog", version.ref = "changelog" }
 intellijPlatform = { id = "org.jetbrains.intellij.platform", version.ref = "intellijPlatform" }
 kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
+serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+
+[libraries]
+configcat-java = { module = "com.configcat:configcat-publicapi-java-client", version.ref = "configcat" }
+serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
+serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
