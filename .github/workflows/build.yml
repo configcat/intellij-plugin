@@ -180,6 +180,10 @@ jobs:
         with:
           gradle-home-cache-cleanup: true
 
+      # Gradle permission
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
       # ChangeLog updated as part of the release process. See the DEPLOY.md for details.
 
       # Publish the plugin to JetBrains Marketplace
