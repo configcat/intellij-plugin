@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [1.0.2] - 2025-02-20
+
+### Fixed
+
+- Fixed JSON parse error by updating `com.configcat:configcat-publicapi-java-client` to `1.1.0`
+
 ## [1.0.1] - 2025-01-21
 
 ### Changed
@@ -16,6 +22,7 @@
 
 - Initial release of the ConfigCat IntelliJ Plugin.
 
-[Unreleased]: https://github.com/configcat/intellij-plugin/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/configcat/intellij-plugin/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/configcat/intellij-plugin/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/configcat/intellij-plugin/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/configcat/intellij-plugin/commits/v1.0.0

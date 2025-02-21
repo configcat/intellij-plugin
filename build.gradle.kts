@@ -138,8 +138,8 @@ tasks {
 intellijPlatformTesting {
     runIde {
         register("runIdeForUiTests") {
-            type = IntelliJPlatformType.IntellijIdeaCommunity
-            version = "2024.1"
+            type = IntelliJPlatformType.IntellijIdeaUltimate
+            version = "2024.3"
             task {
                 jvmArgumentProviders += CommandLineArgumentProvider {
                     listOf(
