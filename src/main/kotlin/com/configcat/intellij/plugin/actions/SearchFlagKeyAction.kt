@@ -31,10 +31,6 @@ class SearchFlagKeyAction: AnAction() {
             return
         }
         val settingKey = selectedNode.setting.key
-        if(settingKey == null) {
-            ConfigCatNotifier.Notify.error(e.project, "Search Flag key action could not be executed. Missing Setting Key.")
-            return
-        }
         val findModel = FindModel()
 
         findModel.stringToFind = settingKey

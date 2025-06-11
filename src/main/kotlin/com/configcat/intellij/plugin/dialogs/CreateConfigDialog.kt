@@ -20,7 +20,7 @@ import com.intellij.ui.dsl.builder.panel
 import javax.swing.JComponent
 import javax.swing.JTextField
 
-class CreateConfigDialog(val project: Project?, val product: ProductModel): DialogWrapper(true) {
+class CreateConfigDialog(val project: Project?, private val product: ProductModel): DialogWrapper(true) {
 
     private val nameTextField = JTextField()
     private val descriptionTextField = JTextField()
@@ -67,10 +67,6 @@ class CreateConfigDialog(val project: Project?, val product: ProductModel): Dial
         val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigSate = ConfigCatApplicationConfig.getInstance().state
 
         val productId = product.productId
-        if(productId == null) {
-            ConfigCatNotifier.Notify.error(project,"Config create failed. Missing product ID.")
-            return
-        }
 
         val configsService = ConfigCatService.createConfigsService(Constants.decodePublicApiConfiguration(stateConfig.authConfiguration), stateConfig.publicApiBaseUrl)
         val createConfigRequest =  CreateConfigRequest()
