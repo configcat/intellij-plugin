@@ -1,6 +1,5 @@
 package com.configcat.intellij.plugin.dialogs
 
-import com.configcat.intellij.plugin.ConfigCatNotifier
 import com.configcat.intellij.plugin.Constants
 import com.configcat.intellij.plugin.ErrorHandler
 import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
