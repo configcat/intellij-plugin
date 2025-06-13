@@ -1,6 +1,7 @@
 package com.configcat.intellij.plugin
 
 import com.configcat.intellij.plugin.services.PublicApiConfiguration
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 

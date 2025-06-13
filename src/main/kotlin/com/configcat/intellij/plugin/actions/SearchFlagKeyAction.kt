@@ -8,7 +8,6 @@ import com.intellij.find.FindModel
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.actionSystem.DataKey
 import com.intellij.openapi.components.service
 import javax.swing.tree.DefaultMutableTreeNode
 
@@ -31,10 +30,6 @@ class SearchFlagKeyAction: AnAction() {
             return
         }
         val settingKey = selectedNode.setting.key
-        if(settingKey == null) {
-            ConfigCatNotifier.Notify.error(e.project, "Search Flag key action could not be executed. Missing Setting Key.")
-            return
-        }
         val findModel = FindModel()
 
         findModel.stringToFind = settingKey

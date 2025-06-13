@@ -35,11 +35,7 @@ class ProductNode(val product: ProductModel, parent: SimpleNode): SimpleNode(nul
     override fun getChildren(): Array<SimpleNode> {
         val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
         val productId = product.productId
-        val configs: List<ConfigModel>? = if(productId == null) {
-           emptyList()
-        }  else {
-            configCatNodeDataService.getProductConfigs(productId)
-        }
+        val configs: List<ConfigModel>? = configCatNodeDataService.getProductConfigs(productId)
         if(configs == null) {
             return arrayOf(InfoNode("Loading..."))
         } else {
@@ -56,7 +52,7 @@ class ProductNode(val product: ProductModel, parent: SimpleNode): SimpleNode(nul
     }
 
     override fun getName(): String {
-        return product.name ?: product.productId?.toString() ?: "<missing data>"
+        return product.name
     }
 
 }
@@ -71,11 +67,7 @@ class ConfigNode(val config: ConfigModel, parent: SimpleNode): SimpleNode(null, 
         val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
 
         val configId = config.configId
-        val flags: List<SettingModel>? = if(configId == null) {
-            emptyList()
-        }  else {
-            configCatNodeDataService.getConfigFlags(configId)
-        }
+        val flags: List<SettingModel>? = configCatNodeDataService.getConfigFlags(configId)
 
         if(flags == null) {
             return arrayOf(InfoNode("Loading..."))
@@ -93,7 +85,7 @@ class ConfigNode(val config: ConfigModel, parent: SimpleNode): SimpleNode(null, 
     }
 
     override fun getName(): String {
-        return config.name ?: config.configId?.toString() ?: "<missing data>"
+        return config.name
     }
 
 }
@@ -113,7 +105,7 @@ class FlagNode(val setting: SettingModel, parent: SimpleNode): SimpleNode(null, 
     }
 
     override fun getName(): String {
-        return if(setting.name?.isEmpty() != false && setting.key?.isEmpty() != false)  "<missing data>" else  setting.key + " (${setting.name})"
+        return if(setting.name.isEmpty() && setting.key.isEmpty())  "<missing data>" else  setting.key + " (${setting.name})"
     }
 }
 

@@ -1,6 +1,5 @@
 package com.configcat.intellij.plugin.dialogs
 
-import com.configcat.intellij.plugin.ConfigCatNotifier
 import com.configcat.intellij.plugin.Constants
 import com.configcat.intellij.plugin.ErrorHandler
 import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
@@ -116,10 +115,6 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWr
         val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigSate = ConfigCatApplicationConfig.getInstance().state
 
         val configId = config.configId
-        if(configId == null) {
-            ConfigCatNotifier.Notify.error(project,"Flag create failed. Missing config ID.")
-            return
-        }
 
         val settingService = ConfigCatService.createFeatureFlagsSettingsService(Constants.decodePublicApiConfiguration(stateConfig.authConfiguration), stateConfig.publicApiBaseUrl)
         val createSettingInitialValues =  CreateSettingInitialValues()
