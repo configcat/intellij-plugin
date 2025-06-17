@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [1.0.5] - 2025-06-17
+
+### Security
+
+- 2025 June security release
+
 ## [1.0.4] - 2025-05-05
 
 ### Changed
@@ -34,7 +40,8 @@
 
 - Initial release of the ConfigCat IntelliJ Plugin.
 
-[Unreleased]: https://github.com/configcat/intellij-plugin/compare/v1.0.4...HEAD
+[Unreleased]: https://github.com/configcat/intellij-plugin/compare/v1.0.5...HEAD
+[1.0.5]: https://github.com/configcat/intellij-plugin/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/configcat/intellij-plugin/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/configcat/intellij-plugin/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/configcat/intellij-plugin/compare/v1.0.1...v1.0.2
