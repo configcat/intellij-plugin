@@ -63,7 +63,7 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWr
                     .columns(COLUMNS_MEDIUM)
 
             }
-            row("Name for hoomans"){
+            row("Name for humans"){
                 cell(nameTextField)
                     .validationOnInput {
                         if(nameTextField.text.isNullOrEmpty() ){
