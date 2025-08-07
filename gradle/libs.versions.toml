@@ -5,7 +5,7 @@ changelog = "2.3.0"
 intellijPlatform = "2.7.0"
 kover = "0.9.1"
 #libraries
-configcat = "2.0.0"
+configcat = "2.0.1"
 kotlinx-serialization = "1.9.0"
 
 
