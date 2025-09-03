@@ -1,6 +1,8 @@
 package com.configcat.intellij.plugin.dialogs
 
 import com.configcat.intellij.plugin.Constants
+import com.configcat.intellij.plugin.Constants.FEATURE_FLAG_KEY_REGEX
+import com.configcat.intellij.plugin.Constants.INPUT_MAX_LENGTH
 import com.configcat.intellij.plugin.ErrorHandler
 import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
 import com.configcat.intellij.plugin.services.ConfigCatService
@@ -22,7 +24,7 @@ import javax.swing.JTextField
 
 class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWrapper(true) {
 
-  private val nameTextField = JTextField()
+    private val nameTextField = JTextField()
     private val keyTextField = JTextField()
     private val hintTextField = JTextField()
     private val flagTypeDropDown = ComboBox<SettingTypeDropDown>()
@@ -54,9 +56,8 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWr
             row("Setting type"){
                 cell(flagTypeDropDown)
                     .validationOnInput {
-                        if(flagTypeDropDown.model.selectedItem ==  null){
-                            return@validationOnInput ValidationInfo("Invalid Flag type", flagTypeDropDown)
-                        }
+                        val validateInputInfos = doValidate()
+                        if(validateInputInfos != null) return@validationOnInput validateInputInfos
                         myOKAction.isEnabled = true
                         null
                     }
@@ -66,9 +67,8 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWr
             row("Name for hoomans"){
                 cell(nameTextField)
                     .validationOnInput {
-                        if(nameTextField.text.isNullOrEmpty() ){
-                            return@validationOnInput ValidationInfo("Empty name", nameTextField)
-                        }
+                        val validateInputInfos = doValidate()
+                        if(validateInputInfos != null) return@validationOnInput validateInputInfos
                         myOKAction.isEnabled = true
                         null
                     }
@@ -77,9 +77,8 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWr
             row("Key for programs"){
                 cell(keyTextField)
                     .validationOnInput {
-                        if(keyTextField.text.isNullOrEmpty() ){
-                            return@validationOnInput ValidationInfo("Empty key", keyTextField)
-                        }
+                        val validateInputInfos = doValidate()
+                        if(validateInputInfos != null) return@validationOnInput validateInputInfos
                         myOKAction.isEnabled = true
                         null
                     }
@@ -97,17 +96,27 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWr
 
     override fun doValidate(): ValidationInfo? {
         if(nameTextField.text.isNullOrEmpty()){
-            return ValidationInfo("Invalid name", nameTextField)
+            return ValidationInfo("The field is required.", nameTextField)
         }
+        if(nameTextField.text.length > INPUT_MAX_LENGTH){
+            return ValidationInfo("The field must be at max 255 characters long.", nameTextField)
+        }
+
         if(keyTextField.text.isNullOrEmpty()){
-            return ValidationInfo("Invalid key", keyTextField)
+            return ValidationInfo("The field is required.", keyTextField)
         }
+        if(keyTextField.text.length > INPUT_MAX_LENGTH){
+            return ValidationInfo("The field must be at max 255 characters long.", keyTextField)
+        }
+        if(!FEATURE_FLAG_KEY_REGEX.toRegex().matches(keyTextField.text)){
+            return ValidationInfo("Invalid key. Keys must start with a letter, followed by a combination of numbers, letters, underscores and hyphens.", keyTextField)
+        }
+
         if(flagTypeDropDown.model.selectedItem ==  null){
             return ValidationInfo("Invalid Flag type", flagTypeDropDown)
         }
         return null
     }
-
 
     override fun doOKAction() {
         super.doOKAction()
