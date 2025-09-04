@@ -39,10 +39,10 @@ class CreateConfigDialog(val project: Project?, private val product: ProductMode
             row("Name"){
                 cell(nameTextField)
                     .validationOnInput {
-                        val validateInputInfos = doValidate()
-                        if(validateInputInfos != null) return@validationOnInput validateInputInfos
-                        myOKAction.isEnabled = true
-                        null
+                        return@validationOnInput nameTextFieldValidation()
+                    }
+                    .validationOnApply {
+                        return@validationOnApply nameTextFieldValidation()
                     }
                     .columns(COLUMNS_MEDIUM)
             }
@@ -55,7 +55,7 @@ class CreateConfigDialog(val project: Project?, private val product: ProductMode
         return dialogPanel
     }
 
-    override fun doValidate(): ValidationInfo? {
+    fun nameTextFieldValidation(): ValidationInfo? {
         if(nameTextField.text.isNullOrEmpty()){
             return ValidationInfo("The field is required.", nameTextField)
         }

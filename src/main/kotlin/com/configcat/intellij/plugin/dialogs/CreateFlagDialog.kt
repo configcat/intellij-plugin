@@ -56,10 +56,10 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWr
             row("Setting type"){
                 cell(flagTypeDropDown)
                     .validationOnInput {
-                        val validateInputInfos = doValidate()
-                        if(validateInputInfos != null) return@validationOnInput validateInputInfos
-                        myOKAction.isEnabled = true
-                        null
+                       return@validationOnInput flagTypeDropDownValidation()
+                    }
+                    .validationOnApply {
+                        return@validationOnApply flagTypeDropDownValidation()
                     }
                     .columns(COLUMNS_MEDIUM)
 
@@ -67,20 +67,20 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWr
             row("Name for hoomans"){
                 cell(nameTextField)
                     .validationOnInput {
-                        val validateInputInfos = doValidate()
-                        if(validateInputInfos != null) return@validationOnInput validateInputInfos
-                        myOKAction.isEnabled = true
-                        null
+                       return@validationOnInput nameTextFieldValidation()
+                    }
+                    .validationOnApply {
+                        return@validationOnApply nameTextFieldValidation()
                     }
                     .columns(COLUMNS_MEDIUM)
             }
             row("Key for programs"){
                 cell(keyTextField)
                     .validationOnInput {
-                        val validateInputInfos = doValidate()
-                        if(validateInputInfos != null) return@validationOnInput validateInputInfos
-                        myOKAction.isEnabled = true
-                        null
+                        return@validationOnInput keyTextFieldValidation()
+                    }
+                    .validationOnApply {
+                        return@validationOnApply keyTextFieldValidation()
                     }
                     .columns(COLUMNS_MEDIUM)
             }
@@ -90,18 +90,20 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWr
             }
 
         }
-
         return dialogPanel
     }
 
-    override fun doValidate(): ValidationInfo? {
+    fun nameTextFieldValidation(): ValidationInfo? {
         if(nameTextField.text.isNullOrEmpty()){
             return ValidationInfo("The field is required.", nameTextField)
         }
         if(nameTextField.text.length > INPUT_MAX_LENGTH){
             return ValidationInfo("The field must be at max 255 characters long.", nameTextField)
         }
+        return null
+    }
 
+    fun keyTextFieldValidation(): ValidationInfo? {
         if(keyTextField.text.isNullOrEmpty()){
             return ValidationInfo("The field is required.", keyTextField)
         }
@@ -111,9 +113,12 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWr
         if(!FEATURE_FLAG_KEY_REGEX.toRegex().matches(keyTextField.text)){
             return ValidationInfo("Invalid key. Keys must start with a letter, followed by a combination of numbers, letters, underscores and hyphens.", keyTextField)
         }
+        return  null
+    }
 
+    fun flagTypeDropDownValidation(): ValidationInfo? {
         if(flagTypeDropDown.model.selectedItem ==  null){
-            return ValidationInfo("Invalid Flag type", flagTypeDropDown)
+            return ValidationInfo("Invalid Flag type.", flagTypeDropDown)
         }
         return null
     }
