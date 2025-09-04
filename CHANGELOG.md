@@ -4,6 +4,12 @@
 
 ## [Unreleased]
 
+## [1.0.7] - 2025-09-04
+
+### Changed
+
+- Updated input validation on create dialogs.
+
 ## [1.0.6] - 2025-08-05
 
 ### Security
@@ -46,7 +52,8 @@
 
 - Initial release of the ConfigCat IntelliJ Plugin.
 
-[Unreleased]: https://github.com/configcat/intellij-plugin/compare/v1.0.6...HEAD
+[Unreleased]: https://github.com/configcat/intellij-plugin/compare/v1.0.7...HEAD
+[1.0.7]: https://github.com/configcat/intellij-plugin/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/configcat/intellij-plugin/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/configcat/intellij-plugin/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/configcat/intellij-plugin/compare/v1.0.3...v1.0.4
