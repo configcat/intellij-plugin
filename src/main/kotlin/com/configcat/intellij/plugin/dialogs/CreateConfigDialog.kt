@@ -1,6 +1,7 @@
 package com.configcat.intellij.plugin.dialogs
 
 import com.configcat.intellij.plugin.Constants
+import com.configcat.intellij.plugin.Constants.INPUT_MAX_LENGTH
 import com.configcat.intellij.plugin.ErrorHandler
 import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
 import com.configcat.intellij.plugin.services.ConfigCatService
@@ -38,11 +39,10 @@ class CreateConfigDialog(val project: Project?, private val product: ProductMode
             row("Name"){
                 cell(nameTextField)
                     .validationOnInput {
-                        if(nameTextField.text.isNullOrEmpty() ){
-                            return@validationOnInput ValidationInfo("Invalid name", nameTextField)
-                        }
-                        myOKAction.isEnabled = true
-                        null
+                        return@validationOnInput nameTextFieldValidation()
+                    }
+                    .validationOnApply {
+                        return@validationOnApply nameTextFieldValidation()
                     }
                     .columns(COLUMNS_MEDIUM)
             }
@@ -55,9 +55,12 @@ class CreateConfigDialog(val project: Project?, private val product: ProductMode
         return dialogPanel
     }
 
-    override fun doValidate(): ValidationInfo? {
+    fun nameTextFieldValidation(): ValidationInfo? {
         if(nameTextField.text.isNullOrEmpty()){
-            return ValidationInfo("Empty name", nameTextField)
+            return ValidationInfo("The field is required.", nameTextField)
+        }
+        if(nameTextField.text.length > INPUT_MAX_LENGTH){
+            return ValidationInfo("The field must be at max 255 characters long.", nameTextField)
         }
         return null
     }
