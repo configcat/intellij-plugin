@@ -1,6 +1,6 @@
 [versions]
 # plugins
-kotlin = "2.2.10"
+kotlin = "2.2.20"
 changelog = "2.4.0"
 intellijPlatform = "2.7.2"
 kover = "0.9.1"
