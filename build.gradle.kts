@@ -1,3 +1,4 @@
+import com.github.gradle.node.npm.task.NpmTask
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
@@ -9,6 +10,7 @@ plugins {
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
     alias(libs.plugins.kover) // Gradle Kover Plugin
     alias(libs.plugins.serialization) // Kotlin serialization
+    id("com.github.node-gradle.node") version "7.1.0"
 }
 
 group = providers.gradleProperty("pluginGroup").get()
@@ -24,11 +26,27 @@ repositories {
     }
 }
 
+node {
+    download = true
+    version = "20.19.0"
+    nodeProjectDir = file("$projectDir/webpanel")
+}
+
+tasks.register("npmBuild", NpmTask::class) {
+    dependsOn("npmInstall")
+    args.set(listOf("run", "build"))
+    workingDir = file("$projectDir/webpanel")
+}
+
+tasks.named("buildPlugin") {
+    dependsOn("npmBuild")
+}
+
 dependencies {
     implementation(libs.configcat.java)
     implementation(libs.serialization.core)
     implementation(libs.serialization.json)
-
+    implementation(libs.okhttp)
 
     intellijPlatform {
         create(providers.gradleProperty("platformType"), providers.gradleProperty("platformVersion"))

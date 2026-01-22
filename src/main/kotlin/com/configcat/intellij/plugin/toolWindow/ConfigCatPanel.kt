@@ -132,12 +132,14 @@ class ConfigCatPanel : SimpleToolWindowPanel(false, false), Disposable {
         val openDashboardAction = actionManager.getAction(OpenInBrowserAction.CONFIGCAT_OPEN_IN_BROWSER_ACTION_ID)
         val searchFlagKeyAction = actionManager.getAction(SearchFlagKeyAction.CONFIGCAT_SEARCH_FLAG_KEY_ACTION_ID)
         val copyFlagKeyAction = actionManager.getAction(CopyFlagKeyAction.CONFIGCAT_COPY_FLAG_KEY_ACTION_ID)
+        val openFeatureFlagAction = actionManager.getAction(OpenFeatureFlagAction.CONFIGCAT_OPEN_FF_ACTION_ID)
 
         toolbarActionGroup.add(refreshAction)
         toolbarActionGroup.add(createAction)
         toolbarActionGroup.add(openDashboardAction)
         toolbarActionGroup.add(searchFlagKeyAction)
         toolbarActionGroup.add(copyFlagKeyAction)
+        toolbarActionGroup.add(openFeatureFlagAction)
 
         val actionPopup = DefaultActionGroup()
 
@@ -149,6 +151,7 @@ class ConfigCatPanel : SimpleToolWindowPanel(false, false), Disposable {
                 add(openDashboardAction)
                 add(searchFlagKeyAction)
                 add(copyFlagKeyAction)
+                add(openFeatureFlagAction)
             },
             ActionPlaces.POPUP
         )

@@ -8,8 +8,8 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <notificationGroup id="ConfigCat Notification Group" displayType="BALLOON" isLogByDefault="true"/>
-        <toolWindow factoryClass="com.configcat.intellij.plugin.toolWindow.ConfigCatToolWindowFactory" id="ConfigCat - Feature Flags" icon="/META-INF/pluginIcon.svg"/>
-        <applicationConfigurable parentId="tools" instance="com.configcat.intellij.plugin.settings.ConfigCatConfigurable" id="com.configcat.intellij.plugin.settings.ConfigCatConfigurable" displayName="ConfigCat Feature Flags"/>
+        <toolWindow factoryClass="com.configcat.intellij.plugin.toolWindow.ConfigCatToolWindowFactory" anchor="bottom" id="ConfigCat" icon="/META-INF/pluginIcon.svg" canCloseContents="true"/>
+        <applicationConfigurable parentId="tools" instance="com.configcat.intellij.plugin.settings.ConfigCatConfigurable" id="com.configcat.intellij.plugin.settings.ConfigCatConfigurable" displayName="ConfigCat Feature Flags" />
         <applicationService serviceImplementation="com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig"/>
     </extensions>
 
@@ -19,6 +19,7 @@
         <action class="com.configcat.intellij.plugin.actions.CopyFlagKeyAction" icon="AllIcons.Actions.Copy" id="CONFIGCAT_COPY_FLAG_KEY_ACTION_ID" text="Copy Key to Clipboard" description="Copy key to clipboard."/>
         <action class="com.configcat.intellij.plugin.actions.SearchFlagKeyAction" icon="/icons/search.svg" id="CONFIGCAT_SEARCH_FLAG_KEY_ACTION_ID" text="Find Usage" description="Find Flag key usage in the code."/>
         <action class="com.configcat.intellij.plugin.actions.CreateAction" icon="AllIcons.General.Add" id="CONFIGCAT_CREATE_ACTION_ID" text="Create" description="Create flags or configs."/>
+        <action class="com.configcat.intellij.plugin.actions.OpenFeatureFlagAction" icon="AllIcons.Actions.PreviewDetailsVertically" id="CONFIGCAT_OPEN_FF_ACTION_ID" text="View Feature Flag" description="View or update flag values."/>
     </actions>
 
 </idea-plugin>

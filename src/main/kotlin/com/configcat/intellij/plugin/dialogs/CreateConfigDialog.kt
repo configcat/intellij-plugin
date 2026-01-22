@@ -10,6 +10,7 @@ import com.configcat.publicapi.java.client.ApiException
 import com.configcat.publicapi.java.client.model.CreateConfigRequest
 import com.configcat.publicapi.java.client.model.EvaluationVersion
 import com.configcat.publicapi.java.client.model.ProductModel
+import com.intellij.collaboration.ui.util.name
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.openapi.ui.DialogWrapper
@@ -27,6 +28,7 @@ class CreateConfigDialog(val project: Project?, private val product: ProductMode
 
     init {
         title = "Create Config"
+        okAction.name="Create"
         init()
     }
 

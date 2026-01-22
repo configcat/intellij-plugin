@@ -5,9 +5,9 @@ changelog = "2.5.0"
 intellijPlatform = "2.10.5"
 kover = "0.9.3"
 #libraries
-configcat = "2.1.0"
+configcat = "2.2.0"
 kotlinx-serialization = "1.9.0"
-
+okhttp = "5.0.0"
 
 [plugins]
 changelog = { id = "org.jetbrains.changelog", version.ref = "changelog" }
@@ -20,3 +20,4 @@ serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref 
 configcat-java = { module = "com.configcat:configcat-publicapi-java-client", version.ref = "configcat" }
 serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
 serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }

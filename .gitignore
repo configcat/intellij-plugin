@@ -3,3 +3,5 @@
 .intellijPlatform
 .qodana
 build
+
+src/main/resources/dist

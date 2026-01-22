@@ -11,7 +11,6 @@ import java.awt.datatransfer.Clipboard
 import java.awt.datatransfer.StringSelection
 import javax.swing.tree.DefaultMutableTreeNode
 
-
 class CopyFlagKeyAction: AnAction() {
     companion object {
         const val CONFIGCAT_COPY_FLAG_KEY_ACTION_ID = "CONFIGCAT_COPY_FLAG_KEY_ACTION_ID"

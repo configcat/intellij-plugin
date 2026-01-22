@@ -1,41 +1,64 @@
 package com.configcat.intellij.plugin.toolWindow
 
+import com.configcat.publicapi.java.client.model.SettingModel
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.components.JBPanel
-import com.intellij.ui.components.JBTabbedPane
 import com.intellij.ui.content.ContentFactory
 import java.awt.BorderLayout
 
 
 class ConfigCatToolWindowFactory : ToolWindowFactory {
 
+    companion object {
+        const val CONFIGCAT_TOOL_WINDOW_ID = "ConfigCat"
+    }
+
+    //TODO refactor classes and folders?
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        val myToolWindow = ConfigCatToolWindow(project, toolWindow)
-        val content = ContentFactory.getInstance().createContent(myToolWindow.getContent(), null, false)
-        toolWindow.contentManager.addContent(content)
+        val treeToolWindow = FeatureFlagsTreeToolWindow(project, toolWindow)
+        val treeContent = ContentFactory.getInstance().createContent(treeToolWindow.getContent(), "Feature Flags & Settings", false)
+        treeContent.isCloseable = false
+        toolWindow.contentManager.addContent(treeContent)
+
+        val helpToolWindow = HelpToolWindow(project, toolWindow)
+        val helpContent = ContentFactory.getInstance().createContent(helpToolWindow.getContent(), "Help & Feedback", false)
+        helpContent.isCloseable = false
+        toolWindow.contentManager.addContent(helpContent)
     }
 
     override fun shouldBeAvailable(project: Project) = true
 
-    class ConfigCatToolWindow(project: Project, toolWindow: ToolWindow) {
+    class FeatureFlagsTreeToolWindow(project: Project, toolWindow: ToolWindow) {
 
-        init {
-            toolWindow.title = "ConfigCat Feature Flags"
-        }
-
-        private val helpPanel = HelpPanel()
         private val configCatPanel = ConfigCatPanel.getInstance(project)
 
         fun getContent() = JBPanel<JBPanel<*>>().apply {
-
             layout = BorderLayout()
-            val tabsPane = JBTabbedPane()
-            tabsPane.insertTab("Feature Flags & Settings", null, configCatPanel, "Manage products, configs and flags & settings.", 0)
-            tabsPane.insertTab("Help & Feedback", null, helpPanel, "Useful links.", 1)
-
-            add(tabsPane, BorderLayout.CENTER)
+            toolTipText = "Manage products, configs and flags & settings."
+            add(configCatPanel, BorderLayout.CENTER)
         }
     }
+
+    class HelpToolWindow(project: Project, toolWindow: ToolWindow) {
+
+        private val helpPanel = HelpPanel()
+
+        fun getContent() = JBPanel<JBPanel<*>>().apply {
+            layout = BorderLayout()
+            toolTipText = "Useful links."
+            add(helpPanel, BorderLayout.CENTER)
+        }
+    }
+
+    class ConfigCatFeatureFlagsViewToolWindow(project: Project, toolWindow: ToolWindow, setting: SettingModel) {
+
+        private val viewFlagPanel = ViewFlagPanel(setting)
+        fun getContent() = JBPanel<JBPanel<*>>().apply {
+            layout = BorderLayout()
+            add(viewFlagPanel, BorderLayout.CENTER)
+        }
+    }
+
 }

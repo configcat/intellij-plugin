@@ -19,6 +19,8 @@ import com.intellij.ui.SortedComboBoxModel
 import com.intellij.ui.dsl.builder.COLUMNS_MEDIUM
 import com.intellij.ui.dsl.builder.columns
 import com.intellij.ui.dsl.builder.panel
+import com.jetbrains.rd.util.remove
+import javax.swing.Action
 import javax.swing.JComponent
 import javax.swing.JTextField
 
@@ -32,6 +34,15 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWr
     init {
         title = "Create Flag"
         init()
+    }
+
+//    override fun createActions(): Array<out Action?> {
+//
+//    }
+
+    override fun createActions(): Array<out Action?> {
+        val actions = super.createActions()
+        return actions.remove(okAction);
     }
 
     override fun createCenterPanel(): JComponent {

@@ -10,7 +10,7 @@ internal object Constants {
     const val FEATURE_FLAG_KEY_REGEX = "^[a-zA-Z]+[a-zA-Z0-9_-]*$"
     const val INPUT_MAX_LENGTH = 255
 
-    private val json =
+    val json =
         Json {
             ignoreUnknownKeys = true
         }
