@@ -17,7 +17,9 @@ import java.net.URI
 
 private typealias CefResourceProvider = () -> CefResourceHandler?
 
-class CefLocalRequestHandler(  val parent: ViewFlagPanel) : CefRequestHandlerAdapter() {
+private const val distPrefix = "http://dist"
+
+class CefLocalRequestHandler(val parent: ViewFlagPanel) : CefRequestHandlerAdapter() {
     private val myResources: MutableMap<String, CefResourceProvider> = HashMap()
 
     private val rejectingResourceHandler: CefResourceHandler =
@@ -31,8 +33,6 @@ class CefLocalRequestHandler(  val parent: ViewFlagPanel) : CefRequestHandlerAda
             }
         }
 
-//    private val restResourceHandler = RestCefStreamResourceHandler(parent)
-
     private val resourceRequestHandler =
         object : CefResourceRequestHandlerAdapter() {
             override fun getResourceHandler(
@@ -41,8 +41,6 @@ class CefLocalRequestHandler(  val parent: ViewFlagPanel) : CefRequestHandlerAda
                 request: CefRequest,
             ): CefResourceHandler {
                 val url = URI.create(request.url).toURL()
-//                if (url.toString().endsWith("http://dist")){
-                    println("We load the resource: $url")
                     return try {
                         val fileName = url.path.split("/").last()
                         myResources[fileName]?.let { it() } ?: rejectingResourceHandler
@@ -50,8 +48,6 @@ class CefLocalRequestHandler(  val parent: ViewFlagPanel) : CefRequestHandlerAda
                         rejectingResourceHandler
                     }
                 }
-//               return restResourceHandler
-//            }
         }
 
     fun addResource(
@@ -71,7 +67,7 @@ class CefLocalRequestHandler(  val parent: ViewFlagPanel) : CefRequestHandlerAda
         disableDefaultHandling: BoolRef?,
     ): CefResourceRequestHandler? {
         println(request?.url)
-        if (request?.url.toString().startsWith("http://dist", true)) {
+        if (request?.url.toString().startsWith(distPrefix, true)) {
             return resourceRequestHandler
         }
         return null

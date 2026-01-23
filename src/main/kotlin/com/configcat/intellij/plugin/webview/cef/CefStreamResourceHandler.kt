@@ -52,18 +52,13 @@ class CefStreamResourceHandler(
     ): Boolean {
         try {
             bytesRead.set(myStream.read(dataOut, 0, bytesToRead))
-
-//            var rawHtml = dataOut.toString(Charsets.UTF_8);
             if (bytesRead.get() != -1) {
-//                println("return true")
                 return true
             }
-
 
         } catch (e: IOException) {
             callback.cancel()
         }
-//        println("return false some how")
         bytesRead.set(0)
         Disposer.dispose(this)
         return false

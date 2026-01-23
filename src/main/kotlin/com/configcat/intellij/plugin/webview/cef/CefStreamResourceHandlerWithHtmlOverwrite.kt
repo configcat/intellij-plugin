@@ -21,7 +21,7 @@ import kotlin.collections.iterator
 class CefStreamResourceHandlerWithHtmlOverwrite(
     private val myStream: InputStream,
     private val myMimeType: String,
-    private val parent: ViewFlagPanel,
+    parent: ViewFlagPanel,
     private val viewData: ViewData,
     private val appData: AppData,
     private val headers: Map<String, String> = mapOf(),
@@ -61,11 +61,8 @@ class CefStreamResourceHandlerWithHtmlOverwrite(
             bytesRead.set( myStream.read(dataOut, 0, bytesToRead))
 
             var rawHtml = dataOut.toString(Charsets.UTF_8);
-
-//            rawHtml = rawHtml.replace("<base href=\"/\"/>", "<base href=\"${appData.publicApiBaseUrl}\"/>")
             rawHtml = rawHtml.replace("window.CONFIGCAT_APPDATA = {};", "window.CONFIGCAT_APPDATA = " + Constants.json.encodeToString(appData))
             rawHtml = rawHtml.replace("window.CONFIGCAT_APP_VIEW = {};", "window.CONFIGCAT_APP_VIEW = " + Constants.json.encodeToString(viewData))
-//            rawHtml.byteInputStream().read(dataOut, 0, bytesToRead)
 
             bytesRead.set( rawHtml.byteInputStream().read(dataOut, 0, bytesToRead))
             if (bytesRead.get() != -1) {
@@ -75,24 +72,6 @@ class CefStreamResourceHandlerWithHtmlOverwrite(
         } catch (e: IOException) {
             callback.cancel()
         }
-
-
-//        try {
-////            bytesRead.set(rawHtml.byteInputStream().read(dataOut, 0, bytesToRead))
-//            if (bytesRead.get() != -1) {
-//                println("return true")
-//                return true
-//            }
-//        } catch (e: IOException) {
-//            callback.cancel()
-//        }
-
-        println("return false some how")
-
-        //this is BAD. NOT WORKING THE read response .... try to fix
-//        var rawHtml = dataOut.toString(Charsets.UTF_8);
-
-
         bytesRead.set(0)
         Disposer.dispose(this)
         return false

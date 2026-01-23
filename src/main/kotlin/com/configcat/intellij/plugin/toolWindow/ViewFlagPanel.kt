@@ -39,12 +39,14 @@ data class AppData(
     val productName: String,
     val configId: String,
     val configName: String,
-    val environmentId: String,
+    var environmentId: String,
     val evaluationVersion: String,
     val settingId: String,
 )
+//TODO where is the right place for AppData?
 
-class ViewFlagPanel(setting: SettingModel) : SimpleToolWindowPanel(false, false), Disposable {
+class ViewFlagPanel(appData: AppData) : SimpleToolWindowPanel(false, false), Disposable {
+
     companion object {
         const val DIST_FOLDER_PATH = "dist"
         const val INDEX_HTML = "index.html"
@@ -53,14 +55,12 @@ class ViewFlagPanel(setting: SettingModel) : SimpleToolWindowPanel(false, false)
         const val STYLES_CSS = "styles.css"
     }
 
-
-
-    private val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigSate = ConfigCatApplicationConfig.getInstance().state
+//    private val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigSate = ConfigCatApplicationConfig.getInstance().state
 
     private val cefClient = JBCefApp.getInstance().createClient()
     private val jBCefBrowser: JBCefBrowser = JBCefBrowserBuilder()
         .setClient(cefClient)
-        .setUrl("https://test-api.configcat.com/")
+        .setUrl(appData.publicApiBaseUrl)
         .setEnableOpenDevToolsMenuItem(true)
         .setMouseWheelEventEnable(true)
         .build()
@@ -76,25 +76,13 @@ class ViewFlagPanel(setting: SettingModel) : SimpleToolWindowPanel(false, false)
                 if (JBCefApp.isSupported()) {
                     //TODO rewrite this and maybe the tool window as well to executeOnPooledThread
 
-//                    cefClient.setProperty("JS_QUERY_POOL_SIZE", 30)
+                    cefClient.setProperty("JS_QUERY_POOL_SIZE", 30)
 
                     //TODO view and appData fix
                     val viewData = ViewData("featureflagsetting") //TODO view data should be an enum or const
-                    val authConf = Constants.decodePublicApiConfiguration(stateConfig.authConfiguration)
+
                     //TODO not all data is the proper data here.
-                    val appData = AppData(
-                        stateConfig.publicApiBaseUrl,
-                        authConf.basicAuthUserName,
-                        authConf.basicAuthPassword,
-                        stateConfig.dashboardBaseUrl,
-                        "08daf7cd-a3a1-4697-8466-433f4463f8c1",
-                        "",
-                        setting.configId.toString(),
-                        "",
-                        "08dcaaf9-23ae-4f6f-804c-2069bdf34cb8",
-                        "v2",
-                        setting.settingId.toString()
-                    )
+
 
                     initiateCefRequestHandler(viewData, appData)
                     setupJavascriptCallback()
@@ -115,7 +103,7 @@ class ViewFlagPanel(setting: SettingModel) : SimpleToolWindowPanel(false, false)
         )
     }
 
-    private fun initiateCefRequestHandler(  viewData: ViewData, appData: AppData,) {
+    private fun initiateCefRequestHandler(  viewData: ViewData, appData: AppData) {
         val myRequestHandler = CefLocalRequestHandler(this)
         myRequestHandler.addResource(INDEX_HTML) {
             javaClass.classLoader.getResourceAsStream("${DIST_FOLDER_PATH}/${INDEX_HTML}")?.let {
@@ -155,6 +143,15 @@ class ViewFlagPanel(setting: SettingModel) : SimpleToolWindowPanel(false, false)
                     // TODO add is dev IF This should be only in development.
                     jBCefBrowser.openDevtools()
 
+                }
+
+                override fun onLoadEnd(browser: CefBrowser?, frame: CefFrame?, httpStatusCode: Int) {
+                    // fire ng load event
+                    browser?.executeJavaScript(
+                                "document.dispatchEvent(new Event('startNgLoad'));",
+                        browser.url,
+                        0,
+                    )
                 }
             },
             jBCefBrowser.cefBrowser,

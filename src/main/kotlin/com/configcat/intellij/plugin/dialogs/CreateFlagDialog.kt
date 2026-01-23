@@ -36,10 +36,6 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWr
         init()
     }
 
-//    override fun createActions(): Array<out Action?> {
-//
-//    }
-
     override fun createActions(): Array<out Action?> {
         val actions = super.createActions()
         return actions.remove(okAction);

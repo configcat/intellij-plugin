@@ -3,8 +3,11 @@ package com.configcat.intellij.plugin.actions
 import com.configcat.intellij.plugin.ConfigCatNotifier
 import com.configcat.intellij.plugin.Constants
 import com.configcat.intellij.plugin.ErrorHandler
+import com.configcat.intellij.plugin.dialogs.CreateConfigDialog
+import com.configcat.intellij.plugin.dialogs.EnvironmentSelectDialog
 import com.configcat.intellij.plugin.services.ConfigCatService
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
+import com.configcat.intellij.plugin.toolWindow.AppData
 import com.configcat.intellij.plugin.toolWindow.ConfigCatPanel
 import com.configcat.intellij.plugin.toolWindow.ConfigCatToolWindowFactory
 import com.configcat.intellij.plugin.toolWindow.ConfigNode
@@ -64,22 +67,26 @@ class OpenFeatureFlagAction : AnAction() {
             ErrorHandler.errorNotify(exception)
             return
         }
-        //TODO enviroment select ....should be a thing
-        val evaluationVersion = configParent.config.evaluationVersion ?: EvaluationVersion.V1
-        val orgId = productParent.product.organization?.organizationId
 
-        //TODO open what should be opened
-        e.project?.let {
-            val toolWindow =
-                ToolWindowManager.getInstance(it).getToolWindow(ConfigCatToolWindowFactory.CONFIGCAT_TOOL_WINDOW_ID)
-            //TODO try to add new panel .. hopefully closable with web view init
-//           //TODO this should be removed the View Action should create and add the content
-            val myToolWindow = ConfigCatToolWindowFactory.ConfigCatFeatureFlagsViewToolWindow(e.project!!, toolWindow!!, selectedNode.setting)
-            val content = ContentFactory.getInstance().createContent(myToolWindow.getContent(), selectedNode.setting.name, false)
-            content.isCloseable = true
-            toolWindow.contentManager.addContent(content)
-        }
+        val evaluationVersion = configParent.config.evaluationVersion
 
+        val authConf = Constants.decodePublicApiConfiguration(stateConfig.authConfiguration)
+
+        val appData = AppData(
+            stateConfig.publicApiBaseUrl,
+            authConf.basicAuthUserName,
+            authConf.basicAuthPassword,
+            stateConfig.dashboardBaseUrl,
+            productParent.product.productId.toString(),
+            "",
+            selectedNode.setting.configId.toString(),
+            "",
+            "",
+            evaluationVersion.toString(),
+            selectedNode.setting.settingId.toString()
+        )
+
+        EnvironmentSelectDialog(e.project, environments, appData, selectedNode.setting.name ).show()
     }
 
     override fun update(e: AnActionEvent) {
