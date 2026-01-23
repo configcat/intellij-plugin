@@ -3,7 +3,7 @@ import { CreateFeatureFlagComponent, LinkFeatureFlagParameters } from "ng-config
 import { AppData } from "../app-data";
 
 @Component({
-  selector: "configcat-vscode-create-feature-flag",
+  selector: "configcat-intellij-create-feature-flag",
   imports: [CreateFeatureFlagComponent],
   templateUrl: "./create-feature-flag-setting.component.html",
 })

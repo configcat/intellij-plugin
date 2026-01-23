@@ -4,7 +4,7 @@ import { FeatureFlagItemComponent, SettingItemComponent} from "ng-configcat-publ
 import { AppData } from "../app-data";
 
 @Component({
-  selector: "configcat-vscode-feature-flag-setting",
+  selector: "configcat-intellij-feature-flag-setting",
   imports: [SettingItemComponent, FeatureFlagItemComponent],
   templateUrl: "./feature-flag-setting.component.html",
 })
