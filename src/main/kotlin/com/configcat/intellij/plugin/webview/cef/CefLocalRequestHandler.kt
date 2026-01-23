@@ -66,9 +66,16 @@ class CefLocalRequestHandler(val parent: ViewFlagPanel) : CefRequestHandlerAdapt
         requestInitiator: String?,
         disableDefaultHandling: BoolRef?,
     ): CefResourceRequestHandler? {
-        println(request?.url)
+//        println(request?.url)
         if (request?.url.toString().startsWith(distPrefix, true)) {
             return resourceRequestHandler
+        }
+        if (isNavigation) {
+            //TODO find a way to handle link opens
+            println("Navigation URL")
+            println(request?.url)
+//           browser?.loadURL(request?.url)
+//            return resourceRequestHandler
         }
         return null
 

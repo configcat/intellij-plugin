@@ -74,14 +74,17 @@ class EnvironmentSelectDialog(val project: Project?, private val environments: L
 
     override fun doOKAction() {
         // set selected env id to appData and create FFView
-        appData.environmentId = (environmentsDropDown.selectedItem as EnvironmentDropDown).id
+        val selectedEnvironment = environmentsDropDown.selectedItem as EnvironmentDropDown
+        appData.environmentId = selectedEnvironment.id
         project?.let {
             val toolWindow =
                 ToolWindowManager.getInstance(it).getToolWindow(ConfigCatToolWindowFactory.CONFIGCAT_TOOL_WINDOW_ID)
             val myToolWindow = ConfigCatToolWindowFactory.ConfigCatFeatureFlagsViewToolWindow(project, toolWindow!!,appData )
-            val content = ContentFactory.getInstance().createContent(myToolWindow.getContent(), settingName, false)
+            val content = ContentFactory.getInstance().createContent(myToolWindow.getContent(),
+                "$settingName ($selectedEnvironment)", false)
             content.isCloseable = true
             toolWindow.contentManager.addContent(content)
+            toolWindow.contentManager.setSelectedContent(content)
         }
         super.doOKAction()
     }
