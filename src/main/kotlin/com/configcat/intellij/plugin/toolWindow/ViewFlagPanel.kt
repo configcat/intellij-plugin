@@ -5,6 +5,7 @@ import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.intellij.plugin.webview.cef.CefLocalRequestHandler
 import com.configcat.intellij.plugin.webview.cef.CefStreamResourceHandler
 import com.configcat.publicapi.java.client.model.SettingModel
+import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.openapi.util.Disposer
@@ -18,6 +19,10 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
+import org.cef.handler.CefDisplayHandler
+import org.cef.handler.CefLifeSpanHandler
+import org.cef.handler.CefLifeSpanHandlerAdapter
+import org.cef.handler.CefLoadHandler
 import org.cef.handler.CefLoadHandlerAdapter
 import org.cef.network.CefRequest
 import java.awt.BorderLayout
@@ -55,8 +60,6 @@ class ViewFlagPanel(appData: AppData) : SimpleToolWindowPanel(false, false), Dis
         const val STYLES_CSS = "styles.css"
     }
 
-//    private val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigSate = ConfigCatApplicationConfig.getInstance().state
-
     private val cefClient = JBCefApp.getInstance().createClient()
     private val jBCefBrowser: JBCefBrowser = JBCefBrowserBuilder()
         .setClient(cefClient)
@@ -75,16 +78,13 @@ class ViewFlagPanel(appData: AppData) : SimpleToolWindowPanel(false, false), Dis
                 alignmentY = TOP_ALIGNMENT
                 if (JBCefApp.isSupported()) {
                     //TODO rewrite this and maybe the tool window as well to executeOnPooledThread
-
                     cefClient.setProperty("JS_QUERY_POOL_SIZE", 30)
 
                     //TODO view and appData fix
                     val viewData = ViewData("featureflagsetting") //TODO view data should be an enum or const
 
-                    //TODO not all data is the proper data here.
-
-
                     initiateCefRequestHandler(viewData, appData)
+//                    jBCefBrowser.setOpenLinksInExternalBrowser(true)
                     setupJavascriptCallback()
 
                     jBCefBrowser.loadURL("${DIST_FOLDER_PATH}/${INDEX_HTML}")
@@ -130,6 +130,46 @@ class ViewFlagPanel(appData: AppData) : SimpleToolWindowPanel(false, false), Dis
             }
         }
         cefClient.addRequestHandler(myRequestHandler, jBCefBrowser.cefBrowser)
+
+        cefClient.addLifeSpanHandler(object: CefLifeSpanHandlerAdapter() {
+            override fun onBeforePopup(
+                browser: CefBrowser?,
+                frame: CefFrame?,
+                target_url: String?,
+                target_frame_name: String?
+            ): Boolean {
+                println("onBeforePopup $browser $target_url")
+                val superResult = super.onBeforePopup(browser, frame, target_url, target_frame_name)
+                println("superResult: $superResult")
+//                return superResult
+                //TODO this works.... but not nice .... think about it!
+                // Return true to cancel the popup and use the BrowserUtil.open based on the JBCefBrowserBase.enableExternalBrowserLinks
+                BrowserUtil.open(target_url!!)
+                return true
+            }
+
+            override fun onAfterCreated(browser: CefBrowser?) {
+                println("onAfterCreated $browser")
+                val superResult = super.onAfterCreated(browser)
+                println("superResult: $superResult")
+                return superResult
+            }
+
+            override fun onAfterParentChanged(browser: CefBrowser?) {
+                println("onAfterParentChanged $browser")
+                val superResult = super.onAfterParentChanged(browser)
+                println("superResult: $superResult")
+                return superResult
+            }
+
+            override fun onBeforeClose(browser: CefBrowser?) {
+                println("onBeforeClose $browser")
+                val superResult = super.onBeforeClose(browser)
+                println("superResult: $superResult")
+                return superResult
+            }
+
+        }, jBCefBrowser.cefBrowser)
     }
 
     private fun setupJavascriptCallback() {
@@ -140,12 +180,14 @@ class ViewFlagPanel(appData: AppData) : SimpleToolWindowPanel(false, false), Dis
                     frame: CefFrame?,
                     transitionType: CefRequest.TransitionType?
                 ) {
+                    println("onLoadStart transitionType = $transitionType")
                     // TODO add is dev IF This should be only in development.
                     jBCefBrowser.openDevtools()
 
                 }
 
                 override fun onLoadEnd(browser: CefBrowser?, frame: CefFrame?, httpStatusCode: Int) {
+                    println("onLoadEnd httpStatusCode = $httpStatusCode")
                     // fire ng load event
                     browser?.executeJavaScript(
                                 "document.dispatchEvent(new Event('startNgLoad'));",
