@@ -7,6 +7,7 @@ import { AppData } from "./app-data";
 
 export class ViewData {
   public view: "none" | "featureflagsetting" | "createfeatureflag" | "createconfig" = "none";
+  public initialTheme: "dark" | "light" = "dark";
 }
 
 declare global {

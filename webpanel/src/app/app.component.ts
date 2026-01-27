@@ -15,28 +15,20 @@ import { FeatureFlagSettingComponent } from "./feature-flag-setting/feature-flag
 export class AppComponent implements OnInit, OnDestroy {
 
   private readonly themeService = inject(ThemeService);
-  // private readonly document = inject(DOCUMENT);
   viewData = inject(ViewData);
 
-  title = "webpanel";
-
   postThemeChange = (event: MessageEvent<({ command: string; value: string })>) => {
-    if (!event.origin.startsWith("intellij-webview"))
-      return;
-    const message = event.data; // The JSON data our extension sent
+    const message = event.data;
     if (message.command === "themeChange") {
       const turnOn = message.value === "dark";
       this.themeService.setTheme(turnOn ? Theme.Dark : Theme.Light);
     }
-
-  };
+  }
 
   ngOnInit(): void {
-    //TODO fix theme change
-    // const vscodeThemeKind = this.document.body.getAttribute("data-vscode-theme-kind");
-    // if (vscodeThemeKind === "vscode-dark" || vscodeThemeKind === "vscode-high-contrast") {
-    //   this.themeService.setTheme(Theme.Dark);
-    // }
+    if (this.viewData.initialTheme === "dark") {
+      this.themeService.setTheme(Theme.Dark);
+    }
 
     window.addEventListener("message", this.postThemeChange);
   }

@@ -5,7 +5,10 @@ import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.intellij.plugin.webview.cef.CefLocalRequestHandler
 import com.configcat.intellij.plugin.webview.cef.CefStreamResourceHandler
 import com.configcat.publicapi.java.client.model.SettingModel
+import com.intellij.application.subscribe
 import com.intellij.ide.BrowserUtil
+import com.intellij.ide.ui.LafManager
+import com.intellij.ide.ui.LafManagerListener
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.openapi.util.Disposer
@@ -15,6 +18,7 @@ import com.intellij.ui.jcef.JBCefBrowser
 import com.intellij.ui.jcef.JBCefBrowserBase
 import com.intellij.ui.jcef.JBCefBrowserBuilder
 import com.intellij.ui.jcef.JBCefJSQuery
+import com.intellij.ui.jcef.executeJavaScript
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import org.cef.browser.CefBrowser
@@ -31,7 +35,8 @@ import javax.swing.JPanel
 
 @Serializable
 data class ViewData(
-    val view: String
+    val view: String,
+    val initialTheme: String
 )
 
 @Serializable
@@ -50,7 +55,7 @@ data class AppData(
 )
 //TODO where is the right place for AppData?
 
-class ViewFlagPanel(appData: AppData) : SimpleToolWindowPanel(false, false), Disposable {
+class ViewFlagPanel(appData: AppData) : SimpleToolWindowPanel(false, false), Disposable, LafManagerListener {
 
     companion object {
         const val DIST_FOLDER_PATH = "dist"
@@ -68,8 +73,11 @@ class ViewFlagPanel(appData: AppData) : SimpleToolWindowPanel(false, false), Dis
         .setMouseWheelEventEnable(true)
         .build()
     private val javaScriptEngineProxy: JBCefJSQuery = JBCefJSQuery.create(jBCefBrowser as JBCefBrowserBase)
-
+    private val lafManger = LafManager.getInstance()
     init {
+
+        LafManagerListener.TOPIC.subscribe(this, this)
+
         alignmentX = LEFT_ALIGNMENT
         alignmentY = TOP_ALIGNMENT
         add(
@@ -77,11 +85,10 @@ class ViewFlagPanel(appData: AppData) : SimpleToolWindowPanel(false, false), Dis
                 alignmentX = LEFT_ALIGNMENT
                 alignmentY = TOP_ALIGNMENT
                 if (JBCefApp.isSupported()) {
-                    //TODO rewrite this and maybe the tool window as well to executeOnPooledThread
                     cefClient.setProperty("JS_QUERY_POOL_SIZE", 30)
 
-                    //TODO view and appData fix
-                    val viewData = ViewData("featureflagsetting") //TODO view data should be an enum or const
+                    val theme = getCurrentTheme()
+                    val viewData = ViewData("featureflagsetting", theme ) //TODO view data should be an enum or const
 
                     initiateCefRequestHandler(viewData, appData)
 //                    jBCefBrowser.setOpenLinksInExternalBrowser(true)
@@ -201,5 +208,27 @@ class ViewFlagPanel(appData: AppData) : SimpleToolWindowPanel(false, false), Dis
     }
 
     override fun dispose() {
+    }
+
+    override fun lookAndFeelChanged(source: LafManager) {
+        println("lookAndFeelChanged $source")
+        println(source.lookAndFeelReference.themeId)
+        println(lafManger.currentUIThemeLookAndFeel.isDark)
+        val theme = getCurrentTheme()
+        val message = "{'command': 'themeChange', 'value': '$theme'}"
+        jBCefBrowser.cefBrowser.executeJavaScript(
+            "window.postMessage($message);",
+//            " var event = new Event('message',  { 'command': 'themeChange', 'value': '$theme' }); document.dispatchEvent(event);",
+            jBCefBrowser.cefBrowser.url,
+            0
+        )
+    }
+
+    private fun getCurrentTheme(): String {
+        var theme = "light"
+        if (lafManger.currentUIThemeLookAndFeel.isDark) {
+            theme = "dark"
+        }
+        return theme
     }
 }
