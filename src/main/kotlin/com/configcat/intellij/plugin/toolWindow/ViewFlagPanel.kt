@@ -59,10 +59,16 @@ class ViewFlagPanel(appData: AppData) : SimpleToolWindowPanel(false, false), Dis
 
     companion object {
         const val DIST_FOLDER_PATH = "dist"
+        const val ASSETS_IMAGES_FOLDER_PATH = "assets/images"
+        const val SETTING_TYPES_FOLDER_PATH = "setting-types"
         const val INDEX_HTML = "index.html"
         const val MAIN_JS = "main.js"
         const val POLYFILLS_JS = "polyfills.js"
         const val STYLES_CSS = "styles.css"
+        const val DECIMAL_SVG = "decimal.svg"
+        const val TEXT_SVG = "text.svg"
+        const val WHOLE_SVG = "whole.svg"
+        const val FEATURE_FLAG_SVG = "feature_flag.svg"
     }
 
     private val cefClient = JBCefApp.getInstance().createClient()
@@ -134,6 +140,26 @@ class ViewFlagPanel(appData: AppData) : SimpleToolWindowPanel(false, false), Dis
         myRequestHandler.addResource(STYLES_CSS) {
             javaClass.classLoader.getResourceAsStream("${DIST_FOLDER_PATH}/${STYLES_CSS}")?.let {
                 CefStreamResourceHandler(it, "text/css", this)
+            }
+        }
+        myRequestHandler.addResource(DECIMAL_SVG) {
+            javaClass.classLoader.getResourceAsStream("${DIST_FOLDER_PATH}/${ASSETS_IMAGES_FOLDER_PATH}/${SETTING_TYPES_FOLDER_PATH}/${DECIMAL_SVG}")?.let {
+                CefStreamResourceHandler(it, "image/svg+xml", this)
+            }
+        }
+        myRequestHandler.addResource(TEXT_SVG) {
+            javaClass.classLoader.getResourceAsStream("${DIST_FOLDER_PATH}/${ASSETS_IMAGES_FOLDER_PATH}/${SETTING_TYPES_FOLDER_PATH}/${TEXT_SVG}")?.let {
+                CefStreamResourceHandler(it, "image/svg+xml", this)
+            }
+        }
+        myRequestHandler.addResource(WHOLE_SVG) {
+            javaClass.classLoader.getResourceAsStream("${DIST_FOLDER_PATH}/${ASSETS_IMAGES_FOLDER_PATH}/${SETTING_TYPES_FOLDER_PATH}/${WHOLE_SVG}")?.let {
+                CefStreamResourceHandler(it, "image/svg+xml", this)
+            }
+        }
+        myRequestHandler.addResource(FEATURE_FLAG_SVG) {
+            javaClass.classLoader.getResourceAsStream("${DIST_FOLDER_PATH}/${ASSETS_IMAGES_FOLDER_PATH}/${SETTING_TYPES_FOLDER_PATH}/${FEATURE_FLAG_SVG}")?.let {
+                CefStreamResourceHandler(it, "image/svg+xml", this)
             }
         }
         cefClient.addRequestHandler(myRequestHandler, jBCefBrowser.cefBrowser)
@@ -211,14 +237,10 @@ class ViewFlagPanel(appData: AppData) : SimpleToolWindowPanel(false, false), Dis
     }
 
     override fun lookAndFeelChanged(source: LafManager) {
-        println("lookAndFeelChanged $source")
-        println(source.lookAndFeelReference.themeId)
-        println(lafManger.currentUIThemeLookAndFeel.isDark)
         val theme = getCurrentTheme()
         val message = "{'command': 'themeChange', 'value': '$theme'}"
         jBCefBrowser.cefBrowser.executeJavaScript(
             "window.postMessage($message);",
-//            " var event = new Event('message',  { 'command': 'themeChange', 'value': '$theme' }); document.dispatchEvent(event);",
             jBCefBrowser.cefBrowser.url,
             0
         )
