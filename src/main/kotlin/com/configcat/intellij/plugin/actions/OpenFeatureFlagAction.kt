@@ -3,31 +3,21 @@ package com.configcat.intellij.plugin.actions
 import com.configcat.intellij.plugin.ConfigCatNotifier
 import com.configcat.intellij.plugin.Constants
 import com.configcat.intellij.plugin.ErrorHandler
-import com.configcat.intellij.plugin.dialogs.CreateConfigDialog
+
 import com.configcat.intellij.plugin.dialogs.EnvironmentSelectDialog
 import com.configcat.intellij.plugin.services.ConfigCatService
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
-import com.configcat.intellij.plugin.toolWindow.AppData
 import com.configcat.intellij.plugin.toolWindow.ConfigCatPanel
-import com.configcat.intellij.plugin.toolWindow.ConfigCatToolWindowFactory
 import com.configcat.intellij.plugin.toolWindow.ConfigNode
 import com.configcat.intellij.plugin.toolWindow.FlagNode
 import com.configcat.intellij.plugin.toolWindow.ProductNode
-import com.configcat.intellij.plugin.toolWindow.ViewFlagPanel
+import com.configcat.intellij.plugin.webview.AppData
 import com.configcat.publicapi.java.client.ApiException
-import com.configcat.publicapi.java.client.model.EvaluationVersion
 
-import com.intellij.ide.browsers.BrowserLauncher
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.components.service
-import com.intellij.openapi.wm.ToolWindowManager
-import com.intellij.platform.ide.progress.ModalTaskOwner.project
-import com.intellij.ui.components.JBPanel
-import com.intellij.ui.content.ContentFactory
-import info.debatty.java.stringsimilarity.examples.nischay21
-import java.awt.BorderLayout
 import javax.swing.tree.DefaultMutableTreeNode
 
 

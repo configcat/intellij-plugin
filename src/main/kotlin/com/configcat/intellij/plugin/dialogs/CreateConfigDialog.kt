@@ -6,6 +6,8 @@ import com.configcat.intellij.plugin.ErrorHandler
 import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
 import com.configcat.intellij.plugin.services.ConfigCatService
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
+import com.configcat.intellij.plugin.webview.AppData
+import com.configcat.intellij.plugin.webview.WebViewPanel
 import com.configcat.publicapi.java.client.ApiException
 import com.configcat.publicapi.java.client.model.CreateConfigRequest
 import com.configcat.publicapi.java.client.model.EvaluationVersion
@@ -18,68 +20,55 @@ import com.intellij.openapi.ui.ValidationInfo
 import com.intellij.ui.dsl.builder.COLUMNS_MEDIUM
 import com.intellij.ui.dsl.builder.columns
 import com.intellij.ui.dsl.builder.panel
+import com.jetbrains.rd.util.remove
+import javax.swing.Action
 import javax.swing.JComponent
 import javax.swing.JTextField
 
 class CreateConfigDialog(val project: Project?, private val product: ProductModel): DialogWrapper(true) {
 
-    private val nameTextField = JTextField()
-    private val descriptionTextField = JTextField()
-
     init {
         title = "Create Config"
-        okAction.name="Create"
         init()
+    }
+
+    override fun createActions(): Array<out Action?> {
+        var actions = super.createActions()
+        actions = actions.remove(okAction);
+        actions = actions.remove(cancelAction);
+        return actions
     }
 
     override fun createCenterPanel(): JComponent {
 
-        val dialogPanel : DialogPanel = panel {
-            row{
-                text("Create a new Config in the ${product.name} Product.")
-            }
-            row("Name"){
-                cell(nameTextField)
-                    .validationOnInput {
-                        return@validationOnInput nameTextFieldValidation()
-                    }
-                    .validationOnApply {
-                        return@validationOnApply nameTextFieldValidation()
-                    }
-                    .columns(COLUMNS_MEDIUM)
-            }
-            row("Description"){
-                cell(descriptionTextField)
-                    .columns(COLUMNS_MEDIUM)
-            }
-        }
+        val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigSate =
+            ConfigCatApplicationConfig.getInstance().state
+        val authConf = Constants.decodePublicApiConfiguration(stateConfig.authConfiguration)
 
-        return dialogPanel
-    }
+        val appData = AppData(
+            stateConfig.publicApiBaseUrl,
+            authConf.basicAuthUserName,
+            authConf.basicAuthPassword,
+            stateConfig.dashboardBaseUrl,
+            product.productId.toString(),
+            product.name,
+            "",
+            "",
+            "",
+            "",
+            ""
+        )
 
-    fun nameTextFieldValidation(): ValidationInfo? {
-        if(nameTextField.text.isNullOrEmpty()){
-            return ValidationInfo("The field is required.", nameTextField)
-        }
-        if(nameTextField.text.length > INPUT_MAX_LENGTH){
-            return ValidationInfo("The field must be at max 255 characters long.", nameTextField)
-        }
-        return null
+        return WebViewPanel(appData, "createconfig")
     }
 
     override fun doOKAction() {
-        val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigSate = ConfigCatApplicationConfig.getInstance().state
 
         val productId = product.productId
 
-        val configsService = ConfigCatService.createConfigsService(Constants.decodePublicApiConfiguration(stateConfig.authConfiguration), stateConfig.publicApiBaseUrl)
-        val createConfigRequest =  CreateConfigRequest()
-        createConfigRequest.name = nameTextField.text
-        createConfigRequest.description = descriptionTextField.text
-        createConfigRequest.evaluationVersion = EvaluationVersion.V2
+//TODO this should be called from the webview
 
         try {
-            configsService.createConfig(productId, createConfigRequest)
             val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
             configCatNodeDataService.loadConfigs(productId)
         }catch (e:ApiException){

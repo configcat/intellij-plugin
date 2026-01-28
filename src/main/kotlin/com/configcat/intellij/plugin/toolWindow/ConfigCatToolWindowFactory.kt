@@ -1,6 +1,6 @@
 package com.configcat.intellij.plugin.toolWindow
 
-import com.configcat.publicapi.java.client.model.SettingModel
+import com.configcat.intellij.plugin.webview.AppData
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory

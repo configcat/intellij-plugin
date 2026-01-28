@@ -7,14 +7,18 @@ import com.configcat.intellij.plugin.ErrorHandler
 import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
 import com.configcat.intellij.plugin.services.ConfigCatService
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
+import com.configcat.intellij.plugin.webview.AppData
+import com.configcat.intellij.plugin.webview.WebViewPanel
 import com.configcat.publicapi.java.client.ApiException
 import com.configcat.publicapi.java.client.model.ConfigModel
 import com.configcat.publicapi.java.client.model.CreateSettingInitialValues
+import com.configcat.publicapi.java.client.model.ProductModel
 import com.configcat.publicapi.java.client.model.SettingType
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.ui.ValidationInfo
+import com.intellij.openapi.updateSettings.impl.Product
 import com.intellij.ui.SortedComboBoxModel
 import com.intellij.ui.dsl.builder.COLUMNS_MEDIUM
 import com.intellij.ui.dsl.builder.columns
@@ -26,10 +30,6 @@ import javax.swing.JTextField
 
 class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWrapper(true) {
 
-    private val nameTextField = JTextField()
-    private val keyTextField = JTextField()
-    private val hintTextField = JTextField()
-    private val flagTypeDropDown = ComboBox<SettingTypeDropDown>()
 
     init {
         title = "Create Flag"
@@ -37,116 +37,43 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWr
     }
 
     override fun createActions(): Array<out Action?> {
-        val actions = super.createActions()
-        return actions.remove(okAction);
+        var actions = super.createActions()
+        actions = actions.remove(okAction);
+        actions = actions.remove(cancelAction);
+        return actions
     }
 
     override fun createCenterPanel(): JComponent {
-        val settingTypes: List<SettingTypeDropDown> =  listOf(
-            SettingTypeDropDown("Feature Flag (boolean)", SettingType.BOOLEAN),
-            SettingTypeDropDown("Text (string)", SettingType.STRING),
-            SettingTypeDropDown("Whole number (integer)", SettingType.INT),
-            SettingTypeDropDown("Decimal number (double)", SettingType.DOUBLE),
+
+        val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigSate =
+            ConfigCatApplicationConfig.getInstance().state
+        val authConf = Constants.decodePublicApiConfiguration(stateConfig.authConfiguration)
+
+        val appData = AppData(
+            stateConfig.publicApiBaseUrl,
+            authConf.basicAuthUserName,
+            authConf.basicAuthPassword,
+            stateConfig.dashboardBaseUrl,
+            config.product.productId.toString(),
+            config.product.name,
+            config.configId.toString(),
+            config.name,
+            "",
+            "",
+            ""
         )
 
-        val settingTypeDropDownComparator =
-            Comparator<SettingTypeDropDown> { o1, o2 -> o1.compareTo(o2) }
-        val sortedComboBoxModel = SortedComboBoxModel(settingTypeDropDownComparator)
-        sortedComboBoxModel.addAll(settingTypes)
-        flagTypeDropDown.model = sortedComboBoxModel
-        flagTypeDropDown.selectedItem = settingTypes[0]
-
-        val dialogPanel  = panel {
-            row{
-                text("Create a new Setting in the ${config.name} Config.")
-            }
-            row("Setting type"){
-                cell(flagTypeDropDown)
-                    .validationOnInput {
-                       return@validationOnInput flagTypeDropDownValidation()
-                    }
-                    .validationOnApply {
-                        return@validationOnApply flagTypeDropDownValidation()
-                    }
-                    .columns(COLUMNS_MEDIUM)
-
-            }
-            row("Name for hoomans"){
-                cell(nameTextField)
-                    .validationOnInput {
-                       return@validationOnInput nameTextFieldValidation()
-                    }
-                    .validationOnApply {
-                        return@validationOnApply nameTextFieldValidation()
-                    }
-                    .columns(COLUMNS_MEDIUM)
-            }
-            row("Key for programs"){
-                cell(keyTextField)
-                    .validationOnInput {
-                        return@validationOnInput keyTextFieldValidation()
-                    }
-                    .validationOnApply {
-                        return@validationOnApply keyTextFieldValidation()
-                    }
-                    .columns(COLUMNS_MEDIUM)
-            }
-            row("Hint"){
-                cell(hintTextField)
-                    .columns(COLUMNS_MEDIUM)
-            }
-
-        }
-        return dialogPanel
-    }
-
-    fun nameTextFieldValidation(): ValidationInfo? {
-        if(nameTextField.text.isNullOrEmpty()){
-            return ValidationInfo("The field is required.", nameTextField)
-        }
-        if(nameTextField.text.length > INPUT_MAX_LENGTH){
-            return ValidationInfo("The field must be at max 255 characters long.", nameTextField)
-        }
-        return null
-    }
-
-    fun keyTextFieldValidation(): ValidationInfo? {
-        if(keyTextField.text.isNullOrEmpty()){
-            return ValidationInfo("The field is required.", keyTextField)
-        }
-        if(keyTextField.text.length > INPUT_MAX_LENGTH){
-            return ValidationInfo("The field must be at max 255 characters long.", keyTextField)
-        }
-        if(!FEATURE_FLAG_KEY_REGEX.toRegex().matches(keyTextField.text)){
-            return ValidationInfo("Invalid key. Keys must start with a letter, followed by a combination of numbers, letters, underscores and hyphens.", keyTextField)
-        }
-        return  null
-    }
-
-    fun flagTypeDropDownValidation(): ValidationInfo? {
-        if(flagTypeDropDown.model.selectedItem ==  null){
-            return ValidationInfo("Invalid Flag type.", flagTypeDropDown)
-        }
-        return null
+        return WebViewPanel(appData, "createfeatureflag")
     }
 
     override fun doOKAction() {
         super.doOKAction()
 
-        val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigSate = ConfigCatApplicationConfig.getInstance().state
-
         val configId = config.configId
 
-        val settingService = ConfigCatService.createFeatureFlagsSettingsService(Constants.decodePublicApiConfiguration(stateConfig.authConfiguration), stateConfig.publicApiBaseUrl)
-        val createSettingInitialValues =  CreateSettingInitialValues()
-        createSettingInitialValues.name = nameTextField.text
-        createSettingInitialValues.key = keyTextField.text
-        createSettingInitialValues.hint = hintTextField.text
-        val settingTypeDropDownValue = flagTypeDropDown.model.selectedItem as SettingTypeDropDown
-        createSettingInitialValues.settingType = settingTypeDropDownValue.type
+        //TODO this should be called from the WebView somehow
 
         try {
-            settingService.createSetting(configId, createSettingInitialValues)
             val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
             configCatNodeDataService.loadFlags(configId)
         }catch (e:ApiException){

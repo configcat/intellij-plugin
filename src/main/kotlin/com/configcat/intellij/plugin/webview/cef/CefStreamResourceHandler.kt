@@ -1,6 +1,7 @@
 package com.configcat.intellij.plugin.webview.cef
 
 import com.configcat.intellij.plugin.toolWindow.ViewFlagPanel
+import com.configcat.intellij.plugin.webview.WebViewPanel
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.util.Disposer
@@ -12,12 +13,13 @@ import org.cef.network.CefRequest
 import org.cef.network.CefResponse
 import java.io.IOException
 import java.io.InputStream
+import javax.swing.JPanel
 import kotlin.collections.iterator
 
 class CefStreamResourceHandler(
     private val myStream: InputStream,
     private val myMimeType: String,
-    parent: ViewFlagPanel,
+    parent: WebViewPanel,
     private val headers: Map<String, String> = mapOf(),
 ) : CefResourceHandler, Disposable {
     init {

@@ -1,10 +1,8 @@
 package com.configcat.intellij.plugin.dialogs
 
-import com.configcat.intellij.plugin.dialogs.CreateFlagDialog.SettingTypeDropDown
-import com.configcat.intellij.plugin.toolWindow.AppData
 import com.configcat.intellij.plugin.toolWindow.ConfigCatToolWindowFactory
+import com.configcat.intellij.plugin.webview.AppData
 import com.configcat.publicapi.java.client.model.EnvironmentModel
-import com.configcat.publicapi.java.client.model.SettingType
 import com.intellij.collaboration.ui.util.name
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
