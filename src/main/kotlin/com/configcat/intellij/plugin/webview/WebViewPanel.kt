@@ -1,7 +1,6 @@
 package com.configcat.intellij.plugin.webview
 
 import com.configcat.intellij.plugin.Constants
-import com.configcat.intellij.plugin.messaging.ConfigChangeNotifier
 import com.configcat.intellij.plugin.messaging.ThemeChangeNotifier
 import com.configcat.intellij.plugin.webview.cef.CefLocalRequestHandler
 import com.configcat.intellij.plugin.webview.cef.CefStreamResourceHandler
@@ -123,46 +122,46 @@ class WebViewPanel(project: Project, appData: AppData, viewType: String) : JPane
                     "window.CONFIGCAT_APP_VIEW = {};",
                     "window.CONFIGCAT_APP_VIEW = " + Constants.json.encodeToString(viewData) + ";"
                 )
-                CefStreamResourceHandler(rawHtml.byteInputStream(), "text/html", this)
+                CefStreamResourceHandler(rawHtml.byteInputStream(), "text/html")
             }
         }
         myRequestHandler.addResource(MAIN_JS) {
             javaClass.classLoader.getResourceAsStream("${DIST_FOLDER_PATH}/${MAIN_JS}")?.let {
-                CefStreamResourceHandler(it, "text/javascript", this)
+                CefStreamResourceHandler(it, "text/javascript")
             }
         }
         myRequestHandler.addResource(POLYFILLS_JS) {
             javaClass.classLoader.getResourceAsStream("${DIST_FOLDER_PATH}/${POLYFILLS_JS}")?.let {
-                CefStreamResourceHandler(it, "text/javascript", this)
+                CefStreamResourceHandler(it, "text/javascript")
             }
         }
         myRequestHandler.addResource(STYLES_CSS) {
             javaClass.classLoader.getResourceAsStream("${DIST_FOLDER_PATH}/${STYLES_CSS}")?.let {
-                CefStreamResourceHandler(it, "text/css", this)
+                CefStreamResourceHandler(it, "text/css")
             }
         }
         myRequestHandler.addResource(DECIMAL_SVG) {
             javaClass.classLoader.getResourceAsStream("${DIST_FOLDER_PATH}/${ASSETS_IMAGES_FOLDER_PATH}/${SETTING_TYPES_FOLDER_PATH}/${DECIMAL_SVG}")
                 ?.let {
-                    CefStreamResourceHandler(it, "image/svg+xml", this)
+                    CefStreamResourceHandler(it, "image/svg+xml")
                 }
         }
         myRequestHandler.addResource(TEXT_SVG) {
             javaClass.classLoader.getResourceAsStream("${DIST_FOLDER_PATH}/${ASSETS_IMAGES_FOLDER_PATH}/${SETTING_TYPES_FOLDER_PATH}/${TEXT_SVG}")
                 ?.let {
-                    CefStreamResourceHandler(it, "image/svg+xml", this)
+                    CefStreamResourceHandler(it, "image/svg+xml")
                 }
         }
         myRequestHandler.addResource(WHOLE_SVG) {
             javaClass.classLoader.getResourceAsStream("${DIST_FOLDER_PATH}/${ASSETS_IMAGES_FOLDER_PATH}/${SETTING_TYPES_FOLDER_PATH}/${WHOLE_SVG}")
                 ?.let {
-                    CefStreamResourceHandler(it, "image/svg+xml", this)
+                    CefStreamResourceHandler(it, "image/svg+xml")
                 }
         }
         myRequestHandler.addResource(FEATURE_FLAG_SVG) {
             javaClass.classLoader.getResourceAsStream("${DIST_FOLDER_PATH}/${ASSETS_IMAGES_FOLDER_PATH}/${SETTING_TYPES_FOLDER_PATH}/${FEATURE_FLAG_SVG}")
                 ?.let {
-                    CefStreamResourceHandler(it, "image/svg+xml", this)
+                    CefStreamResourceHandler(it, "image/svg+xml")
                 }
         }
         cefClient.addRequestHandler(myRequestHandler, jBCefBrowser.cefBrowser)
@@ -174,37 +173,10 @@ class WebViewPanel(project: Project, appData: AppData, viewType: String) : JPane
                 target_url: String?,
                 target_frame_name: String?
             ): Boolean {
-                println("onBeforePopup $browser $target_url")
-                val superResult = super.onBeforePopup(browser, frame, target_url, target_frame_name)
-                println("superResult: $superResult")
-//                return superResult
-                //TODO this works.... but not nice .... think about it!
                 // Return true to cancel the popup and use the BrowserUtil.open based on the JBCefBrowserBase.enableExternalBrowserLinks
                 BrowserUtil.open(target_url!!)
                 return true
             }
-
-            override fun onAfterCreated(browser: CefBrowser?) {
-                println("onAfterCreated $browser")
-                val superResult = super.onAfterCreated(browser)
-                println("superResult: $superResult")
-                return superResult
-            }
-
-            override fun onAfterParentChanged(browser: CefBrowser?) {
-                println("onAfterParentChanged $browser")
-                val superResult = super.onAfterParentChanged(browser)
-                println("superResult: $superResult")
-                return superResult
-            }
-
-            override fun onBeforeClose(browser: CefBrowser?) {
-                println("onBeforeClose $browser")
-                val superResult = super.onBeforeClose(browser)
-                println("superResult: $superResult")
-                return superResult
-            }
-
         }, jBCefBrowser.cefBrowser)
     }
 
@@ -216,14 +188,13 @@ class WebViewPanel(project: Project, appData: AppData, viewType: String) : JPane
                     frame: CefFrame?,
                     transitionType: CefRequest.TransitionType?
                 ) {
-                    println("onLoadStart transitionType = $transitionType")
-                    // TODO add is dev IF This should be only in development.
-                    jBCefBrowser.openDevtools()
+                    //TODO this should be a param. based on dev mode. consider the setEnableOpenDevToolsMenuItem
 
+                    // enable this if you need the devtools on load.
+                    // jBCefBrowser.openDevtools()
                 }
 
                 override fun onLoadEnd(browser: CefBrowser?, frame: CefFrame?, httpStatusCode: Int) {
-                    println("onLoadEnd httpStatusCode = $httpStatusCode")
                     // fire ng load event
                     browser?.executeJavaScript(
                         "document.dispatchEvent(new Event('startNgLoad'));",
@@ -237,7 +208,6 @@ class WebViewPanel(project: Project, appData: AppData, viewType: String) : JPane
     }
 
     fun lookAndFeelChanged() {
-        println("lookAndFeelChanged")
         val theme = getCurrentTheme()
         val message = "{'command': 'themeChange', 'value': '$theme'}"
         jBCefBrowser.cefBrowser.executeJavaScript(
@@ -259,7 +229,6 @@ class WebViewPanel(project: Project, appData: AppData, viewType: String) : JPane
         jBCefBrowser.dispose()
         cefClient.dispose()
         javaScriptEngineProxy.dispose()
-
     }
 }
 

@@ -1,7 +1,5 @@
 package com.configcat.intellij.plugin.webview.cef
 
-import com.configcat.intellij.plugin.toolWindow.ViewFlagPanel
-import com.configcat.intellij.plugin.webview.WebViewPanel
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.util.Disposer
@@ -18,12 +16,8 @@ import kotlin.collections.iterator
 class CefStreamResourceHandler(
     private val myStream: InputStream,
     private val myMimeType: String,
-    parent: WebViewPanel,
     private val headers: Map<String, String> = mapOf(),
 ) : CefResourceHandler, Disposable {
-//    init {
-//        Disposer.register(parent, this)
-//    }
 
     override fun processRequest(
         request: CefRequest,
@@ -56,7 +50,6 @@ class CefStreamResourceHandler(
             if (bytesRead.get() != -1) {
                 return true
             }
-
         } catch (e: IOException) {
             callback.cancel()
         }

@@ -61,29 +61,12 @@ class CefLocalRequestHandler(val parent: WebViewPanel) : CefRequestHandlerAdapte
         requestInitiator: String?,
         disableDefaultHandling: BoolRef?,
     ): CefResourceRequestHandler? {
-        println("getResourceRequestHandler requestUrl = ${request?.url} requesttransitionType ${request?.transitionType} ")
         if (request?.url.toString().startsWith(distPrefix, true)) {
             return resourceRequestHandler
         }
-
         return null
 
     }
-
-    override fun onOpenURLFromTab(
-        browser: CefBrowser?,
-        frame: CefFrame?,
-        target_url: String?,
-        user_gesture: Boolean
-    ): Boolean {
-        println("onOpenURLFromTab")
-        println("request url: $target_url")
-        val superResult =  super.onOpenURLFromTab(browser, frame, target_url, user_gesture)
-        println("superResult = $superResult")
-        return superResult
-    }
-
-
 
     override fun onBeforeBrowse(
         browser: CefBrowser?,
@@ -92,23 +75,14 @@ class CefLocalRequestHandler(val parent: WebViewPanel) : CefRequestHandlerAdapte
         user_gesture: Boolean,
         is_redirect: Boolean
     ): Boolean {
-        println("onBeforeBrowse")
-        println("request url: ${request?.url} rt:  ${request?.resourceType} tt ${request?.transitionType} ug: $user_gesture")
-        println(" browser = $browser ${browser?.url} ${browser?.isPopup} ${browser?.isClosed} ${browser?.isLoading} ${browser?.isClosing}")
         if (user_gesture) {
-            println("user_gesture and open")
             BrowserUtil.open(request?.url.toString())
             return true
         }
-
         if(request?.transitionType == CefRequest.TransitionType.TT_LINK) {
-            println("return true")
             return true
         }
 
-        val superResult = super.onBeforeBrowse(browser, frame, request, user_gesture, is_redirect)
-        println("superResult $superResult")
-
-        return superResult
+        return super.onBeforeBrowse(browser, frame, request, user_gesture, is_redirect)
     }
 }
