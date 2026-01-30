@@ -59,7 +59,7 @@ class CreateConfigDialog(val project: Project?, private val product: ProductMode
             ""
         )
 
-        return WebViewPanel(appData, "createconfig")
+        return WebViewPanel(project!!, appData, "createconfig")
     }
 
     override fun doOKAction() {

@@ -1,6 +1,5 @@
 package com.configcat.intellij.plugin.webview.cef
 
-import com.configcat.intellij.plugin.toolWindow.ViewFlagPanel
 import com.configcat.intellij.plugin.webview.WebViewPanel
 import com.intellij.ide.BrowserUtil
 import org.cef.browser.CefBrowser

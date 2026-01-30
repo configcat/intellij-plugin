@@ -13,6 +13,10 @@
         <applicationService serviceImplementation="com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig"/>
     </extensions>
 
+    <applicationListeners>
+        <listener class="com.configcat.intellij.plugin.webview.WebViewLafListener" topic="com.intellij.ide.ui.LafManagerListener"/>
+    </applicationListeners>
+
     <actions>
         <action class="com.configcat.intellij.plugin.actions.RefreshAction" icon="AllIcons.Actions.Refresh" id="CONFIGCAT_REFRESH_ACTION_ID" text="Refresh" description="Refresh ConfigCat products, configs and flags."/>
         <action class="com.configcat.intellij.plugin.actions.OpenInBrowserAction" icon="AllIcons.Actions.MoveTo2" id="CONFIGCAT_OPEN_IN_BROWSER_ACTION_ID" text="Open in Dashboard" description="Open in the ConfigCat Dashboard."/>

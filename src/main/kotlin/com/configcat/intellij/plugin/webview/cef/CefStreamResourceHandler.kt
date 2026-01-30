@@ -13,7 +13,6 @@ import org.cef.network.CefRequest
 import org.cef.network.CefResponse
 import java.io.IOException
 import java.io.InputStream
-import javax.swing.JPanel
 import kotlin.collections.iterator
 
 class CefStreamResourceHandler(
@@ -22,9 +21,9 @@ class CefStreamResourceHandler(
     parent: WebViewPanel,
     private val headers: Map<String, String> = mapOf(),
 ) : CefResourceHandler, Disposable {
-    init {
-        Disposer.register(parent, this)
-    }
+//    init {
+//        Disposer.register(parent, this)
+//    }
 
     override fun processRequest(
         request: CefRequest,

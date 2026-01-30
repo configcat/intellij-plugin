@@ -63,7 +63,7 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWr
             ""
         )
 
-        return WebViewPanel(appData, "createfeatureflag")
+        return WebViewPanel(project!!, appData, "createfeatureflag")
     }
 
     override fun doOKAction() {

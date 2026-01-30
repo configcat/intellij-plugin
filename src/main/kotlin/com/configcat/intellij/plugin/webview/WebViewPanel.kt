@@ -1,21 +1,22 @@
 package com.configcat.intellij.plugin.webview
 
 import com.configcat.intellij.plugin.Constants
+import com.configcat.intellij.plugin.messaging.ConfigChangeNotifier
+import com.configcat.intellij.plugin.messaging.ThemeChangeNotifier
 import com.configcat.intellij.plugin.webview.cef.CefLocalRequestHandler
 import com.configcat.intellij.plugin.webview.cef.CefStreamResourceHandler
-import com.intellij.application.subscribe
 import com.intellij.ide.BrowserUtil
 import com.intellij.ide.ui.LafManager
 import com.intellij.ide.ui.LafManagerListener
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.util.Disposer
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.project.Project
 import com.intellij.ui.components.Label
 import com.intellij.ui.jcef.JBCefApp
 import com.intellij.ui.jcef.JBCefBrowser
 import com.intellij.ui.jcef.JBCefBrowserBase
 import com.intellij.ui.jcef.JBCefBrowserBuilder
 import com.intellij.ui.jcef.JBCefJSQuery
-import com.intellij.ui.jcef.executeJavaScript
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import org.cef.browser.CefBrowser
@@ -48,7 +49,7 @@ data class ViewData(
     val initialTheme: String
 )
 
-class WebViewPanel(appData: AppData, viewType: String) : JPanel(), Disposable, LafManagerListener {
+class WebViewPanel(project: Project, appData: AppData, viewType: String) : JPanel(), Disposable {
 
     companion object {
         const val DIST_FOLDER_PATH = "dist"
@@ -75,8 +76,15 @@ class WebViewPanel(appData: AppData, viewType: String) : JPanel(), Disposable, L
     private val lafManger = LafManager.getInstance()
 
     init {
+        val handleThemeChange = object : ThemeChangeNotifier {
+            override fun notifyThemeChange() {
+                lookAndFeelChanged()
+            }
+        }
+        ApplicationManager.getApplication().messageBus.connect()
+            .subscribe(ThemeChangeNotifier.THEME_CHANGE_TOPIC, handleThemeChange)
 
-        LafManagerListener.TOPIC.subscribe(this, this)
+
         layout = CardLayout().apply {
             alignmentX = LEFT_ALIGNMENT
             alignmentY = TOP_ALIGNMENT
@@ -93,9 +101,6 @@ class WebViewPanel(appData: AppData, viewType: String) : JPanel(), Disposable, L
 
                 add(jBCefBrowser.component, BorderLayout.CENTER)
 
-                Disposer.register(this@WebViewPanel, jBCefBrowser)
-                Disposer.register(this@WebViewPanel, cefClient)
-                Disposer.register(this@WebViewPanel, javaScriptEngineProxy)
 
             } else {
                 //TODO better text ... talk to UI team. ps: message no support, check to turn on, or go to dashboard
@@ -231,7 +236,8 @@ class WebViewPanel(appData: AppData, viewType: String) : JPanel(), Disposable, L
         )
     }
 
-    override fun lookAndFeelChanged(source: LafManager) {
+    fun lookAndFeelChanged() {
+        println("lookAndFeelChanged")
         val theme = getCurrentTheme()
         val message = "{'command': 'themeChange', 'value': '$theme'}"
         jBCefBrowser.cefBrowser.executeJavaScript(
@@ -250,6 +256,18 @@ class WebViewPanel(appData: AppData, viewType: String) : JPanel(), Disposable, L
     }
 
     override fun dispose() {
-    }
+        jBCefBrowser.dispose()
+        cefClient.dispose()
+        javaScriptEngineProxy.dispose()
 
+    }
+}
+
+class WebViewLafListener(): LafManagerListener {
+
+    override fun lookAndFeelChanged(lafManager: LafManager) {
+        val publisher: ThemeChangeNotifier = ApplicationManager.getApplication().messageBus.syncPublisher(
+            ThemeChangeNotifier.THEME_CHANGE_TOPIC)
+        publisher.notifyThemeChange()
+    }
 }
