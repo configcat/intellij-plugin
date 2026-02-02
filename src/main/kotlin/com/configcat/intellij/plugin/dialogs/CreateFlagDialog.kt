@@ -1,35 +1,22 @@
 package com.configcat.intellij.plugin.dialogs
 
 import com.configcat.intellij.plugin.Constants
-import com.configcat.intellij.plugin.Constants.FEATURE_FLAG_KEY_REGEX
-import com.configcat.intellij.plugin.Constants.INPUT_MAX_LENGTH
 import com.configcat.intellij.plugin.ErrorHandler
 import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
-import com.configcat.intellij.plugin.services.ConfigCatService
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.intellij.plugin.webview.AppData
 import com.configcat.intellij.plugin.webview.WebViewPanel
 import com.configcat.publicapi.java.client.ApiException
 import com.configcat.publicapi.java.client.model.ConfigModel
-import com.configcat.publicapi.java.client.model.CreateSettingInitialValues
-import com.configcat.publicapi.java.client.model.ProductModel
 import com.configcat.publicapi.java.client.model.SettingType
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.DialogWrapper
-import com.intellij.openapi.ui.ValidationInfo
-import com.intellij.openapi.updateSettings.impl.Product
-import com.intellij.ui.SortedComboBoxModel
-import com.intellij.ui.dsl.builder.COLUMNS_MEDIUM
-import com.intellij.ui.dsl.builder.columns
-import com.intellij.ui.dsl.builder.panel
 import com.jetbrains.rd.util.remove
+import java.awt.EventQueue.invokeLater
 import javax.swing.Action
 import javax.swing.JComponent
-import javax.swing.JTextField
 
 class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWrapper(true) {
-
 
     init {
         title = "Create Flag"
@@ -62,17 +49,12 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWr
             "",
             ""
         )
-
-        return WebViewPanel(project!!, appData, "createfeatureflag")
+        return WebViewPanel(project!!, appData, "createfeatureflag", {returnId -> saveSuccess(returnId) })
     }
 
-    override fun doOKAction() {
-        super.doOKAction()
 
+    fun saveSuccess(returnId: String?): Unit {
         val configId = config.configId
-
-        //TODO this should be called from the WebView somehow
-
         try {
             val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
             configCatNodeDataService.loadFlags(configId)
@@ -80,6 +62,9 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWr
             ErrorHandler.errorNotify(e, "Flag create failed. For more information check the logs.", project)
         }
 
+        invokeLater {
+            close(OK_EXIT_CODE)
+        }
     }
 
     data class SettingTypeDropDown(val name: String, val type: SettingType) : Comparable<SettingTypeDropDown>{

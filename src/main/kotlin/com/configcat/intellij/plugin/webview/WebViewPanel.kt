@@ -48,7 +48,7 @@ data class ViewData(
     val initialTheme: String
 )
 
-class WebViewPanel(project: Project, appData: AppData, viewType: String) : JPanel(), Disposable {
+class WebViewPanel(project: Project, appData: AppData, viewType: String, val jsReceiverCallbackFunction: ((returnId: String?) -> Unit)?) : JPanel(), Disposable {
 
     companion object {
         const val DIST_FOLDER_PATH = "dist"
@@ -71,7 +71,7 @@ class WebViewPanel(project: Project, appData: AppData, viewType: String) : JPane
         .setEnableOpenDevToolsMenuItem(true)
         .setMouseWheelEventEnable(true)
         .build()
-    private val javaScriptEngineProxy: JBCefJSQuery = JBCefJSQuery.create(jBCefBrowser as JBCefBrowserBase)
+    private val jSQuery: JBCefJSQuery = checkNotNull(JBCefJSQuery.create(jBCefBrowser as JBCefBrowserBase))
     private val lafManger = LafManager.getInstance()
 
     init {
@@ -109,7 +109,7 @@ class WebViewPanel(project: Project, appData: AppData, viewType: String) : JPane
     }
 
     private fun initiateCefRequestHandler(viewData: ViewData, appData: AppData) {
-        val myRequestHandler = CefLocalRequestHandler(this)
+        val myRequestHandler = CefLocalRequestHandler()
         myRequestHandler.addResource(INDEX_HTML) {
             javaClass.classLoader.getResourceAsStream("${DIST_FOLDER_PATH}/${INDEX_HTML}")?.let {
                 //TODO make this nicer
@@ -180,7 +180,16 @@ class WebViewPanel(project: Project, appData: AppData, viewType: String) : JPane
         }, jBCefBrowser.cefBrowser)
     }
 
+    private fun receiveHandler(returnId: String?): JBCefJSQuery.Response? {
+        println("receive $returnId")
+        jsReceiverCallbackFunction?.invoke(returnId)
+        return null
+    }
+
     private fun setupJavascriptCallback() {
+
+        jSQuery.addHandler(::receiveHandler)
+
         jBCefBrowser.jbCefClient.addLoadHandler(
             object : CefLoadHandlerAdapter() {
                 override fun onLoadStart(
@@ -195,9 +204,13 @@ class WebViewPanel(project: Project, appData: AppData, viewType: String) : JPane
                 }
 
                 override fun onLoadEnd(browser: CefBrowser?, frame: CefFrame?, httpStatusCode: Int) {
-                    // fire ng load event
+                    // fire ng load event to properly renderer
+                    //override CONFIGCAT_SUCCESS_METHOD to make jsQuery calls
                     browser?.executeJavaScript(
-                        "document.dispatchEvent(new Event('startNgLoad'));",
+                        "document.dispatchEvent(new Event('startNgLoad'));" +
+                                "window['CONFIGCAT_SUCCESS_METHOD'] = function(returnId) {" +
+                                    jSQuery.inject("returnId") +
+                                "};",
                         browser.url,
                         0,
                     )
@@ -228,7 +241,7 @@ class WebViewPanel(project: Project, appData: AppData, viewType: String) : JPane
     override fun dispose() {
         jBCefBrowser.dispose()
         cefClient.dispose()
-        javaScriptEngineProxy.dispose()
+        jSQuery.dispose()
     }
 }
 

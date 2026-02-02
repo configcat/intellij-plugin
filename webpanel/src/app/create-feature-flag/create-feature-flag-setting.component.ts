@@ -11,6 +11,6 @@ export class CreateFeatureFlagSettingComponent {
   appData = inject(AppData);
 
   createFeatureFlag(linkFeatureFlagParameters: LinkFeatureFlagParameters) {
-    console.log("FF was created: " + linkFeatureFlagParameters.settingId);
+    window["CONFIGCAT_SUCCESS_METHOD"].call(this, linkFeatureFlagParameters.settingId.toString());
   }
 }

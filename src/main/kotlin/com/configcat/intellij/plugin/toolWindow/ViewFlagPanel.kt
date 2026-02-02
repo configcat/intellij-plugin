@@ -14,7 +14,7 @@ class ViewFlagPanel(project: Project, appData: AppData) : SimpleToolWindowPanel(
     init {
         alignmentX = LEFT_ALIGNMENT
         alignmentY = TOP_ALIGNMENT
-        val webViewPanel = WebViewPanel(project, appData,  "featureflagsetting")
+        val webViewPanel = WebViewPanel(project, appData,  "featureflagsetting", null)
         add(webViewPanel)
     }
 

@@ -12,6 +12,6 @@ export class ConfigCreateComponent {
   appData = inject(AppData);
 
   createConfig(configId: string) {
-   console.log("Config was created: " + configId);
+    window["CONFIGCAT_SUCCESS_METHOD"].call(this, configId);
   }
 }

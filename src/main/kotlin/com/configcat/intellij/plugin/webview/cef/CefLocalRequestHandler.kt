@@ -1,6 +1,6 @@
 package com.configcat.intellij.plugin.webview.cef
 
-import com.configcat.intellij.plugin.webview.WebViewPanel
+
 import com.intellij.ide.BrowserUtil
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
@@ -14,7 +14,7 @@ private typealias CefResourceProvider = () -> CefResourceHandler?
 
 private const val distPrefix = "http://dist"
 
-class CefLocalRequestHandler(val parent: WebViewPanel) : CefRequestHandlerAdapter() {
+class CefLocalRequestHandler() : CefRequestHandlerAdapter() {
     private val myResources: MutableMap<String, CefResourceProvider> = HashMap()
 
     private val rejectingResourceHandler: CefResourceHandler =
