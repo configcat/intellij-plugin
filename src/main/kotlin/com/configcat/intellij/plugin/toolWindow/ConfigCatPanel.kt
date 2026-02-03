@@ -50,7 +50,6 @@ class ConfigCatPanel(
             project.getService(ConfigCatPanel::class.java)
     }
 
-
     private val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigSate = ConfigCatApplicationConfig.getInstance().state
     private val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
     private var tree: Tree? = null
@@ -137,6 +136,7 @@ class ConfigCatPanel(
         val searchFlagKeyAction = actionManager.getAction(SearchFlagKeyAction.CONFIGCAT_SEARCH_FLAG_KEY_ACTION_ID)
         val copyFlagKeyAction = actionManager.getAction(CopyFlagKeyAction.CONFIGCAT_COPY_FLAG_KEY_ACTION_ID)
         val openFeatureFlagAction = actionManager.getAction(OpenFeatureFlagAction.CONFIGCAT_OPEN_FF_ACTION_ID)
+        val openHelpAction = actionManager.getAction(HelpAction.CONFIGCAT_HELP_ACTION_ID)
 
         toolbarActionGroup.add(refreshAction)
         toolbarActionGroup.add(createAction)
@@ -144,6 +144,7 @@ class ConfigCatPanel(
         toolbarActionGroup.add(searchFlagKeyAction)
         toolbarActionGroup.add(copyFlagKeyAction)
         toolbarActionGroup.add(openFeatureFlagAction)
+        toolbarActionGroup.add(openHelpAction)
 
         val actionPopup = DefaultActionGroup()
 

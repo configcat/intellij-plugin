@@ -30,8 +30,6 @@ class EnvironmentSelectDialog(val project: Project?, private val environments: L
 
     override fun createCenterPanel(): JComponent {
 
-        //TODO select env from dropdown
-        // return with env ID
         val environmentsDropDownComparator =
             Comparator<EnvironmentDropDown> { o1, o2 -> o1.id.compareTo(o2.id) }
         val sortedComboBoxModel = SortedComboBoxModel(environmentsDropDownComparator)

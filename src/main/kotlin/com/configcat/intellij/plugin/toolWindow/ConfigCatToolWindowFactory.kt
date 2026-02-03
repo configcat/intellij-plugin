@@ -21,11 +21,6 @@ class ConfigCatToolWindowFactory : ToolWindowFactory {
         val treeContent = ContentFactory.getInstance().createContent(treeToolWindow.getContent(), "Feature Flags & Settings", false)
         treeContent.isCloseable = false
         toolWindow.contentManager.addContent(treeContent)
-
-        val helpToolWindow = HelpToolWindow(project, toolWindow)
-        val helpContent = ContentFactory.getInstance().createContent(helpToolWindow.getContent(), "Help & Feedback", false)
-        helpContent.isCloseable = false
-        toolWindow.contentManager.addContent(helpContent)
     }
 
     override fun shouldBeAvailable(project: Project) = true
