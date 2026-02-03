@@ -3,7 +3,7 @@
 kotlin = "2.3.0"
 changelog = "2.5.0"
 intellijPlatform = "2.11.0"
-kover = "0.9.4"
+kover = "0.9.5"
 #libraries
 configcat = "2.1.0"
 kotlinx-serialization = "1.10.0"
