@@ -54,20 +54,16 @@ class OpenInBrowserAction: AnAction() {
                 ErrorHandler.errorNotify(exception)
                 return
             }
-            val evaluationVersion = configParent.config.evaluationVersion ?: EvaluationVersion.V1
-            val orgId = productParent.product.organization?.organizationId
-            url = if(evaluationVersion == EvaluationVersion.V1) {
-                if(environments.size < 1) {
-                    null
-                } else {
+            val evaluationVersion = configParent.config.evaluationVersion
+            val orgId = productParent.product.organization.organizationId
+            url = if(!environments.isEmpty()) {
+                if(evaluationVersion == EvaluationVersion.V1) {
                     stateConfig.dashboardBaseUrl + '/' + productParent.product.productId + '/' + configParent.config.configId + '/' + environments[0].environmentId + "?settingId=" + selectedNode.setting.settingId
-                }
-            } else {
-                if(environments.size < 1 || orgId == null) {
-                    null
                 } else {
                     stateConfig.dashboardBaseUrl + "/v2/" + orgId + '/' + productParent.product.productId + '/' + configParent.config.configId + '/' + environments[0].environmentId + '/' + selectedNode.setting.settingId
                 }
+            } else {
+                null
             }
 
         }
