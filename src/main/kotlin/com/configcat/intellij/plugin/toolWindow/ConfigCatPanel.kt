@@ -23,6 +23,8 @@ import com.intellij.ui.tree.AsyncTreeModel
 import com.intellij.ui.tree.StructureTreeModel
 import com.intellij.ui.treeStructure.Tree
 import com.intellij.util.ui.JBUI
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import java.awt.CardLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
@@ -39,7 +41,9 @@ import javax.swing.tree.TreeSelectionModel
 
 
 @Service(Service.Level.PROJECT)
-class ConfigCatPanel : SimpleToolWindowPanel(false, false), Disposable {
+class ConfigCatPanel(
+    private val cs: CoroutineScope
+) : SimpleToolWindowPanel(false, false), Disposable {
 
     companion object{
         fun getInstance(project: Project): ConfigCatPanel =
@@ -183,14 +187,28 @@ class ConfigCatPanel : SimpleToolWindowPanel(false, false), Disposable {
                 val userObject = treeNode.userObject
                 var reload = false
                 if (userObject is ProductNode) {
-                    reload = configCatNodeDataService.checkAndLoadConfigs(userObject.product.productId)
+                    cs.launch {
+                        reload = configCatNodeDataService.checkAndLoadConfigs(userObject.product.productId)
+                    }.invokeOnCompletion(
+                        {
+                            if(reload) {
+                                refreshTreeNode(treeNode)
+                            }
+                        }
+                    )
                 }
                 if (userObject is ConfigNode) {
-                    reload = configCatNodeDataService.checkAndLoadFlags(userObject.config.configId)
+                    cs.launch {
+                        reload = configCatNodeDataService.checkAndLoadFlags(userObject.config.configId)
+                    }.invokeOnCompletion(
+                        {
+                            if(reload) {
+                                refreshTreeNode(treeNode)
+                            }
+                        }
+                    )
                 }
-                if(reload) {
-                    refreshTreeNode(treeNode)
-                }
+
 
             }
 
