@@ -1,4 +1,4 @@
-package com.configcat.intellij.plugin.toolWindow
+package com.configcat.intellij.plugin.toolWindow.tree
 
 import com.intellij.ui.treeStructure.SimpleNode
 import com.intellij.ui.treeStructure.SimpleTreeStructure

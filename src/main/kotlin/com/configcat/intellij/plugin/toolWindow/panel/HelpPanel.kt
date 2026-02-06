@@ -1,4 +1,4 @@
-package com.configcat.intellij.plugin.toolWindow
+package com.configcat.intellij.plugin.toolWindow.panel
 
 import com.intellij.icons.AllIcons
 import com.intellij.ide.browsers.BrowserLauncher

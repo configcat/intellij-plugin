@@ -14,13 +14,15 @@ class RefreshAction: RefreshAction() {
     override fun actionPerformed(e: AnActionEvent) {
         // Reset the stored data and call reload on panel
         val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
-        configCatNodeDataService.resetData()
+        //TODO maybe separate the reset
+        configCatNodeDataService.resetProductConfigsData()
+        configCatNodeDataService.resetConfigsFlags()
         refreshPublish()
     }
 
     private fun refreshPublish() {
         val publisher: TreeChangeNotifier = ApplicationManager.getApplication().messageBus.syncPublisher(
-            TreeChangeNotifier.TREE_CHANGE_TOPIC)
+            TreeChangeNotifier.TREE_REFRESH_TOPIC)
         publisher.notifyTreeRefresh()
     }
 

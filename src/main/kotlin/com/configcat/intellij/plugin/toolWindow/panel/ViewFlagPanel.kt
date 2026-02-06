@@ -1,4 +1,4 @@
-package com.configcat.intellij.plugin.toolWindow
+package com.configcat.intellij.plugin.toolWindow.panel
 
 
 import com.configcat.intellij.plugin.webview.AppData

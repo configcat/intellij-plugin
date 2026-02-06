@@ -1,4 +1,4 @@
-package com.configcat.intellij.plugin.toolWindow
+package com.configcat.intellij.plugin.toolWindow.panel
 
 import com.configcat.intellij.plugin.Constants
 import com.configcat.intellij.plugin.ErrorHandler
@@ -9,6 +9,9 @@ import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
 import com.configcat.intellij.plugin.services.ConfigCatService
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.intellij.plugin.settings.ConfigCatConfigurable
+import com.configcat.intellij.plugin.toolWindow.tree.FlagTreeStructure
+import com.configcat.intellij.plugin.toolWindow.tree.ProductNode
+import com.configcat.intellij.plugin.toolWindow.tree.ProductRootNode
 import com.configcat.publicapi.java.client.ApiException
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.*
@@ -41,15 +44,16 @@ import javax.swing.tree.TreeSelectionModel
 
 
 @Service(Service.Level.PROJECT)
-class ConfigCatPanel(
+class ProductsConfigsPanel(
     private val cs: CoroutineScope
 ) : SimpleToolWindowPanel(false, false), Disposable {
 
     companion object{
-        fun getInstance(project: Project): ConfigCatPanel =
-            project.getService(ConfigCatPanel::class.java)
+        fun getInstance(project: Project): ProductsConfigsPanel =
+            project.getService(ProductsConfigsPanel::class.java)
     }
 
+    //TODO common tree panel?
     private val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigSate = ConfigCatApplicationConfig.getInstance().state
     private val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
     private var tree: Tree? = null
@@ -57,6 +61,7 @@ class ConfigCatPanel(
 
 
     init {
+        //TODO common tree panel?
         setContent( initContent())
         val handleConfigChange = object : ConfigChangeNotifier {
             override fun notifyConfigChange() {
@@ -76,7 +81,7 @@ class ConfigCatPanel(
             }
         }
         ApplicationManager.getApplication().messageBus.connect()
-            .subscribe(TreeChangeNotifier.TREE_CHANGE_TOPIC, handleTreeNotify)
+            .subscribe(TreeChangeNotifier.TREE_REFRESH_TOPIC, handleTreeNotify)
     }
 
     private fun initContent() : JComponent {
@@ -131,19 +136,15 @@ class ConfigCatPanel(
         toolbar = actionToolbar.component
 
         val refreshAction = actionManager.getAction(RefreshAction.CONFIGCAT_REFRESH_ACTION_ID)
-        val createAction = actionManager.getAction(CreateAction.CONFIGCAT_CREATE_ACTION_ID)
-        val openDashboardAction = actionManager.getAction(OpenInBrowserAction.CONFIGCAT_OPEN_IN_BROWSER_ACTION_ID)
-        val searchFlagKeyAction = actionManager.getAction(SearchFlagKeyAction.CONFIGCAT_SEARCH_FLAG_KEY_ACTION_ID)
-        val copyFlagKeyAction = actionManager.getAction(CopyFlagKeyAction.CONFIGCAT_COPY_FLAG_KEY_ACTION_ID)
-        val openFeatureFlagAction = actionManager.getAction(OpenFeatureFlagAction.CONFIGCAT_OPEN_FF_ACTION_ID)
+        val createAction = actionManager.getAction(ConfigCreateAction.CONFIGCAT_CONFIG_CREATE_ACTION_ID)
+        val openDashboardAction = actionManager.getAction(ConfigOpenInBrowserAction.CONFIGCAT_OPEN_CONFIG_IN_BROWSER_ACTION_ID)
+        val connectConfigAction = actionManager.getAction(ConfigConnectAction.CONFIGCAT_CONNECT_ACTION_ID)
         val openHelpAction = actionManager.getAction(HelpAction.CONFIGCAT_HELP_ACTION_ID)
 
         toolbarActionGroup.add(refreshAction)
         toolbarActionGroup.add(createAction)
         toolbarActionGroup.add(openDashboardAction)
-        toolbarActionGroup.add(searchFlagKeyAction)
-        toolbarActionGroup.add(copyFlagKeyAction)
-        toolbarActionGroup.add(openFeatureFlagAction)
+        toolbarActionGroup.add(connectConfigAction)
         toolbarActionGroup.add(openHelpAction)
 
         val actionPopup = DefaultActionGroup()
@@ -154,9 +155,7 @@ class ConfigCatPanel(
                 add(refreshAction)
                 add(createAction)
                 add(openDashboardAction)
-                add(searchFlagKeyAction)
-                add(copyFlagKeyAction)
-                add(openFeatureFlagAction)
+                add(connectConfigAction)
             },
             ActionPlaces.POPUP
         )
@@ -171,9 +170,9 @@ class ConfigCatPanel(
             ErrorHandler.errorNotify(exception)
             return
         }
-        configCatNodeDataService.resetData()
+        configCatNodeDataService.resetProductConfigsData()
 
-        val treeStructure = FlagTreeStructure(RootNode(products))
+        val treeStructure = FlagTreeStructure(ProductRootNode(products))
         val treeModel: StructureTreeModel<FlagTreeStructure> = StructureTreeModel(treeStructure, this)
         this.treeModel = treeModel
         val treeBuilder = AsyncTreeModel(treeModel, this)
@@ -198,19 +197,6 @@ class ConfigCatPanel(
                         }
                     )
                 }
-                if (userObject is ConfigNode) {
-                    cs.launch {
-                        reload = configCatNodeDataService.checkAndLoadFlags(userObject.config.configId)
-                    }.invokeOnCompletion(
-                        {
-                            if(reload) {
-                                refreshTreeNode(treeNode)
-                            }
-                        }
-                    )
-                }
-
-
             }
 
             override fun treeCollapsed(event: TreeExpansionEvent?) {
@@ -224,6 +210,7 @@ class ConfigCatPanel(
     }
 
     private fun refreshTree() {
+        //TODO configCatNodeDataService.resetProductConfigsData() should be called?
         tree?.let {
             val productsService = ConfigCatService.createProductsService(Constants.decodePublicApiConfiguration(stateConfig.authConfiguration), stateConfig.publicApiBaseUrl)
             val products = try {
@@ -232,7 +219,7 @@ class ConfigCatPanel(
                 ErrorHandler.errorNotify(exception)
                 return
             }
-            val treeStructure = FlagTreeStructure(RootNode(products))
+            val treeStructure = FlagTreeStructure(ProductRootNode(products))
             val treeModel = StructureTreeModel(treeStructure, this)
             val treeBuilder = AsyncTreeModel(treeModel, this)
             this.treeModel = treeModel

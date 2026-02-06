@@ -55,19 +55,6 @@ class ConfigCatNodeDataService {
         return productConfigs[productId]
     }
 
-    fun checkAndLoadFlags(configId: UUID?) : Boolean {
-        if(configId == null){
-            ConfigCatNotifier.Notify.error("Couldn't load the flags: Missing config ID.")
-            thisLogger().error("Couldn't load the flags: Missing config ID.")
-            return false
-        }
-        if(!configFlags.containsKey(configId)){
-            loadFlags(configId)
-        }
-        return true
-
-    }
-
     fun loadFlags(configId: UUID) {
         val featureFlagsSettingsService = ConfigCatService.createFeatureFlagsSettingsService(Constants.decodePublicApiConfiguration(stateConfig.authConfiguration), stateConfig.publicApiBaseUrl)
         val settings = try {
@@ -83,9 +70,11 @@ class ConfigCatNodeDataService {
         return configFlags[configId]
     }
 
-
-    fun resetData(){
-        productConfigs = mutableMapOf()
+    fun resetConfigsFlags() {
         configFlags = mutableMapOf()
+    }
+
+    fun resetProductConfigsData(){
+        productConfigs = mutableMapOf()
     }
 }

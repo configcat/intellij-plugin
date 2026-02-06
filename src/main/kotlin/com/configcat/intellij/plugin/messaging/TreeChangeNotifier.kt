@@ -12,8 +12,8 @@ interface TreeChangeNotifier {
 
     companion object {
         @Topic.AppLevel
-        val TREE_CHANGE_TOPIC: Topic<TreeChangeNotifier> = Topic.create(
-            "ConfigCat Config Changed",
+        val TREE_REFRESH_TOPIC: Topic<TreeChangeNotifier> = Topic.create(
+            "ConfigCat Tree Refresh",
             TreeChangeNotifier::class.java
         )
     }

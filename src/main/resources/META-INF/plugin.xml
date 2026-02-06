@@ -19,11 +19,14 @@
 
     <actions>
         <action class="com.configcat.intellij.plugin.actions.RefreshAction" icon="AllIcons.Actions.Refresh" id="CONFIGCAT_REFRESH_ACTION_ID" text="Refresh" description="Refresh ConfigCat products, configs and flags."/>
-        <action class="com.configcat.intellij.plugin.actions.OpenInBrowserAction" icon="AllIcons.Actions.MoveTo2" id="CONFIGCAT_OPEN_IN_BROWSER_ACTION_ID" text="Open in Dashboard" description="Open in the ConfigCat Dashboard."/>
-        <action class="com.configcat.intellij.plugin.actions.CopyFlagKeyAction" icon="AllIcons.Actions.Copy" id="CONFIGCAT_COPY_FLAG_KEY_ACTION_ID" text="Copy Key to Clipboard" description="Copy key to clipboard."/>
-        <action class="com.configcat.intellij.plugin.actions.SearchFlagKeyAction" icon="/icons/search.svg" id="CONFIGCAT_SEARCH_FLAG_KEY_ACTION_ID" text="Find Usage" description="Find Flag key usage in the code."/>
-        <action class="com.configcat.intellij.plugin.actions.CreateAction" icon="AllIcons.General.Add" id="CONFIGCAT_CREATE_ACTION_ID" text="Create" description="Create flags or configs."/>
-        <action class="com.configcat.intellij.plugin.actions.OpenFeatureFlagAction" icon="AllIcons.Actions.PreviewDetailsVertically" id="CONFIGCAT_OPEN_FF_ACTION_ID" text="View Feature Flag" description="View or update flag values."/>
+        <action class="com.configcat.intellij.plugin.actions.ConfigOpenInBrowserAction" icon="AllIcons.Actions.MoveTo2" id="CONFIGCAT_CONFIG_OPEN_IN_BROWSER_ACTION_ID" text="Open in Dashboard" description="Open in the ConfigCat Dashboard."/>
+        <action class="com.configcat.intellij.plugin.actions.FlagOpenInBrowserAction" icon="AllIcons.Actions.MoveTo2" id="CONFIGCAT_FLAG_OPEN_IN_BROWSER_ACTION_ID" text="Open in Dashboard" description="Open in the ConfigCat Dashboard."/>
+        <action class="com.configcat.intellij.plugin.actions.FlagKeyCopyAction" icon="AllIcons.Actions.Copy" id="CONFIGCAT_COPY_FLAG_KEY_ACTION_ID" text="Copy Key to Clipboard" description="Copy key to clipboard."/>
+        <action class="com.configcat.intellij.plugin.actions.FlagKeySearchAction" icon="/icons/search.svg" id="CONFIGCAT_SEARCH_FLAG_KEY_ACTION_ID" text="Find Usage" description="Find Flag key usage in the code."/>
+        <action class="com.configcat.intellij.plugin.actions.ConfigCreateAction" icon="AllIcons.General.Add" id="CONFIGCAT_CONFIG_CREATE_ACTION_ID" text="Create Config" description="Create config."/>
+        <action class="com.configcat.intellij.plugin.actions.FlagCreateAction" icon="AllIcons.General.Add" id="CONFIGCAT_FLAG_CREATE_ACTION_ID" text="Create Flag" description="Create flag."/>
+        <action class="com.configcat.intellij.plugin.actions.ConfigConnectAction" icon="/icons/connector.svg" id="CONFIGCAT_CONNECT_ACTION_ID" text="Connect Config" description="Connect config."/>
+        <action class="com.configcat.intellij.plugin.actions.FlagViewOpenAction" icon="AllIcons.Actions.PreviewDetailsVertically" id="CONFIGCAT_OPEN_FF_ACTION_ID" text="View Feature Flag" description="View or update flag values."/>
         <action class="com.configcat.intellij.plugin.actions.HelpAction" icon="AllIcons.Actions.Help" id="CONFIGCAT_HELP_ACTION_ID" text="Help and Feedback" description="Help and Feedback."/>
     </actions>
 

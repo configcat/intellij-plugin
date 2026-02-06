@@ -75,8 +75,8 @@ class EnvironmentSelectDialog(val project: Project?, private val environments: L
         project?.let {
             val toolWindow =
                 ToolWindowManager.getInstance(it).getToolWindow(ConfigCatToolWindowFactory.CONFIGCAT_TOOL_WINDOW_ID)
-            val myToolWindow = ConfigCatToolWindowFactory.ConfigCatFeatureFlagsViewToolWindow(project, toolWindow!!,appData )
-            val content = ContentFactory.getInstance().createContent(myToolWindow.getContent(),
+            val featureFlagsViewPanel = ConfigCatToolWindowFactory.ConfigCatFeatureFlagsViewToolWindow(project, toolWindow!!,appData )
+            val content = ContentFactory.getInstance().createContent(featureFlagsViewPanel.getContent(),
                 "$settingName ($selectedEnvironment)", false)
             content.isCloseable = true
             toolWindow.contentManager.addContent(content)

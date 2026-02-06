@@ -1,12 +1,14 @@
-package com.configcat.intellij.plugin.toolWindow
+package com.configcat.intellij.plugin.toolWindow.tree
 
 import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
 import com.configcat.publicapi.java.client.model.ConfigModel
 import com.configcat.publicapi.java.client.model.ProductModel
 import com.configcat.publicapi.java.client.model.SettingModel
 import com.intellij.ui.treeStructure.SimpleNode
+import com.jetbrains.rd.generator.nova.PredefinedType
+import kotlinx.coroutines.launch
 
-class RootNode(private val products: List<ProductModel>): SimpleNode() {
+class ProductRootNode(private val products: List<ProductModel>): SimpleNode() {
 
     private var productNodes: MutableList<SimpleNode> = ArrayList()
 
@@ -23,6 +25,26 @@ class RootNode(private val products: List<ProductModel>): SimpleNode() {
 
     override fun getName(): String {
         return "ConfigCat Products"
+    }
+}
+
+class ConfigRootNode(val flags: List<SettingModel>, val configName: String): SimpleNode() {
+
+    val flagNodes: MutableList<SimpleNode> = ArrayList()
+
+    override fun getChildren(): Array<SimpleNode> {
+            if(flags.isEmpty()) {
+                return arrayOf(InfoNode("No flags."))
+            } else {
+                for (flag in flags) {
+                    flagNodes.add(FlagNode(flag, this))
+                }
+                return flagNodes.toTypedArray()
+        }
+    }
+
+    override fun getName(): String {
+        return configName
     }
 }
 
@@ -64,24 +86,7 @@ class ConfigNode(val config: ConfigModel, parent: SimpleNode): SimpleNode(null, 
     }
 
     override fun getChildren(): Array<SimpleNode> {
-        val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
-
-        val configId = config.configId
-        val flags: List<SettingModel>? = configCatNodeDataService.getConfigFlags(configId)
-
-        if(flags == null) {
-            return arrayOf(InfoNode("Loading..."))
-        } else {
-            if(flags.isEmpty()) {
-                return arrayOf(InfoNode("No flags."))
-            } else {
-                val flagNodes: MutableList<SimpleNode> = ArrayList()
-                for (flag in flags) {
-                    flagNodes.add(FlagNode(flag, this))
-                }
-                return flagNodes.toTypedArray()
-            }
-        }
+        return NO_CHILDREN
     }
 
     override fun getName(): String {
