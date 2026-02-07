@@ -4,6 +4,8 @@ import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
 import com.configcat.publicapi.java.client.model.ConfigModel
 import com.configcat.publicapi.java.client.model.ProductModel
 import com.configcat.publicapi.java.client.model.SettingModel
+import com.intellij.ide.projectView.PresentationData
+import com.intellij.ui.SimpleTextAttributes
 import com.intellij.ui.treeStructure.SimpleNode
 import com.jetbrains.rd.generator.nova.PredefinedType
 import kotlinx.coroutines.launch
@@ -34,7 +36,8 @@ class ConfigRootNode(val flags: List<SettingModel>, val configName: String): Sim
 
     override fun getChildren(): Array<SimpleNode> {
             if(flags.isEmpty()) {
-                return arrayOf(InfoNode("No flags."))
+                val infoNode = InfoNode("No flags.")
+                return arrayOf(infoNode)
             } else {
                 for (flag in flags) {
                     flagNodes.add(FlagNode(flag, this))
@@ -101,6 +104,15 @@ class FlagNode(val setting: SettingModel, parent: SimpleNode): SimpleNode(null, 
         presentation.tooltip = setting.hint
     }
 
+    override fun doUpdate(presentation: PresentationData) {
+        if(setting.name.isEmpty() && setting.key.isEmpty()){
+            presentation.addText("<missing data>", SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES )
+        } else {
+            presentation.addText(setting.key, SimpleTextAttributes.REGULAR_BOLD_ATTRIBUTES)
+            presentation.addText(" (${setting.name})", SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES)
+        }
+    }
+
     override fun getChildren(): Array<SimpleNode> {
         return NO_CHILDREN
     }
@@ -115,6 +127,10 @@ class FlagNode(val setting: SettingModel, parent: SimpleNode): SimpleNode(null, 
 }
 
 class InfoNode(private val message: String): SimpleNode() {
+
+    override fun doUpdate(presentation: PresentationData) {
+        presentation.addText(message, SimpleTextAttributes.GRAY_ITALIC_ATTRIBUTES)
+    }
 
     override fun getChildren(): Array<SimpleNode> {
         return NO_CHILDREN
