@@ -24,7 +24,6 @@ class ConfigCatPropertiesService {
     }
 
     fun setConnectedConfig(configId: String) {
-        println("set config id: $configId")
         propertiesComponent.setValue(CONFIGCAT_CONNECTED_CONFIG_ID, configId)
     }
 

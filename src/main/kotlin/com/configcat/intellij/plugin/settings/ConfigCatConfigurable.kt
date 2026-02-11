@@ -13,9 +13,11 @@ import com.intellij.openapi.options.BoundConfigurable
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.openapi.ui.ValidationInfo
 import com.intellij.ui.dsl.builder.COLUMNS_MEDIUM
+import com.intellij.ui.dsl.builder.Cell
 import com.intellij.ui.dsl.builder.columns
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.layout.ValidationInfoBuilder
+import javax.swing.JEditorPane
 import javax.swing.JPasswordField
 import javax.swing.JTextField
 
@@ -27,6 +29,9 @@ class ConfigCatConfigurable(): BoundConfigurable(displayName = "ConfigCat Featur
     private val authPasswordField = JPasswordField()
     private val dashboardBaseUrlField = JTextField()
     private val publicApiBaseUrlField = JTextField()
+    private lateinit var comment: Cell<JEditorPane>
+
+    private val authenticationComment: String = "<a href=\"%S/my-account/public-api-credentials\">Get your Basic Auth user name and password</a> to access ConfigCat Public API. Note! Your ConfigCat account's email address and password will not work here."
 
     override fun createPanel(): DialogPanel {
         return panel {
@@ -42,9 +47,11 @@ class ConfigCatConfigurable(): BoundConfigurable(displayName = "ConfigCat Featur
                     cell(authPasswordField)
                         .columns(COLUMNS_MEDIUM)
                 }
-
                 row {
-                    comment("<a href=\"${stateConfig.dashboardBaseUrl}/my-account/public-api-credentials\">Get your Basic Auth user name and password</a> to access ConfigCat Public API. Note! Your ConfigCat account's email address and password will not work here.")
+                    comment =
+                        comment(authenticationComment.format(stateConfig.dashboardBaseUrl))
+
+
                 }
             }
             group("Plugin Settings" , true) {
@@ -119,6 +126,8 @@ class ConfigCatConfigurable(): BoundConfigurable(displayName = "ConfigCat Featur
         stateConfig.dashboardBaseUrl = dashboardBaseUrlField.text
         stateConfig.publicApiBaseUrl = publicApiBaseUrlField.text
         configChangedPublish()
+        comment.component.text = authenticationComment.format(stateConfig.dashboardBaseUrl)
+        comment.component.updateUI()
     }
 
     private fun configChangedPublish() {

@@ -109,7 +109,7 @@ class FlagNode(val setting: SettingModel, parent: SimpleNode): SimpleNode(null, 
             presentation.addText("<missing data>", SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES )
         } else {
             presentation.addText(setting.key, SimpleTextAttributes.REGULAR_BOLD_ATTRIBUTES)
-            presentation.addText(" (${setting.name})", SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES)
+            presentation.addText(" ${setting.name}", SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES)
         }
     }
 
