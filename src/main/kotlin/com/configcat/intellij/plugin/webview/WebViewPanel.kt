@@ -181,7 +181,6 @@ class WebViewPanel(project: Project, appData: AppData, viewType: String, val jsR
     }
 
     private fun receiveHandler(returnId: String?): JBCefJSQuery.Response? {
-        println("receive $returnId")
         jsReceiverCallbackFunction?.invoke(returnId)
         return null
     }

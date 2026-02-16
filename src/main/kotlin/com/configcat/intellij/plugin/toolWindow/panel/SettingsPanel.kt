@@ -261,6 +261,9 @@ class SettingsPanel(
 
     fun loadConnectedConfig(): ConfigModel? {
         val connectedConfigId = configCatPropertiesService.getConnectedConfig()
+        if(connectedConfigId == null) {
+            return null
+        }
         val configsService = ConfigCatService.createConfigsService(
             Constants.decodePublicApiConfiguration(stateConfig.authConfiguration),
             stateConfig.publicApiBaseUrl

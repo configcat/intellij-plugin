@@ -14,7 +14,10 @@ import com.configcat.intellij.plugin.toolWindow.tree.ProductNode
 import com.configcat.intellij.plugin.toolWindow.tree.ProductRootNode
 import com.configcat.publicapi.java.client.ApiException
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.actionSystem.*
+import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.openapi.actionSystem.ActionPlaces
+import com.intellij.openapi.actionSystem.ActionToolbar
+import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.options.ShowSettingsUtil
@@ -26,6 +29,8 @@ import com.intellij.ui.tree.AsyncTreeModel
 import com.intellij.ui.tree.StructureTreeModel
 import com.intellij.ui.treeStructure.Tree
 import com.intellij.util.ui.JBUI
+import com.intellij.util.ui.tree.TreeUtil
+import com.intellij.util.ui.tree.TreeUtil.collectExpandedPaths
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.awt.CardLayout
@@ -35,9 +40,10 @@ import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JPanel
-
 import javax.swing.event.TreeExpansionEvent
 import javax.swing.event.TreeExpansionListener
+import javax.swing.event.TreeModelEvent
+import javax.swing.event.TreeModelListener
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.TreePath
 import javax.swing.tree.TreeSelectionModel
@@ -45,7 +51,7 @@ import javax.swing.tree.TreeSelectionModel
 
 @Service(Service.Level.PROJECT)
 class ProductsConfigsPanel(
-    private val cs: CoroutineScope
+    private val cs: CoroutineScope,
 ) : SimpleToolWindowPanel(false, false), Disposable {
 
     companion object{
@@ -58,7 +64,7 @@ class ProductsConfigsPanel(
     private val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
     private var tree: Tree? = null
     private var treeModel: StructureTreeModel<FlagTreeStructure>? = null
-
+    private var expandedTreeNodes = mutableListOf<String>()
 
     init {
         //TODO common tree panel?
@@ -161,7 +167,6 @@ class ProductsConfigsPanel(
         )
     }
 
-
     private fun initTree() {
         val productsService = ConfigCatService.createProductsService(Constants.decodePublicApiConfiguration(stateConfig.authConfiguration), stateConfig.publicApiBaseUrl)
         val products = try {
@@ -172,7 +177,8 @@ class ProductsConfigsPanel(
         }
         configCatNodeDataService.resetProductConfigsData()
 
-        val treeStructure = FlagTreeStructure(ProductRootNode(products))
+        val rootNode = ProductRootNode(products)
+        val treeStructure = FlagTreeStructure(rootNode)
         val treeModel: StructureTreeModel<FlagTreeStructure> = StructureTreeModel(treeStructure, this)
         this.treeModel = treeModel
         val treeBuilder = AsyncTreeModel(treeModel, this)
@@ -187,8 +193,9 @@ class ProductsConfigsPanel(
                 val userObject = treeNode.userObject
                 var reload = false
                 if (userObject is ProductNode) {
+                    val productId = userObject.product.productId
                     cs.launch {
-                        reload = configCatNodeDataService.checkAndLoadConfigs(userObject.product.productId)
+                        reload = configCatNodeDataService.checkAndLoadConfigs(productId)
                     }.invokeOnCompletion(
                         {
                             if(reload) {
@@ -199,10 +206,10 @@ class ProductsConfigsPanel(
                 }
             }
 
-            override fun treeCollapsed(event: TreeExpansionEvent?) {
+            override fun treeCollapsed(event: TreeExpansionEvent) {
             }
-
         })
+
         this.tree = tree
     }
 
@@ -212,6 +219,17 @@ class ProductsConfigsPanel(
     private fun refreshTree() {
         //TODO configCatNodeDataService.resetProductConfigsData() should be called?
         tree?.let {
+            it.invalidate()
+            val collectExpandedPaths = collectExpandedPaths(it)
+            expandedTreeNodes = mutableListOf()
+            collectExpandedPaths.forEach { c ->
+                c.lastPathComponent?.let { lastpC ->
+                    val userObject = (lastpC as DefaultMutableTreeNode).userObject
+                    if(userObject is ProductNode) {
+                        expandedTreeNodes.add(userObject.product.productId.toString())
+                    }
+                }
+            }
             val productsService = ConfigCatService.createProductsService(Constants.decodePublicApiConfiguration(stateConfig.authConfiguration), stateConfig.publicApiBaseUrl)
             val products = try {
                 productsService.products
@@ -220,13 +238,36 @@ class ProductsConfigsPanel(
                 return
             }
             val treeStructure = FlagTreeStructure(ProductRootNode(products))
+
             val treeModel = StructureTreeModel(treeStructure, this)
             val treeBuilder = AsyncTreeModel(treeModel, this)
+            treeBuilder.addTreeModelListener( object : TreeModelListener {
+                override fun treeNodesChanged(e: TreeModelEvent?) {
+                }
+
+                override fun treeNodesInserted(e: TreeModelEvent?) {
+                    e?.children?.forEach { child ->
+                        val childUserObject = (child as DefaultMutableTreeNode).userObject
+                        if (childUserObject is ProductNode) {
+                            if(expandedTreeNodes.contains(childUserObject.product.productId.toString())) {
+                                TreeUtil.promiseExpand(it, TreeUtil.getPathFromRoot(child) )
+                            }
+                        }
+                    }
+                }
+
+                override fun treeNodesRemoved(e: TreeModelEvent?) {
+                }
+
+                override fun treeStructureChanged(e: TreeModelEvent?) {
+                }
+            })
             this.treeModel = treeModel
             it.model = treeBuilder
-            it.invalidate()
         }
+
     }
+
 
     private fun refreshTreeNode(node: DefaultMutableTreeNode) {
         treeModel?.invalidate(TreePath(node), true)

@@ -14,6 +14,10 @@ class ProductRootNode(private val products: List<ProductModel>): SimpleNode() {
 
     private var productNodes: MutableList<SimpleNode> = ArrayList()
 
+    override fun isAutoExpandNode(): Boolean {
+        return true
+    }
+
     override fun getChildren(): Array<SimpleNode> {
         if( products.isEmpty()) {
             return arrayOf(InfoNode("No products."))
@@ -57,6 +61,10 @@ class ProductNode(val product: ProductModel, parent: SimpleNode): SimpleNode(nul
         presentation.tooltip = product.description
     }
 
+    override fun isAutoExpandNode(): Boolean {
+        return true
+    }
+
     override fun getChildren(): Array<SimpleNode> {
         val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
         val productId = product.productId
@@ -79,13 +87,16 @@ class ProductNode(val product: ProductModel, parent: SimpleNode): SimpleNode(nul
     override fun getName(): String {
         return product.name
     }
-
 }
 
 class ConfigNode(val config: ConfigModel, parent: SimpleNode): SimpleNode(null, parent) {
 
     init {
         presentation.tooltip = config.description
+    }
+
+    override fun isAutoExpandNode(): Boolean {
+        return true
     }
 
     override fun getChildren(): Array<SimpleNode> {
