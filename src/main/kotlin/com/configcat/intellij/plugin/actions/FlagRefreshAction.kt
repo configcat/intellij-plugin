@@ -1,28 +1,26 @@
 package com.configcat.intellij.plugin.actions
 
-import com.configcat.intellij.plugin.messaging.TreeChangeNotifier
+import com.configcat.intellij.plugin.messaging.SettingsTreeChangeNotifier
 import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
 import com.intellij.ide.actions.RefreshAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
 
-class RefreshAction: RefreshAction() {
+class FlagRefreshAction: RefreshAction() {
     companion object {
-        const val CONFIGCAT_REFRESH_ACTION_ID = "CONFIGCAT_REFRESH_ACTION_ID"
+        const val CONFIGCAT_FLAG_REFRESH_ACTION_ID = "CONFIGCAT_FLAG_REFRESH_ACTION_ID"
     }
 
     override fun actionPerformed(e: AnActionEvent) {
         // Reset the stored data and call reload on panel
         val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
-        //TODO maybe separate the reset
-        configCatNodeDataService.resetProductConfigsData()
         configCatNodeDataService.resetConfigsFlags()
         refreshPublish()
     }
 
     private fun refreshPublish() {
-        val publisher: TreeChangeNotifier = ApplicationManager.getApplication().messageBus.syncPublisher(
-            TreeChangeNotifier.TREE_REFRESH_TOPIC)
+        val publisher: SettingsTreeChangeNotifier = ApplicationManager.getApplication().messageBus.syncPublisher(
+            SettingsTreeChangeNotifier.TREE_REFRESH_TOPIC)
         publisher.notifyTreeRefresh()
     }
 

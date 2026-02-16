@@ -4,7 +4,7 @@ import com.intellij.util.messages.Topic
 import javax.swing.tree.DefaultMutableTreeNode
 
 
-interface TreeChangeNotifier {
+interface SettingsTreeChangeNotifier {
 
     fun notifyTreeRefresh()
 
@@ -12,9 +12,9 @@ interface TreeChangeNotifier {
 
     companion object {
         @Topic.AppLevel
-        val TREE_REFRESH_TOPIC: Topic<TreeChangeNotifier> = Topic.create(
-            "ConfigCat Tree Refresh",
-            TreeChangeNotifier::class.java
+        val TREE_REFRESH_TOPIC: Topic<SettingsTreeChangeNotifier> = Topic.create(
+            "ConfigCat Settings Tree Refresh",
+            SettingsTreeChangeNotifier::class.java
         )
     }
 }

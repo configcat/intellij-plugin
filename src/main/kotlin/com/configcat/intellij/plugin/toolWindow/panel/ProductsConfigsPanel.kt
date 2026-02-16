@@ -4,7 +4,8 @@ import com.configcat.intellij.plugin.Constants
 import com.configcat.intellij.plugin.ErrorHandler
 import com.configcat.intellij.plugin.actions.*
 import com.configcat.intellij.plugin.messaging.ConfigChangeNotifier
-import com.configcat.intellij.plugin.messaging.TreeChangeNotifier
+import com.configcat.intellij.plugin.messaging.ProductsConfigsTreeChangeNotifier
+import com.configcat.intellij.plugin.messaging.SettingsTreeChangeNotifier
 import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
 import com.configcat.intellij.plugin.services.ConfigCatService
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
@@ -77,7 +78,7 @@ class ProductsConfigsPanel(
         ApplicationManager.getApplication().messageBus.connect()
             .subscribe(ConfigChangeNotifier.CONFIG_CHANGE_TOPIC, handleConfigChange)
 
-        val handleTreeNotify = object : TreeChangeNotifier {
+        val handleTreeNotify = object : ProductsConfigsTreeChangeNotifier {
             override fun notifyTreeRefresh() {
                 refreshTree()
             }
@@ -87,7 +88,7 @@ class ProductsConfigsPanel(
             }
         }
         ApplicationManager.getApplication().messageBus.connect()
-            .subscribe(TreeChangeNotifier.TREE_REFRESH_TOPIC, handleTreeNotify)
+            .subscribe(ProductsConfigsTreeChangeNotifier.TREE_REFRESH_TOPIC, handleTreeNotify)
     }
 
     private fun initContent() : JComponent {
@@ -141,7 +142,7 @@ class ProductsConfigsPanel(
         actionToolbar.targetComponent = panel
         toolbar = actionToolbar.component
 
-        val refreshAction = actionManager.getAction(RefreshAction.CONFIGCAT_REFRESH_ACTION_ID)
+        val refreshAction = actionManager.getAction(ConfigRefreshAction.CONFIGCAT_CONFIG_REFRESH_ACTION_ID)
         val createAction = actionManager.getAction(ConfigCreateAction.CONFIGCAT_CONFIG_CREATE_ACTION_ID)
         val openDashboardAction = actionManager.getAction(ConfigOpenInBrowserAction.CONFIGCAT_OPEN_CONFIG_IN_BROWSER_ACTION_ID)
         val connectConfigAction = actionManager.getAction(ConfigConnectAction.CONFIGCAT_CONNECT_ACTION_ID)
@@ -217,7 +218,6 @@ class ProductsConfigsPanel(
     }
 
     private fun refreshTree() {
-        //TODO configCatNodeDataService.resetProductConfigsData() should be called?
         tree?.let {
             it.invalidate()
             val collectExpandedPaths = collectExpandedPaths(it)

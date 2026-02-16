@@ -1,12 +1,8 @@
 package com.configcat.intellij.plugin.actions
 
-import com.configcat.intellij.plugin.messaging.TreeChangeNotifier
-import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
 import com.configcat.intellij.plugin.toolWindow.ConfigCatToolWindowFactory
-import com.configcat.intellij.plugin.toolWindow.ConfigCatToolWindowFactory.HelpToolWindow
 import com.intellij.ide.actions.RefreshAction
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.ui.content.ContentFactory
 

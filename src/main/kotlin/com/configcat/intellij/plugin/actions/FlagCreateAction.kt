@@ -1,17 +1,12 @@
 package com.configcat.intellij.plugin.actions
 
 import com.configcat.intellij.plugin.ConfigCatNotifier
-import com.configcat.intellij.plugin.dialogs.CreateConfigDialog
 import com.configcat.intellij.plugin.dialogs.CreateFlagDialog
-import com.configcat.intellij.plugin.messaging.TreeChangeNotifier
-import com.configcat.intellij.plugin.toolWindow.panel.ProductsConfigsPanel
+import com.configcat.intellij.plugin.messaging.SettingsTreeChangeNotifier
 import com.configcat.intellij.plugin.toolWindow.panel.SettingsPanel
-import com.configcat.intellij.plugin.toolWindow.tree.ConfigNode
-import com.configcat.intellij.plugin.toolWindow.tree.ProductNode
 import com.intellij.openapi.actionSystem.*
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
-import javax.swing.tree.DefaultMutableTreeNode
 
 
 class FlagCreateAction: AnAction() {
@@ -41,8 +36,8 @@ class FlagCreateAction: AnAction() {
     }
 
     private fun nodeRefreshPublish() {
-        val publisher: TreeChangeNotifier = ApplicationManager.getApplication().messageBus.syncPublisher(
-            TreeChangeNotifier.TREE_REFRESH_TOPIC)
+        val publisher: SettingsTreeChangeNotifier = ApplicationManager.getApplication().messageBus.syncPublisher(
+            SettingsTreeChangeNotifier.TREE_REFRESH_TOPIC)
         publisher.notifyTreeRefresh()
     }
 

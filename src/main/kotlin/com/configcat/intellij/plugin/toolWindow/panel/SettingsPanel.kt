@@ -5,7 +5,7 @@ import com.configcat.intellij.plugin.ErrorHandler
 import com.configcat.intellij.plugin.actions.*
 import com.configcat.intellij.plugin.messaging.ConfigChangeNotifier
 import com.configcat.intellij.plugin.messaging.ConnectedConfigChangeNotifier
-import com.configcat.intellij.plugin.messaging.TreeChangeNotifier
+import com.configcat.intellij.plugin.messaging.SettingsTreeChangeNotifier
 import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
 import com.configcat.intellij.plugin.services.ConfigCatPropertiesService
 import com.configcat.intellij.plugin.services.ConfigCatService
@@ -30,7 +30,6 @@ import com.intellij.ui.tree.StructureTreeModel
 import com.intellij.ui.treeStructure.Tree
 import com.intellij.util.ui.JBUI
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import java.awt.CardLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
@@ -82,7 +81,7 @@ class SettingsPanel(
         ApplicationManager.getApplication().messageBus.connect()
             .subscribe(ConnectedConfigChangeNotifier.CONNECTED_CONFIG_CHANGE_TOPIC, handleConnectedConfigChange)
 
-        val handleTreeNotify = object : TreeChangeNotifier {
+        val handleTreeNotify = object : SettingsTreeChangeNotifier {
             override fun notifyTreeRefresh() {
                 refreshTree()
             }
@@ -92,7 +91,7 @@ class SettingsPanel(
             }
         }
         ApplicationManager.getApplication().messageBus.connect()
-            .subscribe(TreeChangeNotifier.TREE_REFRESH_TOPIC, handleTreeNotify)
+            .subscribe(SettingsTreeChangeNotifier.TREE_REFRESH_TOPIC, handleTreeNotify)
     }
 
     private fun initContent(): JComponent {
@@ -174,7 +173,7 @@ class SettingsPanel(
         actionToolbar.targetComponent = panel
         toolbar = actionToolbar.component
 
-        val refreshAction = actionManager.getAction(RefreshAction.CONFIGCAT_REFRESH_ACTION_ID)
+        val refreshAction = actionManager.getAction(FlagRefreshAction.CONFIGCAT_FLAG_REFRESH_ACTION_ID)
         val createAction = actionManager.getAction(FlagCreateAction.CONFIGCAT_FLAG_CREATE_ACTION_ID)
         val openDashboardAction =
             actionManager.getAction(FlagOpenInBrowserAction.CONFIGCAT_FLAG_OPEN_CONFIG_IN_BROWSER_ACTION_ID)

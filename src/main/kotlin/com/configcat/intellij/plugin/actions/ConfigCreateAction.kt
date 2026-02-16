@@ -2,10 +2,9 @@ package com.configcat.intellij.plugin.actions
 
 import com.configcat.intellij.plugin.ConfigCatNotifier
 import com.configcat.intellij.plugin.dialogs.CreateConfigDialog
-import com.configcat.intellij.plugin.dialogs.CreateFlagDialog
-import com.configcat.intellij.plugin.messaging.TreeChangeNotifier
+import com.configcat.intellij.plugin.messaging.ProductsConfigsTreeChangeNotifier
+import com.configcat.intellij.plugin.messaging.SettingsTreeChangeNotifier
 import com.configcat.intellij.plugin.toolWindow.panel.ProductsConfigsPanel
-import com.configcat.intellij.plugin.toolWindow.tree.ConfigNode
 import com.configcat.intellij.plugin.toolWindow.tree.ProductNode
 import com.intellij.openapi.actionSystem.*
 import com.intellij.openapi.application.ApplicationManager
@@ -42,8 +41,8 @@ class ConfigCreateAction: AnAction() {
     }
 
     private fun nodeRefreshPublish(node: DefaultMutableTreeNode) {
-        val publisher: TreeChangeNotifier = ApplicationManager.getApplication().messageBus.syncPublisher(
-            TreeChangeNotifier.TREE_REFRESH_TOPIC)
+        val publisher: ProductsConfigsTreeChangeNotifier = ApplicationManager.getApplication().messageBus.syncPublisher(
+            ProductsConfigsTreeChangeNotifier.TREE_REFRESH_TOPIC)
         publisher.notifyTreeNodeRefresh(node)
     }
 
