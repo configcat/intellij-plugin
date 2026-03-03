@@ -12,6 +12,6 @@ export class ConfigCreateComponent {
   appData = inject(AppData);
 
   createConfig(configId: string) {
-    window["CONFIGCAT_SUCCESS_METHOD"].call(this, configId);
+    window["configCatSuccessMethod"].call(this, configId);
   }
 }

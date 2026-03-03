@@ -14,7 +14,7 @@ declare global {
   interface Window {
     CONFIGCAT_APPDATA: AppData;
     CONFIGCAT_APP_VIEW: ViewData;
-    CONFIGCAT_SUCCESS_METHOD: (arg0: string) => void;
+    configCatSuccessMethod: (arg0: string) => void;
   }
 }
 export const appConfig: ApplicationConfig = {

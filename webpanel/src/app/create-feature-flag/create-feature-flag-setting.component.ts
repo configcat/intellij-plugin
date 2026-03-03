@@ -11,6 +11,6 @@ export class CreateFeatureFlagSettingComponent {
   appData = inject(AppData);
 
   createFeatureFlag(linkFeatureFlagParameters: LinkFeatureFlagParameters) {
-    window["CONFIGCAT_SUCCESS_METHOD"].call(this, linkFeatureFlagParameters.settingId.toString());
+    window["configCatSuccessMethod"].call(this, linkFeatureFlagParameters.settingId.toString());
   }
 }

@@ -4,7 +4,7 @@ import { AppComponent } from "./app/app.component";
 import { appConfig } from "./app/app.config";
 import { environment } from "./environments/environment";
 
-document.addEventListener('startNgLoad', () => {
+document.addEventListener("startNgLoad", () => {
   if (environment.production) {
     enableProdMode();
   }

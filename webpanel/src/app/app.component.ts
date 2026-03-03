@@ -23,7 +23,7 @@ export class AppComponent implements OnInit, OnDestroy {
       const turnOn = message.value === "dark";
       this.themeService.setTheme(turnOn ? Theme.Dark : Theme.Light);
     }
-  }
+  };
 
   ngOnInit(): void {
     if (this.viewData.initialTheme === "dark") {

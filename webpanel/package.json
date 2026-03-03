@@ -4,7 +4,9 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build"
+    "build": "ng build",
+    "lint": "ng lint",
+    "lint-fix": "ng lint --fix"
   },
   "private": true,
   "dependencies": {
@@ -29,10 +31,21 @@
     "@angular/cli": "^21.1.4",
     "@angular/compiler-cli": "^21.1.4",
     "@rxweb/reactive-form-validators": "^13.0.1",
+    "@smarttools/eslint-plugin-rxjs": "^1.0.20",
+    "@stylistic/eslint-plugin": "^4.4.1",
     "@types/node": "^22.15.30",
     "ace-builds": "^1.37.0",
+    "angular-eslint": "21.2.0",
+    "eslint": "^9.33.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-sonarjs": "^3.0.4",
     "papaparse": "^5.5.3",
+    "prettier": "3.6.2",
     "ts-node": "~10.9.1",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.40.0"
+
   }
 }

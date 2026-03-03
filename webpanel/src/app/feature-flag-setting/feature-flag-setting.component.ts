@@ -1,6 +1,6 @@
-import {Component, inject, OnInit} from "@angular/core";
+import { Component, inject, OnInit } from "@angular/core";
 import { EvaluationVersion } from "ng-configcat-publicapi";
-import { FeatureFlagItemComponent, SettingItemComponent} from "ng-configcat-publicapi-ui";
+import { FeatureFlagItemComponent, SettingItemComponent } from "ng-configcat-publicapi-ui";
 import { AppData } from "../app-data";
 
 @Component({
@@ -17,6 +17,6 @@ export class FeatureFlagSettingComponent implements OnInit {
   EvaluationVersion = EvaluationVersion;
 
   saveFailed() {
-      console.log("FF save failed");
+    console.log("FF save failed");
   }
 }
