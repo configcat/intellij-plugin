@@ -241,7 +241,6 @@ class SettingsPanel(
             val settings = try {
                 featureFlagsSettingsService.getSettings(connectedConfig.configId)
             } catch (exception: ApiException) {
-
                 ErrorHandler.errorNotify(exception)
                 return
             }

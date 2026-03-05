@@ -1,5 +1,6 @@
 package com.configcat.intellij.plugin.dialogs
 
+import com.configcat.intellij.plugin.ConfigCatNotifier
 import com.configcat.intellij.plugin.Constants
 import com.configcat.intellij.plugin.ErrorHandler
 import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
@@ -56,6 +57,7 @@ class CreateConfigDialog(val project: Project?, private val product: ProductMode
     fun saveSuccess(returnId: String?): Unit {
         val productId = product.productId
         try {
+            ConfigCatNotifier.Notify.info("Config Successfully created.")
             val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
             configCatNodeDataService.loadConfigs(productId)
         }catch (e:ApiException){

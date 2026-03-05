@@ -7,6 +7,7 @@ import com.configcat.intellij.plugin.messaging.ConfigChangeNotifier
 import com.configcat.intellij.plugin.services.ConfigCatService
 import com.configcat.intellij.plugin.services.PublicApiConfiguration
 import com.configcat.publicapi.java.client.ApiException
+import com.intellij.icons.AllIcons
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.options.BoundConfigurable
@@ -14,6 +15,8 @@ import com.intellij.openapi.ui.DialogPanel
 import com.intellij.openapi.ui.ValidationInfo
 import com.intellij.ui.dsl.builder.COLUMNS_MEDIUM
 import com.intellij.ui.dsl.builder.Cell
+import com.intellij.ui.dsl.builder.Row
+import com.intellij.ui.dsl.builder.bindText
 import com.intellij.ui.dsl.builder.columns
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.layout.ValidationInfoBuilder
@@ -29,11 +32,14 @@ class ConfigCatConfigurable(): BoundConfigurable(displayName = "ConfigCat Featur
     private val authPasswordField = JPasswordField()
     private val dashboardBaseUrlField = JTextField()
     private val publicApiBaseUrlField = JTextField()
-    private lateinit var comment: Cell<JEditorPane>
+    private lateinit var commentAuthenticationGroup: Cell<JEditorPane>
+    private lateinit var loginFailedRow: Row
+
 
     private val authenticationComment: String = "<a href=\"%S/my-account/public-api-credentials\">Get your Basic Auth user name and password</a> to access ConfigCat Public API. Note! Your ConfigCat account's email address and password will not work here."
 
     override fun createPanel(): DialogPanel {
+
         return panel {
             group("Authentication" , true)  {
                 row {
@@ -48,16 +54,19 @@ class ConfigCatConfigurable(): BoundConfigurable(displayName = "ConfigCat Featur
                         .columns(COLUMNS_MEDIUM)
                 }
                 row {
-                    comment =
+                    commentAuthenticationGroup =
                         comment(authenticationComment.format(stateConfig.dashboardBaseUrl))
-
-
                 }
+                loginFailedRow = row() {
+                    icon(AllIcons.General.Error)
+                    text("Failed to authorize! Invalid Basic auth user name or password.")
+                }.visible(false)
             }
             group("Plugin Settings" , true) {
                 row("Dashboard Base URL") {
                     cell(dashboardBaseUrlField)
                         .columns(COLUMNS_MEDIUM)
+                        .bindText(stateConfig::dashboardBaseUrl)
                         .validationOnApply(urlValidation())
                         .validationOnInput(urlValidation())
 
@@ -97,7 +106,6 @@ class ConfigCatConfigurable(): BoundConfigurable(displayName = "ConfigCat Featur
 
     override fun apply() {
         super.apply()
-
         if(dashboardBaseUrlField.text.isEmpty()){
             ConfigCatNotifier.Notify.error("Dashboard Base URL cannot be empty.")
             return
@@ -117,8 +125,9 @@ class ConfigCatConfigurable(): BoundConfigurable(displayName = "ConfigCat Featur
                 val me = meService.me
                 ConfigCatNotifier.Notify.info("Logged in to ConfigCat. Email: ${me.email}")
             } catch (exception: ApiException) {
+                loginFailedRow.visible(true)
                 ErrorHandler.errorNotify(exception)
-                thisLogger().error("ConfigCat authorization failed.", exception)
+                thisLogger().error("ConfigCat Authentication failed.", exception)
                 return
             }
         }
@@ -126,8 +135,8 @@ class ConfigCatConfigurable(): BoundConfigurable(displayName = "ConfigCat Featur
         stateConfig.dashboardBaseUrl = dashboardBaseUrlField.text
         stateConfig.publicApiBaseUrl = publicApiBaseUrlField.text
         configChangedPublish()
-        comment.component.text = authenticationComment.format(stateConfig.dashboardBaseUrl)
-        comment.component.updateUI()
+        commentAuthenticationGroup.component.text = authenticationComment.format(stateConfig.dashboardBaseUrl)
+        commentAuthenticationGroup.component.updateUI()
     }
 
     private fun configChangedPublish() {

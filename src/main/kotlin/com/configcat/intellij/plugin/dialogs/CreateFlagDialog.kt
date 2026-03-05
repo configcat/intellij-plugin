@@ -1,5 +1,6 @@
 package com.configcat.intellij.plugin.dialogs
 
+import com.configcat.intellij.plugin.ConfigCatNotifier
 import com.configcat.intellij.plugin.Constants
 import com.configcat.intellij.plugin.ErrorHandler
 import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
@@ -56,6 +57,7 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWr
     fun saveSuccess(returnId: String?): Unit {
         val configId = config.configId
         try {
+            ConfigCatNotifier.Notify.info("Feature Flag Successfully created.")
             val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
             configCatNodeDataService.loadFlags(configId)
         }catch (e:ApiException){
