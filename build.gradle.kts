@@ -133,8 +133,8 @@ intellijPlatform {
                 select {
                     types = listOf(IntelliJPlatformType.IntellijIdea)
                     channels = listOf(ProductRelease.Channel.RELEASE)
-                    sinceBuild = "252"
-                    untilBuild = "252.*"
+                    sinceBuild = "253"
+                    untilBuild = "253.*"
                 }
         }
     }
