@@ -6,10 +6,7 @@ import com.configcat.intellij.plugin.ErrorHandler
 import com.configcat.intellij.plugin.services.ConfigCatService
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.intellij.plugin.toolWindow.panel.SettingsPanel
-import com.configcat.intellij.plugin.toolWindow.tree.ConfigNode
-import com.configcat.intellij.plugin.toolWindow.tree.ConfigRootNode
 import com.configcat.intellij.plugin.toolWindow.tree.FlagNode
-import com.configcat.intellij.plugin.toolWindow.tree.ProductNode
 import com.configcat.publicapi.java.client.ApiException
 import com.configcat.publicapi.java.client.model.EvaluationVersion
 

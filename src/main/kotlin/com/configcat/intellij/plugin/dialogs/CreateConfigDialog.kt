@@ -6,6 +6,7 @@ import com.configcat.intellij.plugin.ErrorHandler
 import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.intellij.plugin.webview.AppData
+import com.configcat.intellij.plugin.webview.VIEW_TYPE
 import com.configcat.intellij.plugin.webview.WebViewPanel
 import com.configcat.publicapi.java.client.ApiException
 import com.configcat.publicapi.java.client.model.ProductModel
@@ -51,7 +52,7 @@ class CreateConfigDialog(val project: Project?, private val product: ProductMode
             ""
         )
 
-        return WebViewPanel(project!!, appData, "createconfig", {returnId -> saveSuccess(returnId) })
+        return WebViewPanel(project!!, appData, VIEW_TYPE.CREATE_CONFIG, { returnId -> saveSuccess(returnId) })
     }
 
     fun saveSuccess(returnId: String?): Unit {

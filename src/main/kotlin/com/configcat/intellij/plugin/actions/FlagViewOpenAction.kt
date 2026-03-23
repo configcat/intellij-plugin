@@ -8,9 +8,7 @@ import com.configcat.intellij.plugin.dialogs.EnvironmentSelectDialog
 import com.configcat.intellij.plugin.services.ConfigCatService
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.intellij.plugin.toolWindow.panel.SettingsPanel
-import com.configcat.intellij.plugin.toolWindow.tree.ConfigNode
 import com.configcat.intellij.plugin.toolWindow.tree.FlagNode
-import com.configcat.intellij.plugin.toolWindow.tree.ProductNode
 import com.configcat.intellij.plugin.webview.AppData
 import com.configcat.publicapi.java.client.ApiException
 

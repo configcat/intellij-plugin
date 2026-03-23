@@ -60,7 +60,6 @@ class ProductsConfigsPanel(
             project.getService(ProductsConfigsPanel::class.java)
     }
 
-    //TODO common tree panel?
     private val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigSate = ConfigCatApplicationConfig.getInstance().state
     private val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
     private var tree: Tree? = null
@@ -68,7 +67,6 @@ class ProductsConfigsPanel(
     private var expandedTreeNodes = mutableListOf<String>()
 
     init {
-        //TODO common tree panel?
         setContent( initContent())
         val handleConfigChange = object : ConfigChangeNotifier {
             override fun notifyConfigChange() {
@@ -94,24 +92,7 @@ class ProductsConfigsPanel(
     private fun initContent() : JComponent {
         val content: JComponent = JPanel(CardLayout())
         if(!stateConfig.isConfigured()) {
-            content.add(
-                JPanel().apply {
-                    layout = GridBagLayout()
-                    val gbc = GridBagConstraints()
-                    gbc.insets = JBUI.insets(1)
-                    gbc.gridx = 0
-                    gbc.gridy = 0
-                    add(JLabel("Please configure the ConfigCat plugin."), gbc)
-                    gbc.gridx = 0
-                    gbc.gridy = 1
-
-                    add(JButton("Settings").apply {
-                        addActionListener {
-                            ShowSettingsUtil.getInstance().showSettingsDialog(null, ConfigCatConfigurable::class.java)
-                        }
-                    },  gbc)
-                }
-            )
+            content.add(ConfigurePluginPanel())
             resetTreeView()
             return content
         } else {

@@ -54,7 +54,16 @@ data class ViewData(
     val initialTheme: String
 )
 
-class WebViewPanel(project: Project, appData: AppData, viewType: String, val jsReceiverCallbackFunction: ((returnId: String?) -> Unit)?) : JPanel(), Disposable {
+enum class VIEW_TYPE(val type: String) {
+    CREATE_CONFIG("createconfig"),
+    CREATE_FLAG("createfeatureflag"),
+    VIEW_FLAG("featureflagsetting")
+}
+
+private const val WINDOW_CONFIGCAT_APPDATA = "window.CONFIGCAT_APPDATA ="
+private const val WINDOW_CONFIGCAT_APP_VIEW = "window.CONFIGCAT_APP_VIEW ="
+
+class WebViewPanel(project: Project, appData: AppData, viewType: VIEW_TYPE, val jsReceiverCallbackFunction: ((returnId: String?) -> Unit)?) : JPanel(), Disposable {
 
     companion object {
         const val DIST_FOLDER_PATH = "dist"
@@ -93,11 +102,11 @@ class WebViewPanel(project: Project, appData: AppData, viewType: String, val jsR
         layout = CardLayout().apply {
             alignmentX = LEFT_ALIGNMENT
             alignmentY = TOP_ALIGNMENT
-            if (false) {
+            if (JBCefApp.isSupported()) {
                 cefClient.setProperty("JS_QUERY_POOL_SIZE", 30)
 
                 val theme = getCurrentTheme()
-                val viewData = ViewData(viewType, theme ) //TODO view data should be an enum or const
+                val viewData = ViewData(viewType.type, theme )
 
                 initiateCefRequestHandler(viewData, appData)
                 setupJavascriptCallback()
@@ -130,34 +139,38 @@ class WebViewPanel(project: Project, appData: AppData, viewType: String, val jsR
         val myRequestHandler = CefLocalRequestHandler()
         myRequestHandler.addResource(INDEX_HTML) {
             javaClass.classLoader.getResourceAsStream("${DIST_FOLDER_PATH}/${INDEX_HTML}")?.let {
-                //TODO make this nicer
-                var rawHtml = it.readAllBytes().toString(Charsets.UTF_8)
-                rawHtml = rawHtml.replace(
-                    "window.CONFIGCAT_APPDATA = {};",
-                    "window.CONFIGCAT_APPDATA = " + Constants.json.encodeToString(appData) + ";"
+                // replace HTML placeholders with real data before providing the resource
+                val rawHtml = it.readAllBytes().toString(Charsets.UTF_8).replace(
+                    "$WINDOW_CONFIGCAT_APPDATA {};",
+                    "$WINDOW_CONFIGCAT_APPDATA " + Constants.json.encodeToString(appData) + ";"
+                ).replace(
+                    "$WINDOW_CONFIGCAT_APP_VIEW {};",
+                    "$WINDOW_CONFIGCAT_APP_VIEW " + Constants.json.encodeToString(viewData) + ";"
                 )
-                rawHtml = rawHtml.replace(
-                    "window.CONFIGCAT_APP_VIEW = {};",
-                    "window.CONFIGCAT_APP_VIEW = " + Constants.json.encodeToString(viewData) + ";"
-                )
+
                 CefStreamResourceHandler(rawHtml.byteInputStream(), "text/html")
             }
         }
+        // Main js load for index.html
         myRequestHandler.addResource(MAIN_JS) {
             javaClass.classLoader.getResourceAsStream("${DIST_FOLDER_PATH}/${MAIN_JS}")?.let {
                 CefStreamResourceHandler(it, "text/javascript")
             }
         }
+        // polyfills js load for index.html
         myRequestHandler.addResource(POLYFILLS_JS) {
             javaClass.classLoader.getResourceAsStream("${DIST_FOLDER_PATH}/${POLYFILLS_JS}")?.let {
                 CefStreamResourceHandler(it, "text/javascript")
             }
         }
+        // style csss load for index.html
         myRequestHandler.addResource(STYLES_CSS) {
             javaClass.classLoader.getResourceAsStream("${DIST_FOLDER_PATH}/${STYLES_CSS}")?.let {
                 CefStreamResourceHandler(it, "text/css")
             }
         }
+
+        // setting type image loads
         myRequestHandler.addResource(DECIMAL_SVG) {
             javaClass.classLoader.getResourceAsStream("${DIST_FOLDER_PATH}/${ASSETS_IMAGES_FOLDER_PATH}/${SETTING_TYPES_FOLDER_PATH}/${DECIMAL_SVG}")
                 ?.let {
@@ -214,8 +227,6 @@ class WebViewPanel(project: Project, appData: AppData, viewType: String, val jsR
                     frame: CefFrame?,
                     transitionType: CefRequest.TransitionType?
                 ) {
-                    //TODO this should be a param. based on dev mode. consider the setEnableOpenDevToolsMenuItem
-
                     // enable this if you need the devtools on load.
                     // jBCefBrowser.openDevtools()
                 }

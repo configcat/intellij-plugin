@@ -97,25 +97,7 @@ class SettingsPanel(
     private fun initContent(): JComponent {
         val content: JComponent = JPanel(CardLayout())
         if (!stateConfig.isConfigured()) {
-            content.add(
-                //TODO this panel could be common stuff
-                JPanel().apply {
-                    layout = GridBagLayout()
-                    val gbc = GridBagConstraints()
-                    gbc.insets = JBUI.insets(1)
-                    gbc.gridx = 0
-                    gbc.gridy = 0
-                    add(JLabel("Please configure the ConfigCat plugin."), gbc)
-                    gbc.gridx = 0
-                    gbc.gridy = 1
-
-                    add(JButton("Settings").apply {
-                        addActionListener {
-                            ShowSettingsUtil.getInstance().showSettingsDialog(null, ConfigCatConfigurable::class.java)
-                        }
-                    }, gbc)
-                }
-            )
+            content.add(ConfigurePluginPanel())
             resetTreeView()
             return content
         } else {
