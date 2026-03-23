@@ -2,6 +2,7 @@ import com.github.gradle.node.npm.task.NpmTask
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
+import org.jetbrains.intellij.platform.gradle.models.ProductRelease
 
 plugins {
     id("java") // Java support
@@ -57,7 +58,6 @@ dependencies {
         // Plugin Dependencies. Uses `platformPlugins` property from the gradle.properties file for plugin from JetBrains Marketplace.
         plugins(providers.gradleProperty("platformPlugins").map { it.split(',') })
 
-        instrumentationTools()
         pluginVerifier()
         zipSigner()
     }
@@ -121,12 +121,22 @@ intellijPlatform {
 
     pluginVerification {
         ides {
-                val productReleases = ProductReleasesValueSource().get()
-                val reducedProductReleases =
-                    if (productReleases.size > 2) listOf(productReleases.first(), productReleases.last())
-                    else productReleases
-                ides(reducedProductReleases)
-       }
+                create(IntelliJPlatformType.IntellijIdea,  providers.gradleProperty("platformVersion").get())
+                // To ease the load on GitHub WF we only verify on the first and last supported versions
+                // Update the version based on the gradle.properties changes
+                select {
+                    types = listOf(IntelliJPlatformType.IntellijIdea)
+                    channels = listOf(ProductRelease.Channel.RELEASE)
+                    sinceBuild = "241.1"
+                    untilBuild = "241.2"
+                }
+                select {
+                    types = listOf(IntelliJPlatformType.IntellijIdea)
+                    channels = listOf(ProductRelease.Channel.RELEASE)
+                    sinceBuild = "252"
+                    untilBuild = "252.*"
+                }
+        }
     }
 }
 
