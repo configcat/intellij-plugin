@@ -72,7 +72,7 @@ class FlagViewOpenAction : AnAction() {
             selectedNode.setting.settingId.toString()
         )
 
-        EnvironmentSelectDialog(e.project, environments, appData, selectedNode.setting.name ).show()
+        EnvironmentSelectDialog(e.project, environments, appData, selectedNode.setting.name).show()
     }
 
     override fun update(e: AnActionEvent) {
@@ -81,7 +81,7 @@ class FlagViewOpenAction : AnAction() {
         val configModel = e.project?.service<SettingsPanel>()?.getConnectedConfig()
 
         val selectedNode = selectedElement?.userObject
-        val isEnabled = selectedNode != null &&  selectedNode is FlagNode && configModel != null
+        val isEnabled = selectedNode != null && selectedNode is FlagNode && configModel != null
         e.presentation.isEnabled = isEnabled
         e.presentation.isVisible = true
     }

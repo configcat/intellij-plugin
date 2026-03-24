@@ -13,9 +13,9 @@ internal object ErrorHandler {
     }
 
     fun errorNotify(exception: ApiException, message: String?, project: Project?) {
-        val errorMessage: String = if(exception.code == 401) {
+        val errorMessage: String = if (exception.code == 401) {
             DEFAULT_AUTH_ERROR_MESSAGE
-        } else if(message.isNullOrEmpty()) {
+        } else if (message.isNullOrEmpty()) {
             thisLogger().error(DEFAULT_ERROR_MESSAGE, exception)
             DEFAULT_ERROR_MESSAGE
         } else {

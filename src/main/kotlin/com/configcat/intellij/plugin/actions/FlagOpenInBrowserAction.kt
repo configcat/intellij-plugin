@@ -79,7 +79,7 @@ class FlagOpenInBrowserAction : AnAction() {
         val configModel = e.project?.service<SettingsPanel>()?.getConnectedConfig()
 
         val selectedNode = selectedElement?.userObject
-        val isEnabled = (selectedNode != null &&  selectedNode is FlagNode) && configModel != null
+        val isEnabled = (selectedNode != null && selectedNode is FlagNode) && configModel != null
         e.presentation.isEnabled = isEnabled
         e.presentation.isVisible = true
     }

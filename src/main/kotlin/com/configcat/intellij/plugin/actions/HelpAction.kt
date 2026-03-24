@@ -6,7 +6,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.ui.content.ContentFactory
 
-class HelpAction: RefreshAction() {
+class HelpAction : RefreshAction() {
     companion object {
         const val CONFIGCAT_HELP_ACTION_ID = "CONFIGCAT_HELP_ACTION_ID"
     }
@@ -17,8 +17,10 @@ class HelpAction: RefreshAction() {
             val toolWindow =
                 ToolWindowManager.getInstance(it).getToolWindow(ConfigCatToolWindowFactory.CONFIGCAT_TOOL_WINDOW_ID)
             val myToolWindow = ConfigCatToolWindowFactory.HelpToolWindow(e.project!!, toolWindow!!)
-            val content = ContentFactory.getInstance().createContent(myToolWindow.getContent(),
-                "Help & Feedback", false)
+            val content = ContentFactory.getInstance().createContent(
+                myToolWindow.getContent(),
+                "Help & Feedback", false
+            )
             content.isCloseable = true
             toolWindow.contentManager.addContent(content)
             toolWindow.contentManager.setSelectedContent(content)

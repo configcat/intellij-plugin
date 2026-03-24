@@ -18,7 +18,7 @@ import javax.swing.Action
 import javax.swing.JComponent
 
 
-class CreateConfigDialog(val project: Project?, private val product: ProductModel): DialogWrapper(true) {
+class CreateConfigDialog(val project: Project?, private val product: ProductModel) : DialogWrapper(true) {
 
     init {
         title = "Create Config"
@@ -61,7 +61,7 @@ class CreateConfigDialog(val project: Project?, private val product: ProductMode
             ConfigCatNotifier.Notify.info("Config Successfully created.")
             val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
             configCatNodeDataService.loadConfigs(productId)
-        }catch (e:ApiException){
+        } catch (e: ApiException) {
             ErrorHandler.errorNotify(e, "Config create failed. For more information check the logs.", project)
         }
 

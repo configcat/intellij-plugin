@@ -11,15 +11,8 @@ import com.intellij.ide.ui.LafManagerListener
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
-import com.intellij.ui.components.Label
-import com.intellij.ui.components.labels.BoldLabel
 import com.intellij.ui.dsl.builder.panel
-import com.intellij.ui.jcef.JBCefApp
-import com.intellij.ui.jcef.JBCefBrowser
-import com.intellij.ui.jcef.JBCefBrowserBase
-import com.intellij.ui.jcef.JBCefBrowserBuilder
-import com.intellij.ui.jcef.JBCefJSQuery
-import com.intellij.util.IconUtil
+import com.intellij.ui.jcef.*
 import com.intellij.util.ui.JBFont
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -31,7 +24,6 @@ import org.cef.network.CefRequest
 import java.awt.BorderLayout
 import java.awt.CardLayout
 import javax.swing.JPanel
-import javax.swing.text.IconView
 
 @Serializable
 data class AppData(
@@ -51,7 +43,7 @@ data class AppData(
 @Serializable
 data class ViewData(
     val view: String,
-    val initialTheme: String
+    val initialTheme: String,
 )
 
 enum class VIEW_TYPE(val type: String) {
@@ -63,7 +55,12 @@ enum class VIEW_TYPE(val type: String) {
 private const val WINDOW_CONFIGCAT_APPDATA = "window.CONFIGCAT_APPDATA ="
 private const val WINDOW_CONFIGCAT_APP_VIEW = "window.CONFIGCAT_APP_VIEW ="
 
-class WebViewPanel(project: Project, appData: AppData, viewType: VIEW_TYPE, val jsReceiverCallbackFunction: ((returnId: String?) -> Unit)?) : JPanel(), Disposable {
+class WebViewPanel(
+    project: Project,
+    appData: AppData,
+    viewType: VIEW_TYPE,
+    val jsReceiverCallbackFunction: ((returnId: String?) -> Unit)?,
+) : JPanel(), Disposable {
 
     companion object {
         const val DIST_FOLDER_PATH = "dist"
@@ -106,7 +103,7 @@ class WebViewPanel(project: Project, appData: AppData, viewType: VIEW_TYPE, val 
                 cefClient.setProperty("JS_QUERY_POOL_SIZE", 30)
 
                 val theme = getCurrentTheme()
-                val viewData = ViewData(viewType.type, theme )
+                val viewData = ViewData(viewType.type, theme)
 
                 initiateCefRequestHandler(viewData, appData)
                 setupJavascriptCallback()
@@ -119,14 +116,16 @@ class WebViewPanel(project: Project, appData: AppData, viewType: VIEW_TYPE, val 
             } else {
                 add(
                     panel {
-                        row{
+                        row {
                             icon(AllIcons.General.Error)
-                            label("JCEF (Java Chromium Embedded Framework) is not supported.").applyToComponent { this.font = JBFont.h2()}
+                            label("JCEF (Java Chromium Embedded Framework) is not supported.").applyToComponent {
+                                this.font = JBFont.h2()
+                            }
                         }
-                        row{
+                        row {
                             text("This plugin requires JCEF to load web views. JCEF can be unsupported when the IDE started with an alternative JDK.")
                         }
-                        row{
+                        row {
                             text("You can still manage your Feature Flags on the <a href=\"https://app.configcat.com/\">ConfigCat Dashboard</a>.")
                         }
                     }
@@ -202,7 +201,7 @@ class WebViewPanel(project: Project, appData: AppData, viewType: VIEW_TYPE, val 
                 browser: CefBrowser?,
                 frame: CefFrame?,
                 target_url: String?,
-                target_frame_name: String?
+                target_frame_name: String?,
             ): Boolean {
                 // Return true to cancel the popup and use the BrowserUtil.open based on the JBCefBrowserBase.enableExternalBrowserLinks
                 BrowserUtil.open(target_url!!)
@@ -225,7 +224,7 @@ class WebViewPanel(project: Project, appData: AppData, viewType: VIEW_TYPE, val 
                 override fun onLoadStart(
                     browser: CefBrowser?,
                     frame: CefFrame?,
-                    transitionType: CefRequest.TransitionType?
+                    transitionType: CefRequest.TransitionType?,
                 ) {
                     // enable this if you need the devtools on load.
                     // jBCefBrowser.openDevtools()
@@ -237,7 +236,7 @@ class WebViewPanel(project: Project, appData: AppData, viewType: VIEW_TYPE, val 
                     browser?.executeJavaScript(
                         "document.dispatchEvent(new Event('startNgLoad'));" +
                                 "window['CONFIGCAT_SUCCESS_METHOD'] = function(returnId) {" +
-                                    jSQuery.inject("returnId") +
+                                jSQuery.inject("returnId") +
                                 "};",
                         browser.url,
                         0,
@@ -273,11 +272,12 @@ class WebViewPanel(project: Project, appData: AppData, viewType: VIEW_TYPE, val 
     }
 }
 
-class WebViewLafListener(): LafManagerListener {
+class WebViewLafListener() : LafManagerListener {
 
     override fun lookAndFeelChanged(lafManager: LafManager) {
         val publisher: ThemeChangeNotifier = ApplicationManager.getApplication().messageBus.syncPublisher(
-            ThemeChangeNotifier.THEME_CHANGE_TOPIC)
+            ThemeChangeNotifier.THEME_CHANGE_TOPIC
+        )
         publisher.notifyThemeChange()
     }
 }

@@ -11,8 +11,8 @@ class ConfigCatNotifier {
 
     internal object Notify {
 
-        fun error( content: String) {
-          error(null, content)
+        fun error(content: String) {
+            error(null, content)
         }
 
         fun error(project: Project?, content: String) {
@@ -23,7 +23,7 @@ class ConfigCatNotifier {
                 .notify(project)
         }
 
-        fun info( content: String) {
+        fun info(content: String) {
             NotificationGroupManager.getInstance()
                 .getNotificationGroup(CONFIGCAT_NOTIFICATION_GROUP)
                 .createNotification(CONFIGCAT_TITLE, content, NotificationType.INFORMATION)

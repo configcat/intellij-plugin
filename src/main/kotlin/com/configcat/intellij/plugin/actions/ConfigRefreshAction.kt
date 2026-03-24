@@ -1,13 +1,12 @@
 package com.configcat.intellij.plugin.actions
 
 import com.configcat.intellij.plugin.messaging.ProductsConfigsTreeChangeNotifier
-import com.configcat.intellij.plugin.messaging.SettingsTreeChangeNotifier
 import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
 import com.intellij.ide.actions.RefreshAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
 
-class ConfigRefreshAction: RefreshAction() {
+class ConfigRefreshAction : RefreshAction() {
     companion object {
         const val CONFIGCAT_CONFIG_REFRESH_ACTION_ID = "CONFIGCAT_CONFIG_REFRESH_ACTION_ID"
     }
@@ -21,7 +20,8 @@ class ConfigRefreshAction: RefreshAction() {
 
     private fun refreshPublish() {
         val publisher: ProductsConfigsTreeChangeNotifier = ApplicationManager.getApplication().messageBus.syncPublisher(
-            ProductsConfigsTreeChangeNotifier.TREE_REFRESH_TOPIC)
+            ProductsConfigsTreeChangeNotifier.TREE_REFRESH_TOPIC
+        )
         publisher.notifyTreeRefresh()
     }
 

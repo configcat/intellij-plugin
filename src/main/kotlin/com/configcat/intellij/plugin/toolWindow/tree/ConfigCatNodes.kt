@@ -7,10 +7,8 @@ import com.configcat.publicapi.java.client.model.SettingModel
 import com.intellij.ide.projectView.PresentationData
 import com.intellij.ui.SimpleTextAttributes
 import com.intellij.ui.treeStructure.SimpleNode
-import com.jetbrains.rd.generator.nova.PredefinedType
-import kotlinx.coroutines.launch
 
-class ProductRootNode(private val products: List<ProductModel>): SimpleNode() {
+class ProductRootNode(private val products: List<ProductModel>) : SimpleNode() {
 
     private var productNodes: MutableList<SimpleNode> = ArrayList()
 
@@ -19,11 +17,11 @@ class ProductRootNode(private val products: List<ProductModel>): SimpleNode() {
     }
 
     override fun getChildren(): Array<SimpleNode> {
-        if( products.isEmpty()) {
+        if (products.isEmpty()) {
             return arrayOf(InfoNode("No products."))
 
         }
-        for(product in products) {
+        for (product in products) {
             productNodes.add(ProductNode(product, this))
         }
         return productNodes.toTypedArray()
@@ -34,19 +32,19 @@ class ProductRootNode(private val products: List<ProductModel>): SimpleNode() {
     }
 }
 
-class ConfigRootNode(val flags: List<SettingModel>, val configName: String): SimpleNode() {
+class ConfigRootNode(val flags: List<SettingModel>, val configName: String) : SimpleNode() {
 
     val flagNodes: MutableList<SimpleNode> = ArrayList()
 
     override fun getChildren(): Array<SimpleNode> {
-            if(flags.isEmpty()) {
-                val infoNode = InfoNode("No flags.")
-                return arrayOf(infoNode)
-            } else {
-                for (flag in flags) {
-                    flagNodes.add(FlagNode(flag, this))
-                }
-                return flagNodes.toTypedArray()
+        if (flags.isEmpty()) {
+            val infoNode = InfoNode("No flags.")
+            return arrayOf(infoNode)
+        } else {
+            for (flag in flags) {
+                flagNodes.add(FlagNode(flag, this))
+            }
+            return flagNodes.toTypedArray()
         }
     }
 
@@ -55,7 +53,7 @@ class ConfigRootNode(val flags: List<SettingModel>, val configName: String): Sim
     }
 }
 
-class ProductNode(val product: ProductModel, parent: SimpleNode): SimpleNode(null, parent) {
+class ProductNode(val product: ProductModel, parent: SimpleNode) : SimpleNode(null, parent) {
 
     init {
         presentation.tooltip = product.description
@@ -69,10 +67,10 @@ class ProductNode(val product: ProductModel, parent: SimpleNode): SimpleNode(nul
         val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
         val productId = product.productId
         val configs: List<ConfigModel>? = configCatNodeDataService.getProductConfigs(productId)
-        if(configs == null) {
+        if (configs == null) {
             return arrayOf(InfoNode("Loading..."))
         } else {
-            if(configs.isEmpty()) {
+            if (configs.isEmpty()) {
                 return arrayOf(InfoNode("No configs."))
             } else {
                 val configNodes: MutableList<SimpleNode> = ArrayList()
@@ -89,7 +87,7 @@ class ProductNode(val product: ProductModel, parent: SimpleNode): SimpleNode(nul
     }
 }
 
-class ConfigNode(val config: ConfigModel, parent: SimpleNode): SimpleNode(null, parent) {
+class ConfigNode(val config: ConfigModel, parent: SimpleNode) : SimpleNode(null, parent) {
 
     init {
         presentation.tooltip = config.description
@@ -109,15 +107,15 @@ class ConfigNode(val config: ConfigModel, parent: SimpleNode): SimpleNode(null, 
 
 }
 
-class FlagNode(val setting: SettingModel, parent: SimpleNode): SimpleNode(null, parent) {
+class FlagNode(val setting: SettingModel, parent: SimpleNode) : SimpleNode(null, parent) {
 
     init {
         presentation.tooltip = setting.hint
     }
 
     override fun doUpdate(presentation: PresentationData) {
-        if(setting.name.isEmpty() && setting.key.isEmpty()){
-            presentation.addText("<missing data>", SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES )
+        if (setting.name.isEmpty() && setting.key.isEmpty()) {
+            presentation.addText("<missing data>", SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES)
         } else {
             presentation.addText(setting.key, SimpleTextAttributes.REGULAR_BOLD_ATTRIBUTES)
             presentation.addText(" ${setting.name}", SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES)
@@ -133,11 +131,11 @@ class FlagNode(val setting: SettingModel, parent: SimpleNode): SimpleNode(null, 
     }
 
     override fun getName(): String {
-        return if(setting.name.isEmpty() && setting.key.isEmpty())  "<missing data>" else  setting.key + " (${setting.name})"
+        return if (setting.name.isEmpty() && setting.key.isEmpty()) "<missing data>" else setting.key + " (${setting.name})"
     }
 }
 
-class InfoNode(private val message: String): SimpleNode() {
+class InfoNode(private val message: String) : SimpleNode() {
 
     override fun doUpdate(presentation: PresentationData) {
         presentation.addText(message, SimpleTextAttributes.GRAY_ITALIC_ATTRIBUTES)

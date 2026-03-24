@@ -15,7 +15,8 @@ import java.util.*
 @Service(Service.Level.APP)
 class ConfigCatNodeDataService {
 
-    private val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigSate = ConfigCatApplicationConfig.getInstance().state
+    private val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigSate =
+        ConfigCatApplicationConfig.getInstance().state
 
     private var productConfigs: MutableMap<UUID, List<ConfigModel>> = mutableMapOf()
     private var configFlags: MutableMap<UUID, List<SettingModel>> = mutableMapOf()
@@ -28,20 +29,23 @@ class ConfigCatNodeDataService {
         }
     }
 
-    fun checkAndLoadConfigs(productId: UUID?) : Boolean {
-        if(productId == null){
+    fun checkAndLoadConfigs(productId: UUID?): Boolean {
+        if (productId == null) {
             ConfigCatNotifier.Notify.error("Couldn't load the configs: Missing product ID.")
             thisLogger().error("Couldn't load the configs: Missing product ID.")
             return false
         }
-        if(!productConfigs.containsKey(productId)){
+        if (!productConfigs.containsKey(productId)) {
             loadConfigs(productId)
         }
         return true
     }
 
     fun loadConfigs(productId: UUID) {
-        val configsService = ConfigCatService.createConfigsService(Constants.decodePublicApiConfiguration(stateConfig.authConfiguration), stateConfig.publicApiBaseUrl)
+        val configsService = ConfigCatService.createConfigsService(
+            Constants.decodePublicApiConfiguration(stateConfig.authConfiguration),
+            stateConfig.publicApiBaseUrl
+        )
         val configs = try {
             configsService.getConfigs(productId)
         } catch (exception: ApiException) {
@@ -51,12 +55,15 @@ class ConfigCatNodeDataService {
         productConfigs[productId] = configs
     }
 
-    fun getProductConfigs(productId: UUID) : List<ConfigModel>? {
+    fun getProductConfigs(productId: UUID): List<ConfigModel>? {
         return productConfigs[productId]
     }
 
     fun loadFlags(configId: UUID) {
-        val featureFlagsSettingsService = ConfigCatService.createFeatureFlagsSettingsService(Constants.decodePublicApiConfiguration(stateConfig.authConfiguration), stateConfig.publicApiBaseUrl)
+        val featureFlagsSettingsService = ConfigCatService.createFeatureFlagsSettingsService(
+            Constants.decodePublicApiConfiguration(stateConfig.authConfiguration),
+            stateConfig.publicApiBaseUrl
+        )
         val settings = try {
             featureFlagsSettingsService.getSettings(configId)
         } catch (exception: ApiException) {
@@ -66,7 +73,7 @@ class ConfigCatNodeDataService {
         configFlags[configId] = settings
     }
 
-    fun getConfigFlags(configId: UUID) : List<SettingModel>? {
+    fun getConfigFlags(configId: UUID): List<SettingModel>? {
         return configFlags[configId]
     }
 
@@ -74,7 +81,7 @@ class ConfigCatNodeDataService {
         configFlags = mutableMapOf()
     }
 
-    fun resetProductConfigsData(){
+    fun resetProductConfigsData() {
         productConfigs = mutableMapOf()
     }
 }

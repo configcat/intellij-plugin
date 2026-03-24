@@ -34,7 +34,10 @@ class ConfigCatService {
             return ConfigsApi(apiClient)
         }
 
-        fun createFeatureFlagsSettingsService(authConfig: PublicApiConfiguration, basePath: String): FeatureFlagsSettingsApi {
+        fun createFeatureFlagsSettingsService(
+            authConfig: PublicApiConfiguration,
+            basePath: String,
+        ): FeatureFlagsSettingsApi {
             val apiClient = ApiClient()
             apiClient.setBasePath(basePath)
             apiClient.setUsername(authConfig.basicAuthUserName)

@@ -1,6 +1,5 @@
 package com.configcat.intellij.plugin.services
 
-import com.configcat.publicapi.java.client.model.ConfigModel
 import com.intellij.ide.util.PropertiesComponent
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service

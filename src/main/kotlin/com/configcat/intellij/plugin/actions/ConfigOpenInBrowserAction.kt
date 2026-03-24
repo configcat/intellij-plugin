@@ -14,7 +14,7 @@ import com.intellij.openapi.components.service
 import javax.swing.tree.DefaultMutableTreeNode
 
 
-class ConfigOpenInBrowserAction: AnAction() {
+class ConfigOpenInBrowserAction : AnAction() {
     companion object {
         const val CONFIGCAT_OPEN_CONFIG_IN_BROWSER_ACTION_ID = "CONFIGCAT_CONFIG_OPEN_IN_BROWSER_ACTION_ID"
     }
@@ -27,14 +27,19 @@ class ConfigOpenInBrowserAction: AnAction() {
         val selectedElement: DefaultMutableTreeNode? = e.project?.service<ProductsConfigsPanel>()?.getSelectedNode()
 
         val selectedNode = selectedElement?.userObject
-        if(selectedNode == null ||  selectedNode !is ConfigNode) {
-            ConfigCatNotifier.Notify.error(e.project, "Open in Dashboard action could not be executed without a selected Config Node.")
+        if (selectedNode == null || selectedNode !is ConfigNode) {
+            ConfigCatNotifier.Notify.error(
+                e.project,
+                "Open in Dashboard action could not be executed without a selected Config Node."
+            )
             return
         }
 
-        val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigSate = ConfigCatApplicationConfig.getInstance().state
+        val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigSate =
+            ConfigCatApplicationConfig.getInstance().state
         val productParent = selectedNode.parent as ProductNode
-        val url = stateConfig.dashboardBaseUrl + "/" + productParent.product.productId + "/"+ selectedNode.config.configId
+        val url =
+            stateConfig.dashboardBaseUrl + "/" + productParent.product.productId + "/" + selectedNode.config.configId
 
         BrowserLauncher.instance.open(url)
     }
@@ -44,7 +49,7 @@ class ConfigOpenInBrowserAction: AnAction() {
         val selectedElement: DefaultMutableTreeNode? = e.project?.service<ProductsConfigsPanel>()?.getSelectedNode()
 
         val selectedNode = selectedElement?.userObject
-        val isEnabled  = selectedNode != null && selectedNode is ConfigNode
+        val isEnabled = selectedNode != null && selectedNode is ConfigNode
         e.presentation.isEnabled = isEnabled
         e.presentation.isVisible = true
     }

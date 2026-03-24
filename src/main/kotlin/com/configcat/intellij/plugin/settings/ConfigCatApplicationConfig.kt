@@ -14,8 +14,9 @@ const val DEFAULT_DASHBOARD_BASE_URL = "https://app.configcat.com"
 const val DEFAULT_PUBLIC_API_BASE_URL = "https://api.configcat.com"
 const val EMPTY_CREDENTIALS = "{\"basicAuthUserName\":\"\",\"basicAuthPassword\":\"\"}"
 
-@State( name = "ConfigCatApplicationConfig", storages = [Storage("configcat-intellij-plugin.xml")])
-open class ConfigCatApplicationConfig : PersistentStateComponent<ConfigCatApplicationConfig.ConfigCatApplicationConfigSate> {
+@State(name = "ConfigCatApplicationConfig", storages = [Storage("configcat-intellij-plugin.xml")])
+open class ConfigCatApplicationConfig :
+    PersistentStateComponent<ConfigCatApplicationConfig.ConfigCatApplicationConfigSate> {
     private var appState: ConfigCatApplicationConfigSate = ConfigCatApplicationConfigSate()
 
     companion object {
@@ -57,7 +58,7 @@ open class ConfigCatApplicationConfig : PersistentStateComponent<ConfigCatApplic
 
 
         override fun isConfigured(): Boolean {
-              return authConfiguration.isNotEmpty() && authConfiguration != EMPTY_CREDENTIALS && dashboardBaseUrl.isNotEmpty() && publicApiBaseUrl.isNotEmpty()
+            return authConfiguration.isNotEmpty() && authConfiguration != EMPTY_CREDENTIALS && dashboardBaseUrl.isNotEmpty() && publicApiBaseUrl.isNotEmpty()
         }
 
     }

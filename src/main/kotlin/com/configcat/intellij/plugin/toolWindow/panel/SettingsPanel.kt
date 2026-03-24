@@ -10,17 +10,18 @@ import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
 import com.configcat.intellij.plugin.services.ConfigCatPropertiesService
 import com.configcat.intellij.plugin.services.ConfigCatService
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
-import com.configcat.intellij.plugin.settings.ConfigCatConfigurable
 import com.configcat.intellij.plugin.toolWindow.tree.ConfigRootNode
 import com.configcat.intellij.plugin.toolWindow.tree.FlagTreeStructure
 import com.configcat.publicapi.java.client.ApiException
 import com.configcat.publicapi.java.client.model.ConfigModel
 import com.configcat.publicapi.java.client.model.SettingModel
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.actionSystem.*
+import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.openapi.actionSystem.ActionPlaces
+import com.intellij.openapi.actionSystem.ActionToolbar
+import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
-import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.ui.PopupHandler
@@ -33,16 +34,13 @@ import kotlinx.coroutines.CoroutineScope
 import java.awt.CardLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
-import java.util.UUID
-import javax.swing.JButton
+import java.util.*
 import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JPanel
-
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.TreePath
 import javax.swing.tree.TreeSelectionModel
-
 
 @Service(Service.Level.PROJECT)
 class SettingsPanel(
@@ -241,7 +239,7 @@ class SettingsPanel(
 
     fun loadConnectedConfig(): ConfigModel? {
         val connectedConfigId = configCatPropertiesService.getConnectedConfig()
-        if(connectedConfigId == null) {
+        if (connectedConfigId == null) {
             return null
         }
         val configsService = ConfigCatService.createConfigsService(

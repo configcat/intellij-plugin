@@ -1,7 +1,7 @@
 package com.configcat.intellij.plugin.toolWindow
 
-import com.configcat.intellij.plugin.toolWindow.panel.ProductsConfigsPanel
 import com.configcat.intellij.plugin.toolWindow.panel.HelpPanel
+import com.configcat.intellij.plugin.toolWindow.panel.ProductsConfigsPanel
 import com.configcat.intellij.plugin.toolWindow.panel.SettingsPanel
 import com.configcat.intellij.plugin.toolWindow.panel.ViewFlagPanel
 import com.configcat.intellij.plugin.webview.AppData
@@ -12,7 +12,6 @@ import com.intellij.ui.components.JBPanel
 import com.intellij.ui.content.ContentFactory
 import java.awt.BorderLayout
 
-
 class ConfigCatToolWindowFactory : ToolWindowFactory {
 
     companion object {
@@ -21,11 +20,13 @@ class ConfigCatToolWindowFactory : ToolWindowFactory {
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         val productsConfigsPanel = ProductsConfigsTreeToolWindow(project, toolWindow)
-        val productsConfigsContent = ContentFactory.getInstance().createContent(productsConfigsPanel.getContent(), "Products & Configs", false)
+        val productsConfigsContent =
+            ContentFactory.getInstance().createContent(productsConfigsPanel.getContent(), "Products & Configs", false)
         productsConfigsContent.isCloseable = false
         toolWindow.contentManager.addContent(productsConfigsContent)
         val settingsPanel = FeatureFlagsTreeToolWindow(project, toolWindow)
-        val settingsContent = ContentFactory.getInstance().createContent(settingsPanel.getContent(), "Feature Flags & Settings", false)
+        val settingsContent =
+            ContentFactory.getInstance().createContent(settingsPanel.getContent(), "Feature Flags & Settings", false)
         settingsContent.isCloseable = false
         toolWindow.contentManager.addContent(settingsContent)
     }

@@ -1,16 +1,8 @@
 package com.configcat.intellij.plugin.toolWindow.panel
 
-import com.intellij.icons.AllIcons
-import com.intellij.ide.browsers.BrowserLauncher
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.ui.SimpleToolWindowPanel
-import com.intellij.ui.JBColor
 import com.intellij.ui.dsl.builder.panel
-import java.awt.Cursor
-import java.awt.Font
-import java.awt.event.MouseAdapter
-import java.awt.event.MouseEvent
-import javax.swing.JLabel
 
 
 class HelpPanel : SimpleToolWindowPanel(false, false), Disposable {

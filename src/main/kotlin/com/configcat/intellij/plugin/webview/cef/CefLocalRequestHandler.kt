@@ -1,6 +1,5 @@
 package com.configcat.intellij.plugin.webview.cef
 
-
 import com.intellij.ide.BrowserUtil
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
@@ -36,13 +35,13 @@ class CefLocalRequestHandler() : CefRequestHandlerAdapter() {
                 request: CefRequest,
             ): CefResourceHandler {
                 val url = URI.create(request.url).toURL()
-                    return try {
-                        val fileName = url.path.split("/").last()
-                        myResources[fileName]?.let { it() } ?: rejectingResourceHandler
-                    } catch (e: RuntimeException) {
-                        rejectingResourceHandler
-                    }
+                return try {
+                    val fileName = url.path.split("/").last()
+                    myResources[fileName]?.let { it() } ?: rejectingResourceHandler
+                } catch (e: RuntimeException) {
+                    rejectingResourceHandler
                 }
+            }
         }
 
     fun addResource(
@@ -73,13 +72,13 @@ class CefLocalRequestHandler() : CefRequestHandlerAdapter() {
         frame: CefFrame?,
         request: CefRequest?,
         user_gesture: Boolean,
-        is_redirect: Boolean
+        is_redirect: Boolean,
     ): Boolean {
         if (user_gesture) {
             BrowserUtil.open(request?.url.toString())
             return true
         }
-        if(request?.transitionType == CefRequest.TransitionType.TT_LINK) {
+        if (request?.transitionType == CefRequest.TransitionType.TT_LINK) {
             return true
         }
 

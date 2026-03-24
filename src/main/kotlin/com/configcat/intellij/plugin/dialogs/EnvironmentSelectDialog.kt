@@ -17,14 +17,19 @@ import com.intellij.ui.dsl.builder.columns
 import com.intellij.ui.dsl.builder.panel
 import javax.swing.JComponent
 
-class EnvironmentSelectDialog(val project: Project?, private val environments: List<EnvironmentModel>, val appData: AppData, val settingName: String ): DialogWrapper(true) {
+class EnvironmentSelectDialog(
+    val project: Project?,
+    private val environments: List<EnvironmentModel>,
+    val appData: AppData,
+    val settingName: String,
+) : DialogWrapper(true) {
 
     private val environmentsDropDown = ComboBox<EnvironmentDropDown>()
 
 
     init {
         title = "Select an Environment"
-        okAction.name="Select"
+        okAction.name = "Select"
         init()
     }
 
@@ -34,15 +39,16 @@ class EnvironmentSelectDialog(val project: Project?, private val environments: L
             Comparator<EnvironmentDropDown> { o1, o2 -> o1.id.compareTo(o2.id) }
         val sortedComboBoxModel = SortedComboBoxModel(environmentsDropDownComparator)
 
-        val environmentDropDownList: List<EnvironmentDropDown> =  environments.map { it -> EnvironmentDropDown(it.name, it.environmentId.toString()) }
+        val environmentDropDownList: List<EnvironmentDropDown> =
+            environments.map { it -> EnvironmentDropDown(it.name, it.environmentId.toString()) }
 
 
         sortedComboBoxModel.addAll(environmentDropDownList)
         environmentsDropDown.model = sortedComboBoxModel
         environmentsDropDown.selectedItem = environmentDropDownList[0]
 
-        val dialogPanel : DialogPanel = panel {
-            row{
+        val dialogPanel: DialogPanel = panel {
+            row {
                 text("Select in which Environment should we open the Feature Flag.")
             }
             row("Environment:") {
@@ -62,7 +68,7 @@ class EnvironmentSelectDialog(val project: Project?, private val environments: L
     }
 
     fun environmentsDropDownValidation(): ValidationInfo? {
-        if(environmentsDropDown.model.selectedItem ==  null){
+        if (environmentsDropDown.model.selectedItem == null) {
             return ValidationInfo("Invalid environment.", environmentsDropDown)
         }
         return null
@@ -75,9 +81,12 @@ class EnvironmentSelectDialog(val project: Project?, private val environments: L
         project?.let {
             val toolWindow =
                 ToolWindowManager.getInstance(it).getToolWindow(ConfigCatToolWindowFactory.CONFIGCAT_TOOL_WINDOW_ID)
-            val featureFlagsViewPanel = ConfigCatToolWindowFactory.ConfigCatFeatureFlagsViewToolWindow(project, toolWindow!!,appData )
-            val content = ContentFactory.getInstance().createContent(featureFlagsViewPanel.getContent(),
-                "$settingName ($selectedEnvironment)", false)
+            val featureFlagsViewPanel =
+                ConfigCatToolWindowFactory.ConfigCatFeatureFlagsViewToolWindow(project, toolWindow!!, appData)
+            val content = ContentFactory.getInstance().createContent(
+                featureFlagsViewPanel.getContent(),
+                "$settingName ($selectedEnvironment)", false
+            )
             content.isCloseable = true
             toolWindow.contentManager.addContent(content)
             toolWindow.contentManager.setSelectedContent(content)
@@ -85,7 +94,7 @@ class EnvironmentSelectDialog(val project: Project?, private val environments: L
         super.doOKAction()
     }
 
-    data class EnvironmentDropDown(val name: String, val id: String) : Comparable<EnvironmentDropDown>{
+    data class EnvironmentDropDown(val name: String, val id: String) : Comparable<EnvironmentDropDown> {
 
         override fun compareTo(other: EnvironmentDropDown): Int {
             return this.id.compareTo(other.id)

@@ -11,7 +11,6 @@ import org.cef.network.CefRequest
 import org.cef.network.CefResponse
 import java.io.IOException
 import java.io.InputStream
-import kotlin.collections.iterator
 
 class CefStreamResourceHandler(
     private val myStream: InputStream,

@@ -6,7 +6,7 @@ import com.intellij.ide.actions.RefreshAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
 
-class FlagRefreshAction: RefreshAction() {
+class FlagRefreshAction : RefreshAction() {
     companion object {
         const val CONFIGCAT_FLAG_REFRESH_ACTION_ID = "CONFIGCAT_FLAG_REFRESH_ACTION_ID"
     }
@@ -20,7 +20,8 @@ class FlagRefreshAction: RefreshAction() {
 
     private fun refreshPublish() {
         val publisher: SettingsTreeChangeNotifier = ApplicationManager.getApplication().messageBus.syncPublisher(
-            SettingsTreeChangeNotifier.TREE_REFRESH_TOPIC)
+            SettingsTreeChangeNotifier.TREE_REFRESH_TOPIC
+        )
         publisher.notifyTreeRefresh()
     }
 

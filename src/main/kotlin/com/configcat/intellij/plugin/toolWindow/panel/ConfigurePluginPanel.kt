@@ -9,7 +9,7 @@ import javax.swing.JButton
 import javax.swing.JLabel
 import javax.swing.JPanel
 
-class ConfigurePluginPanel: JPanel() {
+class ConfigurePluginPanel : JPanel() {
 
     init {
         layout = GridBagLayout()

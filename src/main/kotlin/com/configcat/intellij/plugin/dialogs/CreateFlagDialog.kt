@@ -18,7 +18,7 @@ import java.awt.EventQueue.invokeLater
 import javax.swing.Action
 import javax.swing.JComponent
 
-class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWrapper(true) {
+class CreateFlagDialog(val project: Project?, val config: ConfigModel) : DialogWrapper(true) {
 
     init {
         title = "Create Flag"
@@ -61,7 +61,7 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWr
             ConfigCatNotifier.Notify.info("Feature Flag Successfully created.")
             val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
             configCatNodeDataService.loadFlags(configId)
-        }catch (e:ApiException){
+        } catch (e: ApiException) {
             ErrorHandler.errorNotify(e, "Flag create failed. For more information check the logs.", project)
         }
 
@@ -70,7 +70,7 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel): DialogWr
         }
     }
 
-    data class SettingTypeDropDown(val name: String, val type: SettingType) : Comparable<SettingTypeDropDown>{
+    data class SettingTypeDropDown(val name: String, val type: SettingType) : Comparable<SettingTypeDropDown> {
 
         override fun compareTo(other: SettingTypeDropDown): Int {
             return this.type.compareTo(other.type)
