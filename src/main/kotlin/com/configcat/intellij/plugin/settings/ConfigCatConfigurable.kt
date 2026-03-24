@@ -54,7 +54,7 @@ class ConfigCatConfigurable() : BoundConfigurable(displayName = "ConfigCat Featu
                     commentAuthenticationGroup =
                         comment(authenticationComment.format(stateConfig.dashboardBaseUrl))
                 }
-                loginFailedRow = row() {
+                loginFailedRow = row {
                     icon(AllIcons.General.Error)
                     text("Failed to authorize! Invalid Basic auth user name or password.")
                 }.visible(false)

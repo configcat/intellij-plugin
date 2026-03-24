@@ -73,10 +73,6 @@ class ConfigCatNodeDataService {
         configFlags[configId] = settings
     }
 
-    fun getConfigFlags(configId: UUID): List<SettingModel>? {
-        return configFlags[configId]
-    }
-
     fun resetConfigsFlags() {
         configFlags = mutableMapOf()
     }

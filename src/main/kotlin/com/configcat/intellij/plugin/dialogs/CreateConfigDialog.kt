@@ -27,8 +27,8 @@ class CreateConfigDialog(val project: Project?, private val product: ProductMode
 
     override fun createActions(): Array<out Action?> {
         var actions = super.createActions()
-        actions = actions.remove(okAction);
-        actions = actions.remove(cancelAction);
+        actions = actions.remove(okAction)
+        actions = actions.remove(cancelAction)
         return actions
     }
 
@@ -52,10 +52,10 @@ class CreateConfigDialog(val project: Project?, private val product: ProductMode
             ""
         )
 
-        return WebViewPanel(project!!, appData, VIEW_TYPE.CREATE_CONFIG, { returnId -> saveSuccess(returnId) })
+        return WebViewPanel(project!!, appData, VIEW_TYPE.CREATE_CONFIG) { returnId -> saveSuccess(returnId) }
     }
 
-    fun saveSuccess(returnId: String?): Unit {
+    fun saveSuccess(returnId: String?) {
         val productId = product.productId
         try {
             ConfigCatNotifier.Notify.info("Config Successfully created.")

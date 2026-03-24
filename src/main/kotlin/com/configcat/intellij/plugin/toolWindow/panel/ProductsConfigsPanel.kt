@@ -176,13 +176,11 @@ class ProductsConfigsPanel(
                     val productId = userObject.product.productId
                     cs.launch {
                         reload = configCatNodeDataService.checkAndLoadConfigs(productId)
-                    }.invokeOnCompletion(
-                        {
-                            if (reload) {
-                                refreshTreeNode(treeNode)
-                            }
+                    }.invokeOnCompletion {
+                        if (reload) {
+                            refreshTreeNode(treeNode)
                         }
-                    )
+                    }
                 }
             }
 

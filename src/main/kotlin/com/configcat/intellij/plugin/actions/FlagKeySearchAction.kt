@@ -38,7 +38,7 @@ class FlagKeySearchAction : AnAction() {
         findModel.stringToFind = settingKey
         findModel.isCaseSensitive = true
         findModel.isFindAll = true
-        FindManager.getInstance(e.project).showFindDialog(findModel, {})
+        FindManager.getInstance(e.project).showFindDialog(findModel) {}
     }
 
     override fun update(e: AnActionEvent) {

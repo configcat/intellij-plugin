@@ -116,26 +116,27 @@ intellijPlatform {
         // The pluginVersion is based on the SemVer (https://semver.org) and supports pre-release labels, like 2.1.7-alpha.3
         // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
         // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
-        channels = providers.gradleProperty("pluginVersion").map { listOf(it.substringAfter('-', "").substringBefore('.').ifEmpty { "default" }) }
+        channels = providers.gradleProperty("pluginVersion")
+            .map { listOf(it.substringAfter('-', "").substringBefore('.').ifEmpty { "default" }) }
     }
 
     pluginVerification {
         ides {
-                create(IntelliJPlatformType.IntellijIdea,  providers.gradleProperty("platformVersion").get())
-                // To ease the load on GitHub WF we only verify on the first and last supported versions
-                // Update the version based on the gradle.properties changes
-                select {
-                    types = listOf(IntelliJPlatformType.IntellijIdea)
-                    channels = listOf(ProductRelease.Channel.RELEASE)
-                    sinceBuild = "241.1"
-                    untilBuild = "241.2"
-                }
-                select {
-                    types = listOf(IntelliJPlatformType.IntellijIdea)
-                    channels = listOf(ProductRelease.Channel.RELEASE)
-                    sinceBuild = "253"
-                    untilBuild = "253.*"
-                }
+            create(IntelliJPlatformType.IntellijIdea, providers.gradleProperty("platformVersion").get())
+            // To ease the load on GitHub WF we only verify on the first and last supported versions
+            // Update the version based on the gradle.properties changes
+            select {
+                types = listOf(IntelliJPlatformType.IntellijIdea)
+                channels = listOf(ProductRelease.Channel.RELEASE)
+                sinceBuild = "241.1"
+                untilBuild = "241.2"
+            }
+            select {
+                types = listOf(IntelliJPlatformType.IntellijIdea)
+                channels = listOf(ProductRelease.Channel.RELEASE)
+                sinceBuild = "253"
+                untilBuild = "253.*"
+            }
         }
     }
 }
