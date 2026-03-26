@@ -15,22 +15,27 @@ import com.configcat.intellij.plugin.toolWindow.tree.FlagTreeStructure
 import com.configcat.publicapi.java.client.ApiException
 import com.configcat.publicapi.java.client.model.ConfigModel
 import com.configcat.publicapi.java.client.model.SettingModel
+import com.intellij.icons.AllIcons
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.ActionPlaces
 import com.intellij.openapi.actionSystem.ActionToolbar
 import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.EDT
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
 import com.intellij.ui.PopupHandler
 import com.intellij.ui.ScrollPaneFactory
+import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.tree.AsyncTreeModel
 import com.intellij.ui.tree.StructureTreeModel
 import com.intellij.ui.treeStructure.Tree
 import com.intellij.util.ui.JBUI
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.awt.CardLayout
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
@@ -60,12 +65,17 @@ class SettingsPanel(
     private var tree: Tree? = null
     private var treeModel: StructureTreeModel<FlagTreeStructure>? = null
     private var connectedConfig: ConfigModel? = null
+    val toolbarActionGroup = DefaultActionGroup()
+    val actionPopup = DefaultActionGroup()
 
     init {
-        setContent(initContent())
+        initToolbar(this)
+        initContent()
+
+        // Configure notifiers
         val handleConfigChange = object : ConfigChangeNotifier {
             override fun notifyConfigChange() {
-                setContent(initContent())
+                initContent()
             }
         }
         ApplicationManager.getApplication().messageBus.connect()
@@ -73,7 +83,7 @@ class SettingsPanel(
 
         val handleConnectedConfigChange = object : ConnectedConfigChangeNotifier {
             override fun notifyConnectedConfigChange() {
-                setContent(initContent())
+                initContent()
             }
         }
         ApplicationManager.getApplication().messageBus.connect()
@@ -92,62 +102,76 @@ class SettingsPanel(
             .subscribe(SettingsTreeChangeNotifier.TREE_REFRESH_TOPIC, handleTreeNotify)
     }
 
-    private fun initContent(): JComponent {
-        val content: JComponent = JPanel(CardLayout())
+    private fun initContent() {
+        val centeredInfoPanel = JPanel(GridBagLayout())
+        val infoPanel = panel {
+            row {
+                icon(AllIcons.General.Information)
+                label("ConfigCat Plugin is loading.")
+            }
+        }
+        centeredInfoPanel.add(infoPanel)
+        setContent(centeredInfoPanel)
+
         if (!stateConfig.isConfigured()) {
-            content.add(ConfigurePluginPanel())
+            setContent(ConfigurePluginPanel())
             resetTreeView()
-            return content
         } else {
+            initTreeContent()
+        }
+    }
+
+    private fun initTreeContent() {
+        cs.launch(Dispatchers.Default) {
             val connectedConfig = loadConnectedConfig()
             if (connectedConfig == null) {
-                content.add(
-                    JPanel().apply {
-                        layout = GridBagLayout()
-                        val gbc = GridBagConstraints()
-                        gbc.insets = JBUI.insets(1)
-                        gbc.gridx = 0
-                        gbc.gridy = 0
-                        add(JLabel("Please connect a config on the 'Products & Configs' tab."), gbc)
+                cs.launch(Dispatchers.EDT) {
+                    val centeredNoConfigPanel = JPanel(GridBagLayout())
+                    val noConfigPanel = panel {
+                        row {
+                            icon(AllIcons.General.Information)
+                            label("No config connected!")
+                        }
+                        row {
+                            text("Please connect a config on the 'Products & Configs' tab.")
+                        }
                     }
-                )
-                return content
-            } else {
-                val featureFlagsSettingsService = ConfigCatService.createFeatureFlagsSettingsService(
-                    Constants.decodePublicApiConfiguration(stateConfig.authConfiguration), stateConfig.publicApiBaseUrl
-                )
-                val settings = try {
-                    featureFlagsSettingsService.getSettings(connectedConfig.configId)
-                } catch (exception: ApiException) {
-                    ErrorHandler.errorNotify(exception)
-                    content.add(JLabel("ConfigCat Plugin - Load failed. Try to refresh."))
-                    return content
+                    centeredNoConfigPanel.add(noConfigPanel)
+                    setContent(centeredNoConfigPanel)
                 }
-                initTree(settings, connectedConfig.name)
-                tree?.let {
-                    val scrollPanel = ScrollPaneFactory.createScrollPane(tree, true)
-                    content.add(scrollPanel)
-                    initToolbar(this, it)
-                    return content
+            } else{
+                tree = initTree(connectedConfig)
+                cs.launch(Dispatchers.EDT) {
+                    val loadedContent: JComponent = JPanel(CardLayout())
+                    if (tree != null) {
+//                         add action popup to the tree
+                        PopupHandler.installPopupMenu(
+                            tree!!, actionPopup, ActionPlaces.POPUP
+                        )
+                        loadedContent.add(ScrollPaneFactory.createScrollPane(tree, true))
+                    } else {
+                        val centeredErrorPanel = JPanel(GridBagLayout())
+                        val errorPanel = panel {
+                            row {
+                                icon(AllIcons.General.Error)
+                                label("Something went wrong!")
+                            }
+                            row {
+                                text("Try to refresh the panel. For more information check the logs.")
+                            }
+                        }
+                        centeredErrorPanel.add(errorPanel)
+                        loadedContent.add(centeredErrorPanel)
+                    }
+                    setContent(loadedContent)
                 }
+
             }
-
-        }
-        content.add(JLabel("ConfigCat Plugin - Loading..."))
-        return content
-    }
-
-    private fun resetTreeView() {
-        tree = null
-        treeModel = null
-        if (toolbar != null) {
-            toolbar = null
         }
     }
 
-    private fun initToolbar(panel: JComponent, tree: Tree) {
+    private fun initToolbar(panel: JComponent) {
         val actionManager: ActionManager = ActionManager.getInstance()
-        val toolbarActionGroup = DefaultActionGroup()
         val actionToolbar: ActionToolbar =
             actionManager.createActionToolbar("CONFIGCAT_PANEL_ACTION_TOOLBAR", toolbarActionGroup, false)
         actionToolbar.targetComponent = panel
@@ -170,27 +194,31 @@ class SettingsPanel(
         toolbarActionGroup.add(openFeatureFlagAction)
         toolbarActionGroup.add(openHelpAction)
 
-        val actionPopup = DefaultActionGroup()
-
-        PopupHandler.installPopupMenu(
-            tree,
-            actionPopup.apply {
-                add(refreshAction)
-                add(createAction)
-                add(openDashboardAction)
-                add(searchFlagKeyAction)
-                add(copyFlagKeyAction)
-                add(openFeatureFlagAction)
-            },
-            ActionPlaces.POPUP
-        )
+        actionPopup.apply {
+            add(refreshAction)
+            add(createAction)
+            add(openDashboardAction)
+            add(searchFlagKeyAction)
+            add(copyFlagKeyAction)
+            add(openFeatureFlagAction)
+        }
     }
 
-    private fun initTree(flags: List<SettingModel>, connectedConfigName: String) {
+    private fun initTree( connectedConfig: ConfigModel): Tree? {
+
+        val featureFlagsSettingsService = ConfigCatService.createFeatureFlagsSettingsService(
+            Constants.decodePublicApiConfiguration(stateConfig.authConfiguration), stateConfig.publicApiBaseUrl
+        )
+        val settings = try {
+            featureFlagsSettingsService.getSettings(connectedConfig.configId)
+        } catch (exception: ApiException) {
+            ErrorHandler.errorNotify(exception)
+            return null
+        }
 
         configCatNodeDataService.resetConfigsFlags()
 
-        val treeStructure = FlagTreeStructure(ConfigRootNode(flags, connectedConfigName))
+        val treeStructure = FlagTreeStructure(ConfigRootNode(settings, connectedConfig.name))
         val treeModel: StructureTreeModel<FlagTreeStructure> = StructureTreeModel(treeStructure, this)
         this.treeModel = treeModel
         val treeBuilder = AsyncTreeModel(treeModel, this)
@@ -199,38 +227,21 @@ class SettingsPanel(
 
         tree.setRootVisible(true)
         tree.selectionModel.selectionMode = TreeSelectionModel.SINGLE_TREE_SELECTION
-        this.tree = tree
+        return tree
     }
 
+    private fun resetTreeView() {
+        tree = null
+        treeModel = null
+        if (toolbar != null) {
+            toolbar = null
+        }
+    }
     override fun dispose() {
     }
 
     private fun refreshTree() {
-
-        tree?.let {
-            val connectedConfig = loadConnectedConfig()
-            if (connectedConfig == null) {
-                initContent()
-                return
-            }
-
-            val featureFlagsSettingsService = ConfigCatService.createFeatureFlagsSettingsService(
-                Constants.decodePublicApiConfiguration(stateConfig.authConfiguration),
-                stateConfig.publicApiBaseUrl
-            )
-            val settings = try {
-                featureFlagsSettingsService.getSettings(connectedConfig.configId)
-            } catch (exception: ApiException) {
-                ErrorHandler.errorNotify(exception)
-                return
-            }
-            val treeStructure = FlagTreeStructure(ConfigRootNode(settings, connectedConfig.name))
-            val treeModel = StructureTreeModel(treeStructure, this)
-            val treeBuilder = AsyncTreeModel(treeModel, this)
-            this.treeModel = treeModel
-            it.model = treeBuilder
-            it.invalidate()
-        }
+        initTreeContent()
     }
 
     private fun refreshTreeNode(node: DefaultMutableTreeNode) {

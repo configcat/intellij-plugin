@@ -63,7 +63,7 @@ class ProductsConfigsPanel(
     private val actionPopup = DefaultActionGroup()
 
     init {
-
+        initToolbar(this)
         initContent()
 
         //Configure Notifiers
@@ -98,7 +98,6 @@ class ProductsConfigsPanel(
         }
         centeredInfoPanel.add(infoPanel)
         setContent(centeredInfoPanel)
-        initToolbar(this)
 
         if (!stateConfig.isConfigured()) {
             setContent(ConfigurePluginPanel())
