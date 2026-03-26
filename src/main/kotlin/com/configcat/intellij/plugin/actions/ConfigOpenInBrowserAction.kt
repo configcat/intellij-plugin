@@ -35,7 +35,7 @@ class ConfigOpenInBrowserAction : AnAction() {
             return
         }
 
-        val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigSate =
+        val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigState =
             ConfigCatApplicationConfig.getInstance().state
         val productParent = selectedNode.parent as ProductNode
         val url =

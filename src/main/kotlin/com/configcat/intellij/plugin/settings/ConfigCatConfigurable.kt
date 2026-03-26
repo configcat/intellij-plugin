@@ -22,7 +22,7 @@ import javax.swing.JTextField
 
 class ConfigCatConfigurable() : BoundConfigurable(displayName = "ConfigCat Feature Flags") {
 
-    private var stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigSate =
+    private var stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigState =
         ConfigCatApplicationConfig.getInstance().state
     private val authUserNameField = JTextField()
     private val authPasswordField = JPasswordField()

@@ -53,7 +53,7 @@ class ProductsConfigsPanel(
         fun getInstance(project: Project): ProductsConfigsPanel = project.getService(ProductsConfigsPanel::class.java)
     }
 
-    private val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigSate =
+    private val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigState =
         ConfigCatApplicationConfig.getInstance().state
     private val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
     private var tree: Tree? = null
@@ -168,7 +168,7 @@ class ProductsConfigsPanel(
                     val childUserObject = (child as DefaultMutableTreeNode).userObject
                     if (childUserObject is ProductNode) {
                         if (expandedTreeNodes.contains(childUserObject.product.productId.toString())) {
-                            TreeUtil.promiseExpand(tree!!, TreeUtil.getPathFromRoot(child))
+                            TreeUtil.promiseExpand(tree, TreeUtil.getPathFromRoot(child))
                         }
                     }
                 }

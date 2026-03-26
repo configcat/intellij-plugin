@@ -40,7 +40,7 @@ class FlagViewOpenAction : AnAction() {
             )
             return
         }
-        val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigSate =
+        val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigState =
             ConfigCatApplicationConfig.getInstance().state
 
         val environmentsService = ConfigCatService.createEnvironmentsService(

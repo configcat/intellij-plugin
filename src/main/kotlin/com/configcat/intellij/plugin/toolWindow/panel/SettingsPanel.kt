@@ -52,7 +52,7 @@ class SettingsPanel(
             project.getService(SettingsPanel::class.java)
     }
 
-    private val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigSate =
+    private val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigState =
         ConfigCatApplicationConfig.getInstance().state
 
     private val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()

@@ -1,7 +1,8 @@
 import com.github.gradle.node.npm.task.NpmTask
 import org.jetbrains.changelog.Changelog
-import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
+import org.jetbrains.changelog.markdownToHTML
+import org.jetbrains.intellij.platform.gradle.TestFrameworkType
 import org.jetbrains.intellij.platform.gradle.models.ProductRelease
 
 plugins {
@@ -11,7 +12,7 @@ plugins {
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
     alias(libs.plugins.kover) // Gradle Kover Plugin
     alias(libs.plugins.serialization) // Kotlin serialization
-    id("com.github.node-gradle.node") version "7.1.0"
+    alias(libs.plugins.node) //node-gradle.node
 }
 
 group = providers.gradleProperty("pluginGroup").get()
@@ -49,6 +50,14 @@ dependencies {
     implementation(libs.serialization.json)
     implementation(libs.okhttp)
 
+    testImplementation(libs.mockk) {
+        // Exclude kotlinx-coroutines modules to avoid version conflicts with coroutines
+        // bundled with the IntelliJ Platform.
+        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
+        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core-jvm")
+    }
+    testImplementation(libs.junit)
+
     intellijPlatform {
         create(providers.gradleProperty("platformType"), providers.gradleProperty("platformVersion"))
 
@@ -60,6 +69,7 @@ dependencies {
 
         pluginVerifier()
         zipSigner()
+        testFramework(TestFrameworkType.Platform)
     }
 }
 
@@ -159,6 +169,10 @@ kover {
 }
 
 tasks {
+    test {
+        useJUnit()
+    }
+
     wrapper {
         gradleVersion = providers.gradleProperty("gradleVersion").get()
     }

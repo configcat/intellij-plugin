@@ -39,7 +39,7 @@ class FlagOpenInBrowserAction : AnAction() {
             )
             return
         }
-        val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigSate =
+        val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigState =
             ConfigCatApplicationConfig.getInstance().state
 
         val productModel = configModel.product

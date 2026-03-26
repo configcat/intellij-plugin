@@ -16,8 +16,8 @@ const val EMPTY_CREDENTIALS = "{\"basicAuthUserName\":\"\",\"basicAuthPassword\"
 
 @State(name = "ConfigCatApplicationConfig", storages = [Storage("configcat-intellij-plugin.xml")])
 open class ConfigCatApplicationConfig :
-    PersistentStateComponent<ConfigCatApplicationConfig.ConfigCatApplicationConfigSate> {
-    private var appState: ConfigCatApplicationConfigSate = ConfigCatApplicationConfigSate()
+    PersistentStateComponent<ConfigCatApplicationConfig.ConfigCatApplicationConfigState> {
+    private var appState: ConfigCatApplicationConfigState = ConfigCatApplicationConfigState()
 
     companion object {
         fun getInstance(): ConfigCatApplicationConfig {
@@ -25,15 +25,15 @@ open class ConfigCatApplicationConfig :
         }
     }
 
-    override fun getState(): ConfigCatApplicationConfigSate {
+    override fun getState(): ConfigCatApplicationConfigState {
         return appState
     }
 
-    override fun loadState(state: ConfigCatApplicationConfigSate) {
+    override fun loadState(state: ConfigCatApplicationConfigState) {
         appState = state
     }
 
-    data class ConfigCatApplicationConfigSate(
+    data class ConfigCatApplicationConfigState(
         override var dashboardBaseUrl: String = DEFAULT_DASHBOARD_BASE_URL,
         override var publicApiBaseUrl: String = DEFAULT_PUBLIC_API_BASE_URL,
     ) : ConfigCatSettings {

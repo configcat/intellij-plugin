@@ -15,7 +15,7 @@ import java.util.*
 @Service(Service.Level.APP)
 class ConfigCatNodeDataService {
 
-    private val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigSate =
+    private val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigState =
         ConfigCatApplicationConfig.getInstance().state
 
     private var productConfigs: MutableMap<UUID, List<ConfigModel>> = mutableMapOf()

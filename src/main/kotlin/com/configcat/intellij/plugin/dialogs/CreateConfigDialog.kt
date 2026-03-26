@@ -34,7 +34,7 @@ class CreateConfigDialog(val project: Project?, private val product: ProductMode
 
     override fun createCenterPanel(): JComponent {
 
-        val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigSate =
+        val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigState =
             ConfigCatApplicationConfig.getInstance().state
         val authConf = Constants.decodePublicApiConfiguration(stateConfig.authConfiguration)
 
