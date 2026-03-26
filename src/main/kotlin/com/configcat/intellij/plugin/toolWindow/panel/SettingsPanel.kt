@@ -14,7 +14,6 @@ import com.configcat.intellij.plugin.toolWindow.tree.ConfigRootNode
 import com.configcat.intellij.plugin.toolWindow.tree.FlagTreeStructure
 import com.configcat.publicapi.java.client.ApiException
 import com.configcat.publicapi.java.client.model.ConfigModel
-import com.configcat.publicapi.java.client.model.SettingModel
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionManager
@@ -32,16 +31,13 @@ import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.tree.AsyncTreeModel
 import com.intellij.ui.tree.StructureTreeModel
 import com.intellij.ui.treeStructure.Tree
-import com.intellij.util.ui.JBUI
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.awt.CardLayout
-import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.util.*
 import javax.swing.JComponent
-import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.TreePath
@@ -139,7 +135,7 @@ class SettingsPanel(
                     centeredNoConfigPanel.add(noConfigPanel)
                     setContent(centeredNoConfigPanel)
                 }
-            } else{
+            } else {
                 tree = initTree(connectedConfig)
                 cs.launch(Dispatchers.EDT) {
                     val loadedContent: JComponent = JPanel(CardLayout())
@@ -204,7 +200,7 @@ class SettingsPanel(
         }
     }
 
-    private fun initTree( connectedConfig: ConfigModel): Tree? {
+    private fun initTree(connectedConfig: ConfigModel): Tree? {
 
         val featureFlagsSettingsService = ConfigCatService.createFeatureFlagsSettingsService(
             Constants.decodePublicApiConfiguration(stateConfig.authConfiguration), stateConfig.publicApiBaseUrl
@@ -237,6 +233,7 @@ class SettingsPanel(
             toolbar = null
         }
     }
+
     override fun dispose() {
     }
 

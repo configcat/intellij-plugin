@@ -31,7 +31,6 @@ import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeModel
 import javax.swing.tree.TreePath
 
-@Suppress("UnstableApiUsage")
 class ProductsConfigsPanelTest : LightPlatformTestCase() {
 
     private lateinit var mockState: ConfigCatApplicationConfig.ConfigCatApplicationConfigState
