@@ -227,7 +227,7 @@ class WebViewPanel(
                     transitionType: CefRequest.TransitionType?,
                 ) {
                     // enable this if you need the devtools on load.
-                    // jBCefBrowser.openDevtools()
+//                     jBCefBrowser.openDevtools()
                 }
 
                 override fun onLoadEnd(browser: CefBrowser?, frame: CefFrame?, httpStatusCode: Int) {
@@ -235,7 +235,7 @@ class WebViewPanel(
                     //override CONFIGCAT_SUCCESS_METHOD to make jsQuery calls
                     browser?.executeJavaScript(
                         "document.dispatchEvent(new Event('startNgLoad'));" +
-                                "window['CONFIGCAT_SUCCESS_METHOD'] = function(returnId) {" +
+                                "window['configCatSuccessMethod'] = function(returnId) {" +
                                 jSQuery.inject("returnId") +
                                 "};",
                         browser.url,
