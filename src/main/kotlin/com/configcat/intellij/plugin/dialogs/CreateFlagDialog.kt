@@ -7,7 +7,7 @@ import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.intellij.plugin.webview.AppData
 import com.configcat.intellij.plugin.webview.VIEW_TYPE
-import com.configcat.intellij.plugin.webview.WebViewPanel
+import com.configcat.intellij.plugin.webview.WebViewPanelContainer
 import com.configcat.publicapi.java.client.ApiException
 import com.configcat.publicapi.java.client.model.ConfigModel
 import com.configcat.publicapi.java.client.model.SettingType
@@ -51,7 +51,7 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel) : DialogW
             "",
             ""
         )
-        return WebViewPanel(project!!, appData, VIEW_TYPE.CREATE_FLAG, { returnId -> saveSuccess(returnId) })
+        return WebViewPanelContainer(project!!, appData, VIEW_TYPE.CREATE_FLAG, { returnId -> saveSuccess(returnId) })
     }
 
 

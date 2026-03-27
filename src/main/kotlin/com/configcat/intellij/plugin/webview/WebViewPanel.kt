@@ -4,16 +4,13 @@ import com.configcat.intellij.plugin.Constants
 import com.configcat.intellij.plugin.messaging.ThemeChangeNotifier
 import com.configcat.intellij.plugin.webview.cef.CefLocalRequestHandler
 import com.configcat.intellij.plugin.webview.cef.CefStreamResourceHandler
-import com.intellij.icons.AllIcons
 import com.intellij.ide.BrowserUtil
 import com.intellij.ide.ui.LafManager
 import com.intellij.ide.ui.LafManagerListener
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
-import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.jcef.*
-import com.intellij.util.ui.JBFont
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import org.cef.browser.CefBrowser
@@ -84,7 +81,7 @@ class WebViewPanel(
         .setMouseWheelEventEnable(true)
         .build()
     private val jSQuery: JBCefJSQuery = checkNotNull(JBCefJSQuery.create(jBCefBrowser as JBCefBrowserBase))
-    private val lafManger = LafManager.getInstance()
+    private val lafManager = LafManager.getInstance()
 
     init {
         val handleThemeChange = object : ThemeChangeNotifier {
@@ -99,38 +96,17 @@ class WebViewPanel(
         layout = CardLayout().apply {
             alignmentX = LEFT_ALIGNMENT
             alignmentY = TOP_ALIGNMENT
-            if (JBCefApp.isSupported()) {
-                cefClient.setProperty("JS_QUERY_POOL_SIZE", 30)
+            cefClient.setProperty("JS_QUERY_POOL_SIZE", 30)
 
-                val theme = getCurrentTheme()
-                val viewData = ViewData(viewType.type, theme)
+            val theme = getCurrentTheme()
+            val viewData = ViewData(viewType.type, theme)
 
-                initiateCefRequestHandler(viewData, appData)
-                setupJavascriptCallback()
+            initiateCefRequestHandler(viewData, appData)
+            setupJavascriptCallback()
 
-                jBCefBrowser.loadURL("${DIST_FOLDER_PATH}/${INDEX_HTML}")
+            jBCefBrowser.loadURL("${DIST_FOLDER_PATH}/${INDEX_HTML}")
 
-                add(jBCefBrowser.component, BorderLayout.CENTER)
-
-
-            } else {
-                add(
-                    panel {
-                        row {
-                            icon(AllIcons.General.Error)
-                            label("JCEF (Java Chromium Embedded Framework) is not supported.").applyToComponent {
-                                this.font = JBFont.h2()
-                            }
-                        }
-                        row {
-                            text("This plugin requires JCEF to load web views. JCEF can be unsupported when the IDE started with an alternative JDK.")
-                        }
-                        row {
-                            text("You can still manage your Feature Flags on the <a href=\"https://app.configcat.com/\">ConfigCat Dashboard</a>.")
-                        }
-                    }
-                )
-            }
+            add(jBCefBrowser.component, BorderLayout.CENTER)
         }
     }
 
@@ -259,7 +235,7 @@ class WebViewPanel(
 
     private fun getCurrentTheme(): String {
         var theme = "light"
-        if (lafManger.currentUIThemeLookAndFeel.isDark) {
+        if (lafManager.currentUIThemeLookAndFeel.isDark) {
             theme = "dark"
         }
         return theme
