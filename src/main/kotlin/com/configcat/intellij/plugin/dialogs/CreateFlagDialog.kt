@@ -55,7 +55,7 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel) : DialogW
     }
 
 
-    fun saveSuccess(returnId: String?): Unit {
+    fun saveSuccess(returnId: String?) {
         val configId = config.configId
         try {
             ConfigCatNotifier.Notify.info("Feature Flag Successfully created.")
