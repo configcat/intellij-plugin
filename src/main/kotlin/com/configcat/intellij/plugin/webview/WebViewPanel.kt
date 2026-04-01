@@ -1,5 +1,6 @@
 package com.configcat.intellij.plugin.webview
 
+import com.configcat.intellij.plugin.ConfigCatNotifier
 import com.configcat.intellij.plugin.Constants
 import com.configcat.intellij.plugin.messaging.ThemeChangeNotifier
 import com.configcat.intellij.plugin.webview.cef.CefLocalRequestHandler
@@ -9,7 +10,6 @@ import com.intellij.ide.ui.LafManager
 import com.intellij.ide.ui.LafManagerListener
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.project.Project
 import com.intellij.ui.jcef.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -53,7 +53,6 @@ private const val WINDOW_CONFIGCAT_APPDATA = "window.CONFIGCAT_APPDATA ="
 private const val WINDOW_CONFIGCAT_APP_VIEW = "window.CONFIGCAT_APP_VIEW ="
 
 class WebViewPanel(
-    project: Project,
     appData: AppData,
     viewType: VIEW_TYPE,
     val jsReceiverCallbackFunction: ((returnId: String?) -> Unit)?,
@@ -89,7 +88,7 @@ class WebViewPanel(
                 lookAndFeelChanged()
             }
         }
-        ApplicationManager.getApplication().messageBus.connect()
+        ApplicationManager.getApplication().messageBus.connect(this)
             .subscribe(ThemeChangeNotifier.THEME_CHANGE_TOPIC, handleThemeChange)
 
 
@@ -180,7 +179,14 @@ class WebViewPanel(
                 target_frame_name: String?,
             ): Boolean {
                 // Return true to cancel the popup and use the BrowserUtil.open based on the JBCefBrowserBase.enableExternalBrowserLinks
-                BrowserUtil.open(target_url!!)
+                if (target_url != null) {
+                    BrowserUtil.open(target_url)
+                } else {
+                    ConfigCatNotifier.Notify.error(
+                        null,
+                        "Failed to open the link in the external browser. The URL is null."
+                    )
+                }
                 return true
             }
         }, jBCefBrowser.cefBrowser)
@@ -207,9 +213,10 @@ class WebViewPanel(
                 }
 
                 override fun onLoadEnd(browser: CefBrowser?, frame: CefFrame?, httpStatusCode: Int) {
+                    if (browser == null || frame?.isMain != true) return
                     // fire ng load event to properly renderer
                     //override CONFIGCAT_SUCCESS_METHOD to make jsQuery calls
-                    browser?.executeJavaScript(
+                    browser.executeJavaScript(
                         "document.dispatchEvent(new Event('startNgLoad'));" +
                                 "window['configCatSuccessMethod'] = function(returnId) {" +
                                 jSQuery.inject("returnId") +

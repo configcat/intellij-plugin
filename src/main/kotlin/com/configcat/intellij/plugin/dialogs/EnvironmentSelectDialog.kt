@@ -45,7 +45,9 @@ class EnvironmentSelectDialog(
 
         sortedComboBoxModel.addAll(environmentDropDownList)
         environmentsDropDown.model = sortedComboBoxModel
-        environmentsDropDown.selectedItem = environmentDropDownList[0]
+        if (!environmentDropDownList.isEmpty()) {
+            environmentsDropDown.selectedItem = environmentDropDownList[0]
+        }
 
         val dialogPanel: DialogPanel = panel {
             row {
@@ -78,18 +80,21 @@ class EnvironmentSelectDialog(
         // set selected env id to appData and create FFView
         val selectedEnvironment = environmentsDropDown.selectedItem as EnvironmentDropDown
         appData.environmentId = selectedEnvironment.id
-        project?.let {
+        project?.let { project ->
             val toolWindow =
-                ToolWindowManager.getInstance(it).getToolWindow(ConfigCatToolWindowFactory.CONFIGCAT_TOOL_WINDOW_ID)
-            val featureFlagsViewPanel =
-                ConfigCatToolWindowFactory.ConfigCatFeatureFlagsViewToolWindow(project, toolWindow!!, appData)
-            val content = ContentFactory.getInstance().createContent(
-                featureFlagsViewPanel.getContent(),
-                "$settingName ($selectedEnvironment)", false
-            )
-            content.isCloseable = true
-            toolWindow.contentManager.addContent(content)
-            toolWindow.contentManager.setSelectedContent(content)
+                ToolWindowManager.getInstance(project).getToolWindow(ConfigCatToolWindowFactory.CONFIGCAT_TOOL_WINDOW_ID)
+            toolWindow?.let { toolWindow ->
+                val featureFlagsViewPanel =
+                    ConfigCatToolWindowFactory.ConfigCatFeatureFlagsViewToolWindow(project, toolWindow, appData)
+                val content = ContentFactory.getInstance().createContent(
+                    featureFlagsViewPanel.getContent(),
+                    "$settingName ($selectedEnvironment)", false
+                )
+                content.isCloseable = true
+                toolWindow.contentManager.addContent(content)
+                toolWindow.contentManager.setSelectedContent(content)
+            }
+
         }
         super.doOKAction()
     }

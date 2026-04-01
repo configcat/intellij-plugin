@@ -10,47 +10,35 @@ class ConfigCatService {
 
     companion object {
 
-        fun createMeService(authConfig: PublicApiConfiguration, basePath: String): MeApi {
+        private fun createApiClient(authConfig: PublicApiConfiguration, basePath: String): ApiClient {
             val apiClient = ApiClient()
             apiClient.setBasePath(basePath)
             apiClient.setUsername(authConfig.basicAuthUserName)
             apiClient.setPassword(authConfig.basicAuthPassword)
-            return MeApi(apiClient)
+            return apiClient
+        }
+
+        fun createMeService(authConfig: PublicApiConfiguration, basePath: String): MeApi {
+            return MeApi(createApiClient(authConfig, basePath))
         }
 
         fun createProductsService(authConfig: PublicApiConfiguration, basePath: String): ProductsApi {
-            val apiClient = ApiClient()
-            apiClient.setBasePath(basePath)
-            apiClient.setUsername(authConfig.basicAuthUserName)
-            apiClient.setPassword(authConfig.basicAuthPassword)
-            return ProductsApi(apiClient)
+            return ProductsApi(createApiClient(authConfig, basePath))
         }
 
         fun createConfigsService(authConfig: PublicApiConfiguration, basePath: String): ConfigsApi {
-            val apiClient = ApiClient()
-            apiClient.setBasePath(basePath)
-            apiClient.setUsername(authConfig.basicAuthUserName)
-            apiClient.setPassword(authConfig.basicAuthPassword)
-            return ConfigsApi(apiClient)
+            return ConfigsApi(createApiClient(authConfig, basePath))
         }
 
         fun createFeatureFlagsSettingsService(
             authConfig: PublicApiConfiguration,
             basePath: String,
         ): FeatureFlagsSettingsApi {
-            val apiClient = ApiClient()
-            apiClient.setBasePath(basePath)
-            apiClient.setUsername(authConfig.basicAuthUserName)
-            apiClient.setPassword(authConfig.basicAuthPassword)
-            return FeatureFlagsSettingsApi(apiClient)
+            return FeatureFlagsSettingsApi(createApiClient(authConfig, basePath))
         }
 
         fun createEnvironmentsService(authConfig: PublicApiConfiguration, basePath: String): EnvironmentsApi {
-            val apiClient = ApiClient()
-            apiClient.setBasePath(basePath)
-            apiClient.setUsername(authConfig.basicAuthUserName)
-            apiClient.setPassword(authConfig.basicAuthPassword)
-            return EnvironmentsApi(apiClient)
+            return EnvironmentsApi(createApiClient(authConfig, basePath))
         }
 
     }

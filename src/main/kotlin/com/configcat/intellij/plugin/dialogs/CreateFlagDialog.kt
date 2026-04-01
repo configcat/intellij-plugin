@@ -51,7 +51,7 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel) : DialogW
             "",
             ""
         )
-        return WebViewPanelContainer(project!!, appData, VIEW_TYPE.CREATE_FLAG, { returnId -> saveSuccess(returnId) })
+        return WebViewPanelContainer(appData, VIEW_TYPE.CREATE_FLAG, { returnId -> saveSuccess(returnId) })
     }
 
 

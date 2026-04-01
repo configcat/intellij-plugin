@@ -68,7 +68,7 @@ class ConfigCatToolWindowFactory : ToolWindowFactory {
 
     class ConfigCatFeatureFlagsViewToolWindow(project: Project, toolWindow: ToolWindow, appData: AppData) {
 
-        private val viewFlagPanel = ViewFlagPanel(project, appData)
+        private val viewFlagPanel = ViewFlagPanel(appData)
         fun getContent() = JBPanel<JBPanel<*>>().apply {
             layout = BorderLayout()
             add(viewFlagPanel, BorderLayout.CENTER)
