@@ -19,12 +19,12 @@ class ConfigCatToolWindowFactory : ToolWindowFactory {
     }
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        val productsConfigsPanel = ProductsConfigsTreeToolWindow(project, toolWindow)
+        val productsConfigsPanel = ProductsConfigsTreeToolWindow(project)
         val productsConfigsContent =
             ContentFactory.getInstance().createContent(productsConfigsPanel.getContent(), "Products & Configs", false)
         productsConfigsContent.isCloseable = false
         toolWindow.contentManager.addContent(productsConfigsContent)
-        val settingsPanel = FeatureFlagsTreeToolWindow(project, toolWindow)
+        val settingsPanel = FeatureFlagsTreeToolWindow(project)
         val settingsContent =
             ContentFactory.getInstance().createContent(settingsPanel.getContent(), "Feature Flags & Settings", false)
         settingsContent.isCloseable = false
@@ -33,7 +33,7 @@ class ConfigCatToolWindowFactory : ToolWindowFactory {
 
     override fun shouldBeAvailable(project: Project) = true
 
-    class ProductsConfigsTreeToolWindow(project: Project, toolWindow: ToolWindow) {
+    class ProductsConfigsTreeToolWindow(project: Project) {
 
         private val configCatPanel = ProductsConfigsPanel.getInstance(project)
 
@@ -44,7 +44,7 @@ class ConfigCatToolWindowFactory : ToolWindowFactory {
         }
     }
 
-    class FeatureFlagsTreeToolWindow(project: Project, toolWindow: ToolWindow) {
+    class FeatureFlagsTreeToolWindow(project: Project) {
 
         private val configCatPanel = SettingsPanel.getInstance(project)
 
@@ -55,7 +55,7 @@ class ConfigCatToolWindowFactory : ToolWindowFactory {
         }
     }
 
-    class HelpToolWindow(project: Project, toolWindow: ToolWindow) {
+    class HelpToolWindow() {
 
         private val helpPanel = HelpPanel()
 
@@ -66,7 +66,7 @@ class ConfigCatToolWindowFactory : ToolWindowFactory {
         }
     }
 
-    class ConfigCatFeatureFlagsViewToolWindow(project: Project, toolWindow: ToolWindow, appData: AppData) {
+    class ConfigCatFeatureFlagsViewToolWindow(appData: AppData) {
 
         private val viewFlagPanel = ViewFlagPanel(appData)
         fun getContent() = JBPanel<JBPanel<*>>().apply {

@@ -16,14 +16,16 @@ class HelpAction : RefreshAction() {
         e.project?.let {
             val toolWindow =
                 ToolWindowManager.getInstance(it).getToolWindow(ConfigCatToolWindowFactory.CONFIGCAT_TOOL_WINDOW_ID)
-            val myToolWindow = ConfigCatToolWindowFactory.HelpToolWindow(e.project!!, toolWindow!!)
-            val content = ContentFactory.getInstance().createContent(
-                myToolWindow.getContent(),
-                "Help & Feedback", false
-            )
-            content.isCloseable = true
-            toolWindow.contentManager.addContent(content)
-            toolWindow.contentManager.setSelectedContent(content)
+            toolWindow?.let { toolWindow ->
+                val myToolWindow = ConfigCatToolWindowFactory.HelpToolWindow()
+                val content = ContentFactory.getInstance().createContent(
+                    myToolWindow.getContent(),
+                    "Help & Feedback", false
+                )
+                content.isCloseable = true
+                toolWindow.contentManager.addContent(content)
+                toolWindow.contentManager.setSelectedContent(content)
+            }
         }
     }
 

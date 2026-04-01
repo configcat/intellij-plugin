@@ -85,7 +85,7 @@ class EnvironmentSelectDialog(
                 ToolWindowManager.getInstance(project).getToolWindow(ConfigCatToolWindowFactory.CONFIGCAT_TOOL_WINDOW_ID)
             toolWindow?.let { toolWindow ->
                 val featureFlagsViewPanel =
-                    ConfigCatToolWindowFactory.ConfigCatFeatureFlagsViewToolWindow(project, toolWindow, appData)
+                    ConfigCatToolWindowFactory.ConfigCatFeatureFlagsViewToolWindow(appData)
                 val content = ContentFactory.getInstance().createContent(
                     featureFlagsViewPanel.getContent(),
                     "$settingName ($selectedEnvironment)", false
