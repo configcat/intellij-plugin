@@ -117,8 +117,8 @@ class FlagNode(val setting: SettingModel, parent: SimpleNode) : SimpleNode(null,
         if (setting.name.isEmpty() && setting.key.isEmpty()) {
             presentation.addText("<missing data>", SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES)
         } else {
-            presentation.addText(setting.key, SimpleTextAttributes.REGULAR_BOLD_ATTRIBUTES)
-            presentation.addText(" ${setting.name}", SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES)
+            presentation.addText(setting.name, SimpleTextAttributes.REGULAR_BOLD_ATTRIBUTES)
+            presentation.addText(" ${setting.key}", SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES)
         }
     }
 
@@ -131,7 +131,7 @@ class FlagNode(val setting: SettingModel, parent: SimpleNode) : SimpleNode(null,
     }
 
     override fun getName(): String {
-        return if (setting.name.isEmpty() && setting.key.isEmpty()) "<missing data>" else setting.key + " (${setting.name})"
+        return if (setting.name.isEmpty() && setting.key.isEmpty()) "<missing data>" else setting.name + " (${setting.key})"
     }
 }
 
