@@ -105,7 +105,6 @@ class WebViewPanelContainerTest : LightPlatformTestCase() {
         callback: ((String?) -> Unit)? = null,
     ): WebViewPanelContainer =
         WebViewPanelContainer(
-            project = mockk(relaxed = true),
             appData = testAppData,
             viewType = viewType,
             jsReceiverCallbackFunction = callback,
