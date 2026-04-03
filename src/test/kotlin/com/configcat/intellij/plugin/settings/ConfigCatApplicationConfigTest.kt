@@ -2,13 +2,17 @@ package com.configcat.intellij.plugin.settings
 
 import com.intellij.credentialStore.Credentials
 import com.intellij.ide.passwordSafe.PasswordSafe
+import com.intellij.openapi.application.ApplicationManager
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
 import io.mockk.unmockkObject
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -34,6 +38,23 @@ class ConfigCatApplicationConfigTest {
 	@After
 	fun tearDown() {
 		unmockkObject(PasswordSafe)
+	}
+
+	@Test
+	fun `getInstance should return service from application manager`() {
+		mockkStatic(ApplicationManager::class)
+		try {
+			val application = mockk<com.intellij.openapi.application.Application>()
+			val expected = ConfigCatApplicationConfig()
+			every { ApplicationManager.getApplication() } returns application
+			every { application.getService(ConfigCatApplicationConfig::class.java) } returns expected
+
+			val actual = ConfigCatApplicationConfig.getInstance()
+
+			assertSame(expected, actual)
+		} finally {
+			unmockkStatic(ApplicationManager::class)
+		}
 	}
 
 	@Test
