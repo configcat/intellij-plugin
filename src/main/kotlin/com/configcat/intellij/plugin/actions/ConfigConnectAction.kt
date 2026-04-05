@@ -31,7 +31,7 @@ class ConfigConnectAction : AnAction() {
         if (selectedNode == null || selectedNode !is ConfigNode) {
             ConfigCatNotifier.Notify.error(
                 e.project,
-                "Create action could not be executed without a selected Config Node."
+                "Connect action could not be executed without a selected Config Node."
             )
             return
         }
