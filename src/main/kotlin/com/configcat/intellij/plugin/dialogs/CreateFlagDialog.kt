@@ -69,15 +69,4 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel) : DialogW
             close(OK_EXIT_CODE)
         }
     }
-
-    data class SettingTypeDropDown(val name: String, val type: SettingType) : Comparable<SettingTypeDropDown> {
-
-        override fun compareTo(other: SettingTypeDropDown): Int {
-            return this.type.compareTo(other.type)
-        }
-
-        override fun toString(): String {
-            return name
-        }
-    }
 }
