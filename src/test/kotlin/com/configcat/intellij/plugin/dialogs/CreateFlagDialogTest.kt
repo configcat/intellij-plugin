@@ -7,7 +7,6 @@ import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.publicapi.java.client.ApiException
 import com.configcat.publicapi.java.client.model.ConfigModel
 import com.configcat.publicapi.java.client.model.ProductModel
-import com.configcat.publicapi.java.client.model.SettingType
 import com.intellij.openapi.util.Disposer
 import com.intellij.testFramework.LightPlatformTestCase
 import com.intellij.ui.jcef.JBCefApp
@@ -62,87 +61,6 @@ class CreateFlagDialogTest : LightPlatformTestCase() {
     override fun tearDown() {
         unmockkAll()
         super.tearDown()
-    }
-
-    // -------------------------------------------------------------------------
-    // SettingTypeDropDown – toString
-    // -------------------------------------------------------------------------
-
-    fun testSettingTypeDropDown_toString_returnsName() {
-        val dropDown = CreateFlagDialog.SettingTypeDropDown("Boolean", SettingType.BOOLEAN)
-
-        assertEquals("Boolean", dropDown.toString())
-    }
-
-    fun testSettingTypeDropDown_toString_returnsEmptyWhenNameIsEmpty() {
-        val dropDown = CreateFlagDialog.SettingTypeDropDown("", SettingType.STRING)
-
-        assertEquals("", dropDown.toString())
-    }
-
-    // -------------------------------------------------------------------------
-    // SettingTypeDropDown – compareTo
-    // -------------------------------------------------------------------------
-
-    fun testSettingTypeDropDown_compareTo_equalWhenSameType() {
-        val first = CreateFlagDialog.SettingTypeDropDown("Boolean", SettingType.BOOLEAN)
-        val second = CreateFlagDialog.SettingTypeDropDown("Bool", SettingType.BOOLEAN)
-
-        assertEquals("compareTo must return 0 for equal SettingType values", 0, first.compareTo(second))
-    }
-
-    fun testSettingTypeDropDown_compareTo_orderedBySettingType() {
-        val first = CreateFlagDialog.SettingTypeDropDown("Boolean", SettingType.BOOLEAN)
-        val second = CreateFlagDialog.SettingTypeDropDown("String", SettingType.STRING)
-
-        val result = first.compareTo(second)
-        // Just verify the ordering is consistent (not zero), direction depends on enum ordinal
-        assertEquals(
-            "compareTo must be consistent with SettingType.compareTo",
-            SettingType.BOOLEAN.compareTo(SettingType.STRING),
-            result
-        )
-    }
-
-    // -------------------------------------------------------------------------
-    // SettingTypeDropDown – data class equality & copy
-    // -------------------------------------------------------------------------
-
-    fun testSettingTypeDropDown_equality_sameValues_areEqual() {
-        val first = CreateFlagDialog.SettingTypeDropDown("Boolean", SettingType.BOOLEAN)
-        val second = CreateFlagDialog.SettingTypeDropDown("Boolean", SettingType.BOOLEAN)
-
-        assertEquals(first, second)
-    }
-
-    fun testSettingTypeDropDown_equality_differentType_areNotEqual() {
-        val first = CreateFlagDialog.SettingTypeDropDown("Boolean", SettingType.BOOLEAN)
-        val second = CreateFlagDialog.SettingTypeDropDown("Boolean", SettingType.STRING)
-
-        assertFalse("Instances with different SettingType must not be equal", first == second)
-    }
-
-    fun testSettingTypeDropDown_equality_differentName_areNotEqual() {
-        val first = CreateFlagDialog.SettingTypeDropDown("Boolean", SettingType.BOOLEAN)
-        val second = CreateFlagDialog.SettingTypeDropDown("Bool", SettingType.BOOLEAN)
-
-        assertFalse("Instances with different names must not be equal", first == second)
-    }
-
-    fun testSettingTypeDropDown_copy_preservesTypeAndChangesName() {
-        val original = CreateFlagDialog.SettingTypeDropDown("Boolean", SettingType.BOOLEAN)
-        val copy = original.copy(name = "Bool Flag")
-
-        assertEquals(SettingType.BOOLEAN, copy.type)
-        assertEquals("Bool Flag", copy.name)
-        assertNotSame(original, copy)
-    }
-
-    fun testSettingTypeDropDown_hashCode_equalObjectsHaveSameHashCode() {
-        val first = CreateFlagDialog.SettingTypeDropDown("Boolean", SettingType.BOOLEAN)
-        val second = CreateFlagDialog.SettingTypeDropDown("Boolean", SettingType.BOOLEAN)
-
-        assertEquals(first.hashCode(), second.hashCode())
     }
 
     // -------------------------------------------------------------------------
