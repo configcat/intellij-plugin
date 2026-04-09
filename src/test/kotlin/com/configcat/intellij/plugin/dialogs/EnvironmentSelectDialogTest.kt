@@ -190,7 +190,9 @@ class EnvironmentSelectDialogTest : LightPlatformTestCase() {
         val dialog = buildDialog(listOf(envModel), appData = appData)
         try {
             // project is null, so the project?.let block is skipped; doOKAction must not throw
-            dialog.doOKAction()
+            val doOkAction = EnvironmentSelectDialog::class.java.getDeclaredMethod("doOKAction")
+            doOkAction.isAccessible = true
+            doOkAction.invoke(dialog)
 
             // Verify appData.environmentId was updated with the selected environment's id
             assertEquals("00000000-0000-0000-0000-000000000002", appData.environmentId)

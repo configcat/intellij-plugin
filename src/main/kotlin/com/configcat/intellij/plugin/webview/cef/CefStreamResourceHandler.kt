@@ -18,12 +18,48 @@ class CefStreamResourceHandler(
     private val headers: Map<String, String> = mapOf(),
 ) : CefResourceHandler, Disposable {
 
+    internal fun processRequestInternal(onContinue: () -> Unit): Boolean {
+        onContinue()
+        return true
+    }
+
+    internal fun applyHeaders(
+        setMimeType: (String) -> Unit,
+        setStatus: (Int) -> Unit,
+        setHeader: (String, String) -> Unit,
+    ) {
+        setMimeType(myMimeType)
+        setStatus(200)
+        for (header in headers) {
+            setHeader(header.key, header.value)
+        }
+    }
+
+    internal fun readResponseInternal(
+        dataOut: ByteArray,
+        bytesToRead: Int,
+        onCancel: () -> Unit,
+    ): Pair<Boolean, Int> {
+        return try {
+            val readCount = myStream.read(dataOut, 0, bytesToRead)
+            if (readCount != -1) {
+                true to readCount
+            } else {
+                Disposer.dispose(this)
+                false to 0
+            }
+        } catch (e: IOException) {
+            onCancel()
+            Disposer.dispose(this)
+            false to 0
+        }
+    }
+
     override fun processRequest(
         request: CefRequest,
         callback: CefCallback,
     ): Boolean {
-        callback.Continue()
-        return true
+        return processRequestInternal { callback.Continue() }
     }
 
     override fun getResponseHeaders(
@@ -31,11 +67,11 @@ class CefStreamResourceHandler(
         responseLength: IntRef,
         redirectUrl: StringRef,
     ) {
-        response.mimeType = myMimeType
-        response.status = 200
-        for (header in headers) {
-            response.setHeaderByName(header.key, header.value, true)
-        }
+        applyHeaders(
+            setMimeType = { response.mimeType = it },
+            setStatus = { response.status = it },
+            setHeader = { key, value -> response.setHeaderByName(key, value, true) },
+        )
     }
 
     override fun readResponse(
@@ -44,17 +80,9 @@ class CefStreamResourceHandler(
         bytesRead: IntRef,
         callback: CefCallback,
     ): Boolean {
-        try {
-            bytesRead.set(myStream.read(dataOut, 0, bytesToRead))
-            if (bytesRead.get() != -1) {
-                return true
-            }
-        } catch (e: IOException) {
-            callback.cancel()
-        }
-        bytesRead.set(0)
-        Disposer.dispose(this)
-        return false
+        val (hasMoreData, readCount) = readResponseInternal(dataOut, bytesToRead) { callback.cancel() }
+        bytesRead.set(readCount)
+        return hasMoreData
     }
 
     override fun cancel() {

@@ -22,8 +22,7 @@ class CefLocalRequestHandler() : CefRequestHandlerAdapter() {
                 request: CefRequest,
                 callback: CefCallback,
             ): Boolean {
-                callback.cancel()
-                return false
+                return rejectRequest { callback.cancel() }
             }
         }
 
@@ -34,15 +33,38 @@ class CefLocalRequestHandler() : CefRequestHandlerAdapter() {
                 frame: CefFrame?,
                 request: CefRequest,
             ): CefResourceHandler {
-                val url = URI.create(request.url).toURL()
-                return try {
-                    val fileName = url.path.split("/").last()
-                    myResources[fileName]?.let { it() } ?: rejectingResourceHandler
-                } catch (e: RuntimeException) {
-                    rejectingResourceHandler
-                }
+                return resolveResourceHandler(request.url)
             }
         }
+
+    internal fun isDistUrl(url: String?): Boolean {
+        return url?.startsWith(distPrefix, true) == true
+    }
+
+    internal fun shouldConsumeNavigation(
+        userGesture: Boolean,
+        transitionType: CefRequest.TransitionType?,
+    ): Boolean {
+        return userGesture || transitionType == CefRequest.TransitionType.TT_LINK
+    }
+
+    internal fun resolveResourceHandler(url: String?): CefResourceHandler {
+        return try {
+            val fileName = URI.create(url.orEmpty()).toURL().path.split("/").last()
+            myResources[fileName]?.let { it() } ?: rejectingResourceHandler
+        } catch (e: RuntimeException) {
+            rejectingResourceHandler
+        }
+    }
+
+    internal fun isRejectingHandler(resourceHandler: CefResourceHandler): Boolean {
+        return resourceHandler === rejectingResourceHandler
+    }
+
+    internal fun rejectRequest(onCancel: () -> Unit): Boolean {
+        onCancel()
+        return false
+    }
 
     fun addResource(
         resourcePath: String,
@@ -60,7 +82,7 @@ class CefLocalRequestHandler() : CefRequestHandlerAdapter() {
         requestInitiator: String?,
         disableDefaultHandling: BoolRef?,
     ): CefResourceRequestHandler? {
-        if (request?.url.toString().startsWith(distPrefix, true)) {
+        if (isDistUrl(request?.url)) {
             return resourceRequestHandler
         }
         return null
@@ -74,11 +96,14 @@ class CefLocalRequestHandler() : CefRequestHandlerAdapter() {
         user_gesture: Boolean,
         is_redirect: Boolean,
     ): Boolean {
-        if (user_gesture) {
-            BrowserUtil.open(request?.url.toString())
-            return true
+        if (request == null) {
+            return super.onBeforeBrowse(browser, frame, null, user_gesture, is_redirect)
         }
-        if (request?.transitionType == CefRequest.TransitionType.TT_LINK) {
+
+        if (shouldConsumeNavigation(user_gesture, request.transitionType)) {
+            if (user_gesture) {
+                BrowserUtil.open(request.url.toString())
+            }
             return true
         }
 
