@@ -9,20 +9,21 @@ import com.intellij.ui.SimpleTextAttributes
 import com.intellij.ui.treeStructure.SimpleNode
 
 class ProductRootNode(private val products: List<ProductModel>) : SimpleNode() {
-
     private var productNodes: MutableList<SimpleNode> = ArrayList()
+
+    init {
+        for (product in products) {
+            productNodes.add(ProductNode(product, this))
+        }
+    }
 
     override fun isAutoExpandNode(): Boolean {
         return true
     }
 
     override fun getChildren(): Array<SimpleNode> {
-        if (products.isEmpty()) {
+        if (productNodes.isEmpty()) {
             return arrayOf(InfoNode("No products."))
-
-        }
-        for (product in products) {
-            productNodes.add(ProductNode(product, this))
         }
         return productNodes.toTypedArray()
     }
@@ -36,16 +37,17 @@ class ConfigRootNode(val flags: List<SettingModel>, val configName: String) : Si
 
     val flagNodes: MutableList<SimpleNode> = ArrayList()
 
-    override fun getChildren(): Array<SimpleNode> {
-        if (flags.isEmpty()) {
-            val infoNode = InfoNode("No flags.")
-            return arrayOf(infoNode)
-        } else {
-            for (flag in flags) {
-                flagNodes.add(FlagNode(flag, this))
-            }
-            return flagNodes.toTypedArray()
+    init {
+        for (flag in flags) {
+            flagNodes.add(FlagNode(flag, this))
         }
+    }
+
+    override fun getChildren(): Array<SimpleNode> {
+        if (flagNodes.isEmpty()) {
+            return arrayOf(InfoNode("No flags."))
+        }
+        return flagNodes.toTypedArray()
     }
 
     override fun getName(): String {
