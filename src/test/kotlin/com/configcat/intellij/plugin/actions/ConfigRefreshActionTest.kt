@@ -1,6 +1,5 @@
 package com.configcat.intellij.plugin.actions
 
-import com.configcat.intellij.plugin.messaging.ProductsConfigsTreeChangeNotifier
 import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -11,6 +10,7 @@ import io.mockk.*
 class ConfigRefreshActionTest : LightPlatformTestCase() {
 
     private lateinit var mockNodeDataService: ConfigCatNodeDataService
+    private lateinit var mockState: ConfigCatApplicationConfig.ConfigCatApplicationConfigState
 
     override fun setUp() {
         super.setUp()
@@ -18,8 +18,9 @@ class ConfigRefreshActionTest : LightPlatformTestCase() {
         mockNodeDataService = mockk(relaxed = true)
 
         val mockConfig = mockk<ConfigCatApplicationConfig>(relaxed = true)
-        val mockState = mockk<ConfigCatApplicationConfig.ConfigCatApplicationConfigState>(relaxed = true)
+        mockState = mockk<ConfigCatApplicationConfig.ConfigCatApplicationConfigState>(relaxed = true)
         every { mockConfig.state } returns mockState
+        every { mockState.isConfigured() } returns true
 
         mockkObject(ConfigCatApplicationConfig.Companion)
         every { ConfigCatApplicationConfig.getInstance() } returns mockConfig
@@ -61,7 +62,7 @@ class ConfigRefreshActionTest : LightPlatformTestCase() {
     // update
     // -------------------------------------------------------------------------
 
-    fun testUpdate_setsEnabledAndVisibleTrue() {
+    fun testUpdate_configured_setsEnabledAndVisibleTrue() {
         val action = ConfigRefreshAction()
         val event = mockk<AnActionEvent>(relaxed = true)
         val presentation = Presentation()
@@ -70,6 +71,20 @@ class ConfigRefreshActionTest : LightPlatformTestCase() {
         action.update(event)
 
         assertTrue("Presentation must be enabled and visible", presentation.isEnabledAndVisible)
+    }
+
+    fun testUpdate_notConfigured_isHidden() {
+        every { mockState.isConfigured() } returns false
+
+        val action = ConfigRefreshAction()
+        val event = mockk<AnActionEvent>(relaxed = true)
+        val presentation = Presentation()
+        every { event.presentation } returns presentation
+
+        action.update(event)
+
+        assertFalse("Presentation must be disabled when plugin is not configured", presentation.isEnabled)
+        assertFalse("Presentation must be hidden when plugin is not configured", presentation.isVisible)
     }
 
     // -------------------------------------------------------------------------

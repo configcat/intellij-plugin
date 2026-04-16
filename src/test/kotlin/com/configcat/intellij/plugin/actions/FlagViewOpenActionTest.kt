@@ -19,16 +19,18 @@ class FlagViewOpenActionTest : LightPlatformTestCase() {
 
     private lateinit var mockSettingsPanel: SettingsPanel
     private lateinit var mockEnvironmentsApi: EnvironmentsApi
+    private lateinit var mockState: ConfigCatApplicationConfig.ConfigCatApplicationConfigState
     private val productId = UUID.randomUUID()
     private val configId = UUID.randomUUID()
     private val settingId = 98765
 
     override fun setUp() {
         super.setUp()
-        val mockState = mockk<ConfigCatApplicationConfig.ConfigCatApplicationConfigState>(relaxed = true)
+        mockState = mockk<ConfigCatApplicationConfig.ConfigCatApplicationConfigState>(relaxed = true)
         every { mockState.dashboardBaseUrl } returns "https://app.configcat.com"
         every { mockState.authConfiguration } returns """{"basicAuthUserName":"user","basicAuthPassword":"pass"}"""
         every { mockState.publicApiBaseUrl } returns "https://api.configcat.com"
+        every { mockState.isConfigured() } returns true
         val mockConfig = mockk<ConfigCatApplicationConfig>(relaxed = true)
         every { mockConfig.state } returns mockState
         mockkObject(ConfigCatApplicationConfig.Companion)
@@ -120,6 +122,23 @@ class FlagViewOpenActionTest : LightPlatformTestCase() {
         FlagViewOpenAction().update(event)
         assertFalse(presentation.isEnabled)
         assertTrue(presentation.isVisible)
+    }
+
+    fun testUpdate_notConfigured_isHidden() {
+        every { mockState.isConfigured() } returns false
+
+        val presentation = Presentation()
+        val event = ActionTestFixtures.createSettingsEvent(
+            mockSettingsPanel,
+            ActionTestFixtures.createFlagTreeNode(settingId, configId, key = "flag_key", hint = "", rootName = "Test"),
+            ActionTestFixtures.createConnectedConfigModel(productId, configId, EvaluationVersion.V2)
+        )
+        every { event.presentation } returns presentation
+
+        FlagViewOpenAction().update(event)
+
+        assertFalse(presentation.isEnabled)
+        assertFalse(presentation.isVisible)
     }
 
     fun testCompanionObject_actionIdConstant() {

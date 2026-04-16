@@ -2,11 +2,10 @@ package com.configcat.intellij.plugin.actions
 
 import com.configcat.intellij.plugin.messaging.ProductsConfigsTreeChangeNotifier
 import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
-import com.intellij.ide.actions.RefreshAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
 
-class ConfigRefreshAction : RefreshAction() {
+class ConfigRefreshAction : ConfigCatBaseAnAction() {
     companion object {
         const val CONFIGCAT_CONFIG_REFRESH_ACTION_ID = "CONFIGCAT_CONFIG_REFRESH_ACTION_ID"
     }
@@ -26,8 +25,7 @@ class ConfigRefreshAction : RefreshAction() {
     }
 
     override fun update(e: AnActionEvent) {
-        super.update(e)
-        e.presentation.isEnabledAndVisible = true
+        updateVisibility(e, true)
     }
 
 }

@@ -6,8 +6,6 @@ import com.configcat.intellij.plugin.services.ConfigCatPropertiesService
 import com.configcat.intellij.plugin.toolWindow.ConfigCatToolWindowFactory
 import com.configcat.intellij.plugin.toolWindow.panel.ProductsConfigsPanel
 import com.configcat.intellij.plugin.toolWindow.tree.ConfigNode
-import com.intellij.openapi.actionSystem.ActionUpdateThread
-import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
@@ -15,13 +13,9 @@ import com.intellij.openapi.wm.ToolWindowManager
 import javax.swing.tree.DefaultMutableTreeNode
 
 
-class ConfigConnectAction : AnAction() {
+class ConfigConnectAction : ConfigCatBaseAnAction() {
     companion object {
         const val CONFIGCAT_CONNECT_ACTION_ID = "CONFIGCAT_CONNECT_ACTION_ID"
-    }
-
-    override fun getActionUpdateThread(): ActionUpdateThread {
-        return ActionUpdateThread.BGT
     }
 
     override fun actionPerformed(e: AnActionEvent) {
@@ -57,8 +51,7 @@ class ConfigConnectAction : AnAction() {
         val selectedElement: DefaultMutableTreeNode? = e.project?.service<ProductsConfigsPanel>()?.getSelectedNode()
 
         val selectedNode = selectedElement?.userObject
-        e.presentation.isEnabled = selectedNode != null && selectedNode is ConfigNode
-        e.presentation.isVisible = true
+        updateVisibility(e, selectedNode is ConfigNode)
     }
 
 }

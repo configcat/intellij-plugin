@@ -229,9 +229,6 @@ class SettingsPanel(
     private fun resetTreeView() {
         tree = null
         treeModel = null
-        if (toolbar != null) {
-            toolbar = null
-        }
     }
 
     override fun dispose() {

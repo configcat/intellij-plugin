@@ -15,13 +15,15 @@ import javax.swing.tree.DefaultMutableTreeNode
 class FlagKeyCopyActionTest : LightPlatformTestCase() {
 
     private lateinit var mockSettingsPanel: SettingsPanel
+    private lateinit var mockState: ConfigCatApplicationConfig.ConfigCatApplicationConfigState
 
     override fun setUp() {
         super.setUp()
 
         val mockConfig = mockk<ConfigCatApplicationConfig>(relaxed = true)
-        val mockState = mockk<ConfigCatApplicationConfig.ConfigCatApplicationConfigState>(relaxed = true)
+        mockState = mockk<ConfigCatApplicationConfig.ConfigCatApplicationConfigState>(relaxed = true)
         every { mockConfig.state } returns mockState
+        every { mockState.isConfigured() } returns true
 
         mockkObject(ConfigCatApplicationConfig.Companion)
         every { ConfigCatApplicationConfig.getInstance() } returns mockConfig
@@ -126,6 +128,26 @@ class FlagKeyCopyActionTest : LightPlatformTestCase() {
 
         assertTrue("Presentation must be enabled for FlagNode", presentation.isEnabled)
         assertTrue("Presentation must be visible", presentation.isVisible)
+    }
+
+    fun testUpdate_notConfigured_isHidden() {
+        every { mockState.isConfigured() } returns false
+
+        val action = FlagKeyCopyAction()
+        val flagTreeNode = ActionTestFixtures.createFlagTreeNode(
+            settingId = 1,
+            configId = UUID.randomUUID(),
+            hint = "",
+            rootName = "TestConfig"
+        )
+        val event = ActionTestFixtures.createSettingsEvent(mockSettingsPanel, flagTreeNode, null)
+        val presentation = Presentation()
+        every { event.presentation } returns presentation
+
+        action.update(event)
+
+        assertFalse("Presentation must be disabled when plugin is not configured", presentation.isEnabled)
+        assertFalse("Presentation must be hidden when plugin is not configured", presentation.isVisible)
     }
 
     fun testCompanionObject_actionIdConstant() {

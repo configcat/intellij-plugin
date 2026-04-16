@@ -22,6 +22,7 @@ class FlagOpenInBrowserActionTest : LightPlatformTestCase() {
     private lateinit var mockSettingsPanel: SettingsPanel
     private lateinit var mockBrowserLauncher: BrowserLauncher
     private lateinit var mockEnvironmentsApi: EnvironmentsApi
+    private lateinit var mockState: ConfigCatApplicationConfig.ConfigCatApplicationConfigState
 
     private val productId = UUID.randomUUID()
     private val configId = UUID.randomUUID()
@@ -32,10 +33,11 @@ class FlagOpenInBrowserActionTest : LightPlatformTestCase() {
     override fun setUp() {
         super.setUp()
 
-        val mockState = mockk<ConfigCatApplicationConfig.ConfigCatApplicationConfigState>(relaxed = true)
+        mockState = mockk<ConfigCatApplicationConfig.ConfigCatApplicationConfigState>(relaxed = true)
         every { mockState.dashboardBaseUrl } returns "https://app.configcat.com"
         every { mockState.authConfiguration } returns """{"basicAuthUserName":"user","basicAuthPassword":"pass"}"""
         every { mockState.publicApiBaseUrl } returns "https://api.configcat.com"
+        every { mockState.isConfigured() } returns true
 
         val mockConfig = mockk<ConfigCatApplicationConfig>(relaxed = true)
         every { mockConfig.state } returns mockState
@@ -233,6 +235,22 @@ class FlagOpenInBrowserActionTest : LightPlatformTestCase() {
 
         assertFalse("Presentation must be disabled when config is null", presentation.isEnabled)
         assertTrue("Presentation must be visible", presentation.isVisible)
+    }
+
+    fun testUpdate_notConfigured_isHidden() {
+        every { mockState.isConfigured() } returns false
+
+        val action = FlagOpenInBrowserAction()
+        val flagTreeNode = ActionTestFixtures.createFlagTreeNode(settingId, configId, hint = "", rootName = "TestConfig")
+        val configModel = ActionTestFixtures.createConnectedConfigModel(productId, configId, EvaluationVersion.V2, orgId)
+        val event = ActionTestFixtures.createSettingsEvent(mockSettingsPanel, flagTreeNode, configModel)
+        val presentation = Presentation()
+        every { event.presentation } returns presentation
+
+        action.update(event)
+
+        assertFalse("Presentation must be disabled when plugin is not configured", presentation.isEnabled)
+        assertFalse("Presentation must be hidden when plugin is not configured", presentation.isVisible)
     }
 
     // -------------------------------------------------------------------------

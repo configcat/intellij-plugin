@@ -5,20 +5,14 @@ import com.configcat.intellij.plugin.toolWindow.panel.SettingsPanel
 import com.configcat.intellij.plugin.toolWindow.tree.FlagNode
 import com.intellij.find.FindManager
 import com.intellij.find.FindModel
-import com.intellij.openapi.actionSystem.ActionUpdateThread
-import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.components.service
 import javax.swing.tree.DefaultMutableTreeNode
 
 
-class FlagKeySearchAction : AnAction() {
+class FlagKeySearchAction : ConfigCatBaseAnAction() {
     companion object {
         const val CONFIGCAT_SEARCH_FLAG_KEY_ACTION_ID = "CONFIGCAT_SEARCH_FLAG_KEY_ACTION_ID"
-    }
-
-    override fun getActionUpdateThread(): ActionUpdateThread {
-        return ActionUpdateThread.BGT
     }
 
     override fun actionPerformed(e: AnActionEvent) {
@@ -42,11 +36,9 @@ class FlagKeySearchAction : AnAction() {
     }
 
     override fun update(e: AnActionEvent) {
-        super.update(e)
         val selectedElement: DefaultMutableTreeNode? = e.project?.service<SettingsPanel>()?.getSelectedNode()
 
-        e.presentation.isEnabled = selectedElement != null && selectedElement.userObject is FlagNode
-        e.presentation.isVisible = true
+        updateVisibility(e, selectedElement?.userObject is FlagNode)
     }
 
 

@@ -5,21 +5,15 @@ import com.configcat.intellij.plugin.dialogs.CreateConfigDialog
 import com.configcat.intellij.plugin.messaging.ProductsConfigsTreeChangeNotifier
 import com.configcat.intellij.plugin.toolWindow.panel.ProductsConfigsPanel
 import com.configcat.intellij.plugin.toolWindow.tree.ProductNode
-import com.intellij.openapi.actionSystem.ActionUpdateThread
-import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
 import javax.swing.tree.DefaultMutableTreeNode
 
 
-class ConfigCreateAction : AnAction() {
+class ConfigCreateAction : ConfigCatBaseAnAction() {
     companion object {
         const val CONFIGCAT_CONFIG_CREATE_ACTION_ID = "CONFIGCAT_CONFIG_CREATE_ACTION_ID"
-    }
-
-    override fun getActionUpdateThread(): ActionUpdateThread {
-        return ActionUpdateThread.BGT
     }
 
     override fun actionPerformed(e: AnActionEvent) {
@@ -40,8 +34,7 @@ class ConfigCreateAction : AnAction() {
     override fun update(e: AnActionEvent) {
         val selectedElement: DefaultMutableTreeNode? = e.project?.service<ProductsConfigsPanel>()?.getSelectedNode()
         val selectedNode = selectedElement?.userObject
-        e.presentation.isEnabled = selectedNode != null && selectedNode is ProductNode
-        e.presentation.isVisible = true
+        updateVisibility(e, selectedNode is ProductNode)
     }
 
     private fun nodeRefreshPublish(node: DefaultMutableTreeNode) {

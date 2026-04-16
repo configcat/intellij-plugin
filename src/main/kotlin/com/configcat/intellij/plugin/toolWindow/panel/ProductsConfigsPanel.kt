@@ -253,9 +253,6 @@ class ProductsConfigsPanel(
     private fun resetTreeView() {
         tree = null
         treeModel = null
-        if (toolbar != null) {
-            toolbar = null
-        }
     }
 
     private fun refreshTree() {
