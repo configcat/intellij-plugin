@@ -2,11 +2,13 @@ package com.configcat.intellij.plugin.actions
 
 import com.configcat.intellij.plugin.ConfigCatNotifier
 import com.configcat.intellij.plugin.ErrorHandler
+import com.configcat.intellij.plugin.dialogs.EnvironmentSelectDialog
 import com.configcat.intellij.plugin.services.ConfigCatService
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.intellij.plugin.toolWindow.panel.SettingsPanel
 import com.configcat.publicapi.java.client.ApiException
 import com.configcat.publicapi.java.client.api.EnvironmentsApi
+import com.configcat.publicapi.java.client.model.EnvironmentModel
 import com.configcat.publicapi.java.client.model.EvaluationVersion
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.Presentation
@@ -87,6 +89,26 @@ class FlagViewOpenActionTest : LightPlatformTestCase() {
         )
         FlagViewOpenAction().actionPerformed(event)
         verify { ErrorHandler.errorNotify(any<ApiException>()) }
+    }
+
+    fun testActionPerformed_dialogCancelled_returnsEarly() {
+        val envModel = mockk<EnvironmentModel>(relaxed = true)
+        every { envModel.name } returns "Production"
+        every { envModel.environmentId } returns UUID.randomUUID()
+        every { mockEnvironmentsApi.getEnvironments(productId) } returns listOf(envModel)
+
+        mockkConstructor(EnvironmentSelectDialog::class)
+        every { anyConstructed<EnvironmentSelectDialog>().showAndGet() } returns false
+
+        val event = ActionTestFixtures.createSettingsEvent(
+            mockSettingsPanel,
+            ActionTestFixtures.createFlagTreeNode(settingId, configId, key = "flag_key", hint = "", rootName = "Test"),
+            ActionTestFixtures.createConnectedConfigModel(productId, configId, EvaluationVersion.V2)
+        )
+        FlagViewOpenAction().actionPerformed(event)
+
+        // No error notifications should happen when dialog is cancelled
+        verify(exactly = 0) { ConfigCatNotifier.Notify.error(any(), any()) }
     }
 
     fun testUpdate_nullSelectedNode_isDisabled() {

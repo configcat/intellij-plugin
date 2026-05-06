@@ -5,7 +5,9 @@ import com.configcat.intellij.plugin.Constants
 import com.configcat.intellij.plugin.ErrorHandler
 
 import com.configcat.intellij.plugin.dialogs.EnvironmentSelectDialog
+import com.configcat.intellij.plugin.dialogs.EnvironmentSelectDialog.EnvironmentDropDown
 import com.configcat.intellij.plugin.services.ConfigCatService
+import com.configcat.intellij.plugin.toolWindow.ConfigCatToolWindowFactory
 import com.configcat.intellij.plugin.toolWindow.panel.SettingsPanel
 import com.configcat.intellij.plugin.toolWindow.tree.FlagNode
 import com.configcat.intellij.plugin.webview.AppData
@@ -13,6 +15,8 @@ import com.configcat.publicapi.java.client.ApiException
 
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.components.service
+import com.intellij.openapi.wm.ToolWindowManager
+import com.intellij.ui.content.ContentFactory
 import javax.swing.tree.DefaultMutableTreeNode
 
 
@@ -43,6 +47,14 @@ class FlagViewOpenAction : ConfigCatBaseAnAction() {
             ErrorHandler.errorNotify(exception)
             return
         }
+        val selectedEnvironment: EnvironmentDropDown?
+        val dialog = EnvironmentSelectDialog(e.project, environments, )
+        if (dialog.showAndGet()) {
+            selectedEnvironment = dialog.selectedEnvironment
+            // use envId
+        } else {
+            return
+        }
 
         val evaluationVersion = configModel.evaluationVersion
 
@@ -57,12 +69,27 @@ class FlagViewOpenAction : ConfigCatBaseAnAction() {
             "",
             selectedNode.setting.configId.toString(),
             "",
-            "",
+            selectedEnvironment?.id ?: "",
             evaluationVersion.toString(),
             selectedNode.setting.settingId.toString()
         )
 
-        EnvironmentSelectDialog(e.project, environments, appData, selectedNode.setting.name).show()
+        e.project?.let { project ->
+            val toolWindow =
+                ToolWindowManager.getInstance(project).getToolWindow(ConfigCatToolWindowFactory.CONFIGCAT_TOOL_WINDOW_ID)
+            toolWindow?.let { toolWindow ->
+                val featureFlagsViewPanel =
+                    ConfigCatToolWindowFactory.ConfigCatFeatureFlagsViewToolWindow(appData)
+                val content = ContentFactory.getInstance().createContent(
+                    featureFlagsViewPanel.getContent(),
+                    "$selectedNode.setting.name (${selectedEnvironment?.name})", false
+                )
+                content.isCloseable = true
+                toolWindow.contentManager.addContent(content)
+                toolWindow.contentManager.setSelectedContent(content)
+            }
+
+        }
     }
 
     override fun update(e: AnActionEvent) {

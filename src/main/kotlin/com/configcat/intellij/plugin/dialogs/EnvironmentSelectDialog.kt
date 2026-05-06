@@ -1,7 +1,5 @@
 package com.configcat.intellij.plugin.dialogs
 
-import com.configcat.intellij.plugin.toolWindow.ConfigCatToolWindowFactory
-import com.configcat.intellij.plugin.webview.AppData
 import com.configcat.publicapi.java.client.model.EnvironmentModel
 import com.intellij.collaboration.ui.util.name
 import com.intellij.openapi.project.Project
@@ -9,9 +7,7 @@ import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.ui.ValidationInfo
-import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.ui.SortedComboBoxModel
-import com.intellij.ui.content.ContentFactory
 import com.intellij.ui.dsl.builder.COLUMNS_MEDIUM
 import com.intellij.ui.dsl.builder.columns
 import com.intellij.ui.dsl.builder.panel
@@ -20,12 +16,10 @@ import javax.swing.JComponent
 class EnvironmentSelectDialog(
     val project: Project?,
     private val environments: List<EnvironmentModel>,
-    val appData: AppData,
-    val settingName: String,
 ) : DialogWrapper(true) {
 
     private val environmentsDropDown = ComboBox<EnvironmentDropDown>()
-
+    var selectedEnvironment: EnvironmentDropDown? = null
 
     init {
         title = "Select an Environment"
@@ -77,25 +71,7 @@ class EnvironmentSelectDialog(
     }
 
     override fun doOKAction() {
-        // set selected env id to appData and create FFView
-        val selectedEnvironment = environmentsDropDown.selectedItem as EnvironmentDropDown
-        appData.environmentId = selectedEnvironment.id
-        project?.let { project ->
-            val toolWindow =
-                ToolWindowManager.getInstance(project).getToolWindow(ConfigCatToolWindowFactory.CONFIGCAT_TOOL_WINDOW_ID)
-            toolWindow?.let { toolWindow ->
-                val featureFlagsViewPanel =
-                    ConfigCatToolWindowFactory.ConfigCatFeatureFlagsViewToolWindow(appData)
-                val content = ContentFactory.getInstance().createContent(
-                    featureFlagsViewPanel.getContent(),
-                    "$settingName ($selectedEnvironment)", false
-                )
-                content.isCloseable = true
-                toolWindow.contentManager.addContent(content)
-                toolWindow.contentManager.setSelectedContent(content)
-            }
-
-        }
+        selectedEnvironment = environmentsDropDown.selectedItem as EnvironmentDropDown
         super.doOKAction()
     }
 

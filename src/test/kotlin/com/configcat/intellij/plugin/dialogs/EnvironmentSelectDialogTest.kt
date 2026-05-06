@@ -1,6 +1,5 @@
 package com.configcat.intellij.plugin.dialogs
 
-import com.configcat.intellij.plugin.webview.AppData
 import com.configcat.publicapi.java.client.model.EnvironmentModel
 import com.intellij.openapi.util.Disposer
 import com.intellij.testFramework.LightPlatformTestCase
@@ -181,21 +180,22 @@ class EnvironmentSelectDialogTest : LightPlatformTestCase() {
     // doOKAction with null project
     // -------------------------------------------------------------------------
 
-    fun testDoOKAction_nullProject_doesNotThrow() {
+    fun testDoOKAction_nullProject_setsSelectedEnvironment() {
         val envModel = mockk<EnvironmentModel>(relaxed = true)
         every { envModel.name } returns "Staging"
         every { envModel.environmentId } returns UUID.fromString("00000000-0000-0000-0000-000000000002")
 
-        val appData = createTestAppData()
-        val dialog = buildDialog(listOf(envModel), appData = appData)
+        val dialog = buildDialog(listOf(envModel))
         try {
-            // project is null, so the project?.let block is skipped; doOKAction must not throw
+            // project is null, so doOKAction must not throw; it just sets selectedEnvironment
             val doOkAction = EnvironmentSelectDialog::class.java.getDeclaredMethod("doOKAction")
             doOkAction.isAccessible = true
             doOkAction.invoke(dialog)
 
-            // Verify appData.environmentId was updated with the selected environment's id
-            assertEquals("00000000-0000-0000-0000-000000000002", appData.environmentId)
+            // Verify selectedEnvironment was set from the dropdown
+            assertNotNull("selectedEnvironment must be set after doOKAction", dialog.selectedEnvironment)
+            assertEquals("00000000-0000-0000-0000-000000000002", dialog.selectedEnvironment!!.id)
+            assertEquals("Staging", dialog.selectedEnvironment!!.name)
         } finally {
             safeDispose(dialog)
         }
@@ -207,28 +207,11 @@ class EnvironmentSelectDialogTest : LightPlatformTestCase() {
 
     private fun buildDialog(
         environments: List<EnvironmentModel>,
-        appData: AppData = createTestAppData(),
     ): EnvironmentSelectDialog =
         EnvironmentSelectDialog(
             project = null,
             environments = environments,
-            appData = appData,
-            settingName = "My Feature Flag",
         )
-
-    private fun createTestAppData() = AppData(
-        publicApiBaseUrl = "https://api.configcat.com",
-        basicAuthUsername = "user",
-        basicAuthPassword = "pass",
-        dashboardBasePath = "https://app.configcat.com",
-        productId = "test-product",
-        productName = "Test Product",
-        configId = "test-config",
-        configName = "Test Config",
-        environmentId = "",
-        evaluationVersion = "V2",
-        settingId = "",
-    )
 
     private fun safeDispose(dialog: EnvironmentSelectDialog) {
         try {

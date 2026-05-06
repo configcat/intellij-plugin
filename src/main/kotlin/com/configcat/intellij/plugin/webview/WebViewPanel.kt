@@ -32,7 +32,7 @@ data class AppData(
     val productName: String,
     val configId: String,
     val configName: String,
-    var environmentId: String,
+    val environmentId: String,
     val evaluationVersion: String,
     val settingId: String,
 )
