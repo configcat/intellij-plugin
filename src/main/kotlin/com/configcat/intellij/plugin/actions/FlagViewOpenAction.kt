@@ -82,7 +82,7 @@ class FlagViewOpenAction : ConfigCatBaseAnAction() {
                     ConfigCatToolWindowFactory.ConfigCatFeatureFlagsViewToolWindow(appData)
                 val content = ContentFactory.getInstance().createContent(
                     featureFlagsViewPanel.getContent(),
-                    "$selectedNode.setting.name (${selectedEnvironment?.name})", false
+                    "${selectedNode.setting.name} (${selectedEnvironment?.name})", false
                 )
                 content.isCloseable = true
                 toolWindow.contentManager.addContent(content)

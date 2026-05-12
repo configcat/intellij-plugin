@@ -91,7 +91,6 @@ class WebViewPanel(
         ApplicationManager.getApplication().messageBus.connect(this)
             .subscribe(ThemeChangeNotifier.THEME_CHANGE_TOPIC, handleThemeChange)
 
-
         layout = CardLayout().apply {
             alignmentX = LEFT_ALIGNMENT
             alignmentY = TOP_ALIGNMENT
