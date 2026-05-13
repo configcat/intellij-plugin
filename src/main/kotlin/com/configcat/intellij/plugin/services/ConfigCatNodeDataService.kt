@@ -49,7 +49,7 @@ class ConfigCatNodeDataService {
         val configs = try {
             configsService.getConfigs(productId)
         } catch (exception: ApiException) {
-            ErrorHandler.errorNotify(exception)
+            ErrorHandler.errorNotify(exception, "Failed to load configs list. For more information check the logs.", null)
             return
         }
         productConfigs[productId] = configs
@@ -67,7 +67,7 @@ class ConfigCatNodeDataService {
         val settings = try {
             featureFlagsSettingsService.getSettings(configId)
         } catch (exception: ApiException) {
-            ErrorHandler.errorNotify(exception)
+            ErrorHandler.errorNotify(exception, "Failed to load flags list. For more information check the logs.", null)
             return
         }
         configFlags[configId] = settings

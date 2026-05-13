@@ -44,7 +44,7 @@ class FlagViewOpenAction : ConfigCatBaseAnAction() {
         val environments = try {
             environmentsService.getEnvironments(configModel.product.productId)
         } catch (exception: ApiException) {
-            ErrorHandler.errorNotify(exception)
+            ErrorHandler.errorNotify(exception, "Failed to get environment list. For more information check the logs.", e.project)
             return
         }
         val selectedEnvironment: EnvironmentDropDown?

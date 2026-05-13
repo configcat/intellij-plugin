@@ -208,7 +208,7 @@ class SettingsPanel(
         val settings = try {
             featureFlagsSettingsService.getSettings(connectedConfig.configId)
         } catch (exception: ApiException) {
-            ErrorHandler.errorNotify(exception)
+            ErrorHandler.errorNotify(exception, "Failed to load flags list. For more information check the logs.", null)
             return null
         }
 
@@ -254,7 +254,7 @@ class SettingsPanel(
         try {
             connectedConfig = configsService.getConfig(UUID.fromString(connectedConfigId))
         } catch (exception: ApiException) {
-            ErrorHandler.errorNotify(exception)
+            ErrorHandler.errorNotify(exception, "Failed to load config. For more information check the logs.", null)
             return null
         }
         return connectedConfig

@@ -146,7 +146,7 @@ class ProductsConfigsPanel(
         val products = try {
                 productsService.products
         } catch (exception: ApiException) {
-            ErrorHandler.errorNotify(exception)
+            ErrorHandler.errorNotify(exception, "Failed to load products list. For more information check the logs.", null)
             return null
         }
 

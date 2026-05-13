@@ -125,7 +125,6 @@ class ConfigCatConfigurable() : BoundConfigurable(displayName = "ConfigCat Featu
             } catch (exception: ApiException) {
                 loginFailedRow.visible(true)
                 ErrorHandler.errorNotify(exception)
-                thisLogger().error("ConfigCat Authentication failed.", exception)
                 return
             }
         }
