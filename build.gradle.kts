@@ -144,8 +144,8 @@ intellijPlatform {
             select {
                 types = listOf(IntelliJPlatformType.IntellijIdea)
                 channels = listOf(ProductRelease.Channel.RELEASE)
-                sinceBuild = "253"
-                untilBuild = "253.*"
+                sinceBuild = "261"
+                untilBuild = "261.*"
             }
         }
     }
@@ -185,8 +185,8 @@ tasks {
 intellijPlatformTesting {
     runIde {
         register("runIdeForUiTests") {
-            type = IntelliJPlatformType.IntellijIdeaUltimate
-            version = "251.25410.59"
+            type = IntelliJPlatformType.IntellijIdea
+            version = "2026.1"
             task {
                 jvmArgumentProviders += CommandLineArgumentProvider {
                     listOf(
