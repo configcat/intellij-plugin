@@ -50,7 +50,7 @@ class ConfigCatNodeDataServiceTest : LightPlatformTestCase() {
         every { ConfigCatService.createFeatureFlagsSettingsService(any(), any()) } returns mockFeatureFlagsApi
 
         mockkObject(ErrorHandler)
-        every { ErrorHandler.errorNotify(any()) } just Runs
+        every { ErrorHandler.errorNotify(any<ApiException>(), any(), any()) } just Runs
 
         mockkObject(ConfigCatNotifier.Notify)
         every { ConfigCatNotifier.Notify.error(any()) } just Runs
@@ -156,7 +156,7 @@ class ConfigCatNodeDataServiceTest : LightPlatformTestCase() {
         service.loadConfigs(productId)
 
         assertNull("Configs must not be cached after a 401 error", service.getProductConfigs(productId))
-        verify { ErrorHandler.errorNotify(any<ApiException>()) }
+        verify { ErrorHandler.errorNotify(any<ApiException>(), "Failed to load configs list. For more information check the logs.", null) }
     }
 
     fun testLoadConfigs_api429TooManyRequests_doesNotCacheAndNotifiesError() {
@@ -166,7 +166,7 @@ class ConfigCatNodeDataServiceTest : LightPlatformTestCase() {
         service.loadConfigs(productId)
 
         assertNull("Configs must not be cached after a 429 error", service.getProductConfigs(productId))
-        verify { ErrorHandler.errorNotify(any<ApiException>()) }
+        verify { ErrorHandler.errorNotify(any<ApiException>(), "Failed to load configs list. For more information check the logs.", null) }
     }
 
     fun testLoadConfigs_api500ServerError_doesNotCacheAndNotifiesError() {
@@ -176,7 +176,7 @@ class ConfigCatNodeDataServiceTest : LightPlatformTestCase() {
         service.loadConfigs(productId)
 
         assertNull("Configs must not be cached after a 500 error", service.getProductConfigs(productId))
-        verify { ErrorHandler.errorNotify(any<ApiException>()) }
+        verify { ErrorHandler.errorNotify(any<ApiException>(), "Failed to load configs list. For more information check the logs.", null) }
     }
 
     fun testLoadConfigs_api503ServiceUnavailable_doesNotCacheAndNotifiesError() {
@@ -186,7 +186,7 @@ class ConfigCatNodeDataServiceTest : LightPlatformTestCase() {
         service.loadConfigs(productId)
 
         assertNull("Configs must not be cached after a 503 error", service.getProductConfigs(productId))
-        verify { ErrorHandler.errorNotify(any<ApiException>()) }
+        verify { ErrorHandler.errorNotify(any<ApiException>(), "Failed to load configs list. For more information check the logs.", null) }
     }
 
     // -------------------------------------------------------------------------
@@ -263,7 +263,7 @@ class ConfigCatNodeDataServiceTest : LightPlatformTestCase() {
         service.loadFlags(configId)
 
         assertNull("Flags must not be cached after a 401 error", configFlagsField(service)[configId])
-        verify { ErrorHandler.errorNotify(any<ApiException>()) }
+        verify { ErrorHandler.errorNotify(any<ApiException>(), "Failed to load flags list. For more information check the logs.", null) }
     }
 
     fun testLoadFlags_api429TooManyRequests_doesNotCacheFlagsAndNotifiesError() {
@@ -273,7 +273,7 @@ class ConfigCatNodeDataServiceTest : LightPlatformTestCase() {
         service.loadFlags(configId)
 
         assertNull("Flags must not be cached after a 429 error", configFlagsField(service)[configId])
-        verify { ErrorHandler.errorNotify(any<ApiException>()) }
+        verify { ErrorHandler.errorNotify(any<ApiException>(), "Failed to load flags list. For more information check the logs.", null) }
     }
 
     fun testLoadFlags_api500ServerError_doesNotCacheFlagsAndNotifiesError() {
@@ -283,7 +283,7 @@ class ConfigCatNodeDataServiceTest : LightPlatformTestCase() {
         service.loadFlags(configId)
 
         assertNull("Flags must not be cached after a 500 error", configFlagsField(service)[configId])
-        verify { ErrorHandler.errorNotify(any<ApiException>()) }
+        verify { ErrorHandler.errorNotify(any<ApiException>(), "Failed to load flags list. For more information check the logs.", null) }
     }
 
     fun testLoadFlags_api503ServiceUnavailable_doesNotCacheFlagsAndNotifiesError() {
@@ -293,7 +293,7 @@ class ConfigCatNodeDataServiceTest : LightPlatformTestCase() {
         service.loadFlags(configId)
 
         assertNull("Flags must not be cached after a 503 error", configFlagsField(service)[configId])
-        verify { ErrorHandler.errorNotify(any<ApiException>()) }
+        verify { ErrorHandler.errorNotify(any<ApiException>(), "Failed to load flags list. For more information check the logs.", null) }
     }
 
     // -------------------------------------------------------------------------

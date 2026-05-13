@@ -70,7 +70,7 @@ class SettingsPanelTest : LightPlatformTestCase() {
         every { ConfigCatService.createFeatureFlagsSettingsService(any(), any()) } returns mockFeatureFlagsApi
 
         mockkObject(ErrorHandler)
-        every { ErrorHandler.errorNotify(any()) } just Runs
+        every { ErrorHandler.errorNotify(any<ApiException>(), any(), any()) } just Runs
     }
 
     override fun tearDown() {
@@ -120,7 +120,7 @@ class SettingsPanelTest : LightPlatformTestCase() {
 
         assertNull("tree must remain null after 401 on getConfig()", treeField(panel))
         assertNull("treeModel must remain null after 401 on getConfig()", treeModelField(panel))
-        verify { ErrorHandler.errorNotify(any<ApiException>()) }
+        verify { ErrorHandler.errorNotify(any<ApiException>(), "Failed to load config. For more information check the logs.", null) }
     }
 
     fun testInitTree_getConfig_api429TooManyRequests_treeRemainsNull() {
@@ -133,7 +133,7 @@ class SettingsPanelTest : LightPlatformTestCase() {
 
         assertNull("tree must remain null after 429 on getConfig()", treeField(panel))
         assertNull("treeModel must remain null after 429 on getConfig()", treeModelField(panel))
-        verify { ErrorHandler.errorNotify(any<ApiException>()) }
+        verify { ErrorHandler.errorNotify(any<ApiException>(), "Failed to load config. For more information check the logs.", null) }
     }
 
     fun testInitTree_getConfig_api500ServerError_treeRemainsNull() {
@@ -146,7 +146,7 @@ class SettingsPanelTest : LightPlatformTestCase() {
 
         assertNull("tree must remain null after 500 on getConfig()", treeField(panel))
         assertNull("treeModel must remain null after 500 on getConfig()", treeModelField(panel))
-        verify { ErrorHandler.errorNotify(any<ApiException>()) }
+        verify { ErrorHandler.errorNotify(any<ApiException>(), "Failed to load config. For more information check the logs.", null) }
     }
 
     fun testInitTree_getConfig_api503ServiceUnavailable_treeRemainsNull() {
@@ -159,7 +159,7 @@ class SettingsPanelTest : LightPlatformTestCase() {
 
         assertNull("tree must remain null after 503 on getConfig()", treeField(panel))
         assertNull("treeModel must remain null after 503 on getConfig()", treeModelField(panel))
-        verify { ErrorHandler.errorNotify(any<ApiException>()) }
+        verify { ErrorHandler.errorNotify(any<ApiException>(), "Failed to load config. For more information check the logs.", null) }
     }
 
     // -------------------------------------------------------------------------
@@ -176,7 +176,7 @@ class SettingsPanelTest : LightPlatformTestCase() {
 
         assertNull("tree must remain null after 401 on getSettings()", treeField(panel))
         assertNull("treeModel must remain null after 401 on getSettings()", treeModelField(panel))
-        verify { ErrorHandler.errorNotify(any<ApiException>()) }
+        verify { ErrorHandler.errorNotify(any<ApiException>(), "Failed to load flags list. For more information check the logs.", null) }
     }
 
     fun testInitTree_getSettings_api429TooManyRequests_treeRemainsNull() {
@@ -189,7 +189,7 @@ class SettingsPanelTest : LightPlatformTestCase() {
 
         assertNull("tree must remain null after 429 on getSettings()", treeField(panel))
         assertNull("treeModel must remain null after 429 on getSettings()", treeModelField(panel))
-        verify { ErrorHandler.errorNotify(any<ApiException>()) }
+        verify { ErrorHandler.errorNotify(any<ApiException>(), "Failed to load flags list. For more information check the logs.", null) }
     }
 
     fun testInitTree_getSettings_api500ServerError_treeRemainsNull() {
@@ -202,7 +202,7 @@ class SettingsPanelTest : LightPlatformTestCase() {
 
         assertNull("tree must remain null after 500 on getSettings()", treeField(panel))
         assertNull("treeModel must remain null after 500 on getSettings()", treeModelField(panel))
-        verify { ErrorHandler.errorNotify(any<ApiException>()) }
+        verify { ErrorHandler.errorNotify(any<ApiException>(), "Failed to load flags list. For more information check the logs.", null) }
     }
 
     fun testInitTree_getSettings_api503ServiceUnavailable_treeRemainsNull() {
@@ -215,7 +215,7 @@ class SettingsPanelTest : LightPlatformTestCase() {
 
         assertNull("tree must remain null after 503 on getSettings()", treeField(panel))
         assertNull("treeModel must remain null after 503 on getSettings()", treeModelField(panel))
-        verify { ErrorHandler.errorNotify(any<ApiException>()) }
+        verify { ErrorHandler.errorNotify(any<ApiException>(), "Failed to load flags list. For more information check the logs.", null) }
     }
 
     // -------------------------------------------------------------------------
@@ -270,7 +270,7 @@ class SettingsPanelTest : LightPlatformTestCase() {
         val panel = buildPanel()
 
         assertNull("loadConnectedConfig() must return null when API throws", panel.loadConnectedConfig())
-        verify { ErrorHandler.errorNotify(any<ApiException>()) }
+        verify { ErrorHandler.errorNotify(any<ApiException>(), "Failed to load config. For more information check the logs.", null) }
     }
 
     fun testLoadConnectedConfig_success_returnsConfigModel() {
@@ -381,7 +381,7 @@ class SettingsPanelTest : LightPlatformTestCase() {
         waitForAsync()
 
         assertNull("Tree must become null when getSettings() throws during refresh", treeField(panel))
-        verify { ErrorHandler.errorNotify(any<ApiException>()) }
+        verify { ErrorHandler.errorNotify(any<ApiException>(), "Failed to load flags list. For more information check the logs.", null) }
     }
 
     fun testRefreshTree_successAfterPreviousGetSettingsFailure_treeIsRestored() {

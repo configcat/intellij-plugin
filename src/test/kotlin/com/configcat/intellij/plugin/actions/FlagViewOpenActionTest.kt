@@ -41,7 +41,7 @@ class FlagViewOpenActionTest : LightPlatformTestCase() {
         every { ConfigCatNotifier.Notify.error(any(), any()) } just Runs
         every { ConfigCatNotifier.Notify.error(any<String>()) } just Runs
         mockkObject(ErrorHandler)
-        every { ErrorHandler.errorNotify(any<ApiException>()) } just Runs
+        every { ErrorHandler.errorNotify(any<ApiException>(), any(), any()) } just Runs
         mockSettingsPanel = mockk(relaxed = true)
         mockEnvironmentsApi = mockk(relaxed = true)
         mockkObject(ConfigCatService.Companion)
@@ -88,7 +88,13 @@ class FlagViewOpenActionTest : LightPlatformTestCase() {
             ActionTestFixtures.createConnectedConfigModel(productId, configId, EvaluationVersion.V2)
         )
         FlagViewOpenAction().actionPerformed(event)
-        verify { ErrorHandler.errorNotify(any<ApiException>()) }
+        verify {
+            ErrorHandler.errorNotify(
+                any<ApiException>(),
+                "Failed to get environment list. For more information check the logs.",
+                any()
+            )
+        }
     }
 
     fun testActionPerformed_dialogCancelled_returnsEarly() {

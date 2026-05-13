@@ -57,7 +57,7 @@ class ProductsConfigsPanelTest : LightPlatformTestCase() {
         every { ConfigCatService.createProductsService(any(), any()) } returns mockProductsApi
 
         mockkObject(ErrorHandler)
-        every { ErrorHandler.errorNotify(any()) } just Runs
+        every { ErrorHandler.errorNotify(any<ApiException>(), any(), any()) } just Runs
     }
 
     override fun tearDown() {
@@ -89,7 +89,7 @@ class ProductsConfigsPanelTest : LightPlatformTestCase() {
 
         assertNull("tree must remain null after a 401 ApiException", treeField(panel))
         assertNull("treeModel must remain null after a 401 ApiException", treeModelField(panel))
-        verify { ErrorHandler.errorNotify(any<ApiException>()) }
+        verify { ErrorHandler.errorNotify(any<ApiException>(), "Failed to load products list. For more information check the logs.", null) }
     }
 
     fun testInitTree_api429TooManyRequest_treeRemainsNull() {
@@ -103,7 +103,7 @@ class ProductsConfigsPanelTest : LightPlatformTestCase() {
 
         assertNull("tree must remain null after a 429 ApiException", treeField(panel))
         assertNull("treeModel must remain null after a 429 ApiException", treeModelField(panel))
-        verify { ErrorHandler.errorNotify(any<ApiException>()) }
+        verify { ErrorHandler.errorNotify(any<ApiException>(), "Failed to load products list. For more information check the logs.", null) }
     }
 
     fun testInitTree_api500ServerError_treeRemainsNull() {
@@ -117,7 +117,7 @@ class ProductsConfigsPanelTest : LightPlatformTestCase() {
 
         assertNull("tree must remain null after a 500 ApiException", treeField(panel))
         assertNull("treeModel must remain null after a 500 ApiException", treeModelField(panel))
-        verify { ErrorHandler.errorNotify(any<ApiException>()) }
+        verify { ErrorHandler.errorNotify(any<ApiException>(), "Failed to load products list. For more information check the logs.", null) }
     }
 
     fun testInitTree_api503ServiceUnavailable_treeRemainsNull() {
@@ -131,7 +131,7 @@ class ProductsConfigsPanelTest : LightPlatformTestCase() {
 
         assertNull("tree must remain null after a 503 ApiException", treeField(panel))
         assertNull("treeModel must remain null after a 503 ApiException", treeModelField(panel))
-        verify { ErrorHandler.errorNotify(any<ApiException>()) }
+        verify { ErrorHandler.errorNotify(any<ApiException>(), "Failed to load products list. For more information check the logs.", null) }
     }
 
     // -------------------------------------------------------------------------
@@ -254,7 +254,7 @@ class ProductsConfigsPanelTest : LightPlatformTestCase() {
         waitForAsync()
 
         assertNull("Tree must become null after failed refresh", treeField(panel))
-        verify { ErrorHandler.errorNotify(any<ApiException>()) }
+        verify { ErrorHandler.errorNotify(any<ApiException>(), "Failed to load products list. For more information check the logs.", null) }
     }
 
     fun testRefreshTree_successAfterPreviousFailure_treeIsRestored() {

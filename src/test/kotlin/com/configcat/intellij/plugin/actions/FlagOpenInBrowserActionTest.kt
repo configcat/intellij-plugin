@@ -50,7 +50,7 @@ class FlagOpenInBrowserActionTest : LightPlatformTestCase() {
         every { ConfigCatNotifier.Notify.error(any<String>()) } just Runs
 
         mockkObject(ErrorHandler)
-        every { ErrorHandler.errorNotify(any<ApiException>()) } just Runs
+        every { ErrorHandler.errorNotify(any<ApiException>(), any(), any()) } just Runs
 
         mockSettingsPanel = mockk(relaxed = true)
 
@@ -122,7 +122,13 @@ class FlagOpenInBrowserActionTest : LightPlatformTestCase() {
 
         action.actionPerformed(event)
 
-        verify { ErrorHandler.errorNotify(any<ApiException>()) }
+        verify {
+            ErrorHandler.errorNotify(
+                any<ApiException>(),
+                "Failed to get environment list. For more information check the logs.",
+                any()
+            )
+        }
         verify(exactly = 0) { mockBrowserLauncher.open(any<String>()) }
     }
 
