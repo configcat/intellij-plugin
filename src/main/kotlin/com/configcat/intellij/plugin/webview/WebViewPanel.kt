@@ -10,6 +10,7 @@ import com.intellij.ide.ui.LafManager
 import com.intellij.ide.ui.LafManagerListener
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.ui.JBColor
 import com.intellij.ui.jcef.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -80,7 +81,6 @@ class WebViewPanel(
         .setMouseWheelEventEnable(true)
         .build()
     private val jSQuery: JBCefJSQuery = checkNotNull(JBCefJSQuery.create(jBCefBrowser as JBCefBrowserBase))
-    private val lafManager = LafManager.getInstance()
 
     init {
         val handleThemeChange = object : ThemeChangeNotifier {
@@ -240,11 +240,7 @@ class WebViewPanel(
     }
 
     private fun getCurrentTheme(): String {
-        var theme = "light"
-        if (lafManager.currentUIThemeLookAndFeel.isDark) {
-            theme = "dark"
-        }
-        return theme
+        return if (JBColor.isBright()) "light" else "dark"
     }
 
     override fun dispose() {

@@ -39,13 +39,19 @@ open class ConfigCatApplicationConfig :
     ) : ConfigCatSettings {
 
         private val key = "configCatKey"
-        private val credentialAttributes: CredentialAttributes =
-            CredentialAttributes(
-                generateServiceName(
-                    "configcat-intellij-plugin",
-                    key
-                )
-            )
+        private val credentialAttributes: CredentialAttributes = run {
+            val serviceName = generateServiceName("configcat-intellij-plugin", key)
+            val clazz = CredentialAttributes::class.java
+            // 261+ uses (String, String, Boolean, Boolean); 241 uses (String, String, Class, Boolean, Boolean).
+            // Use reflection to pick the right constructor and avoid deprecated-API bytecode references.
+            try {
+                clazz.getConstructor(String::class.java, String::class.java, Boolean::class.javaPrimitiveType, Boolean::class.javaPrimitiveType)
+                    .newInstance(serviceName, key, false, false)
+            } catch (_: NoSuchMethodException) {
+                clazz.getConstructor(String::class.java, String::class.java, Class::class.java, Boolean::class.javaPrimitiveType, Boolean::class.javaPrimitiveType)
+                    .newInstance(serviceName, key, null, false, false)
+            }
+        }
 
         override var authConfiguration: String
             get() {

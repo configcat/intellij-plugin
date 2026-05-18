@@ -1,7 +1,6 @@
 package com.configcat.intellij.plugin.dialogs
 
 import com.configcat.publicapi.java.client.model.EnvironmentModel
-import com.intellij.collaboration.ui.util.name
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.DialogPanel
@@ -11,6 +10,7 @@ import com.intellij.ui.SortedComboBoxModel
 import com.intellij.ui.dsl.builder.COLUMNS_MEDIUM
 import com.intellij.ui.dsl.builder.columns
 import com.intellij.ui.dsl.builder.panel
+import javax.swing.Action
 import javax.swing.JComponent
 
 class EnvironmentSelectDialog(
@@ -23,7 +23,7 @@ class EnvironmentSelectDialog(
 
     init {
         title = "Select an Environment"
-        okAction.name = "Select"
+        okAction.putValue(Action.NAME, "Select")
         init()
     }
 
