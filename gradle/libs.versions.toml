@@ -6,9 +6,9 @@ intellijPlatform = "2.11.0"
 kover = "0.9.7"
 node = "7.1.0"
 #libraries
-configcat = "2.2.0"
-kotlinx-serialization = "1.9.0"
-okhttp = "5.0.0"
+configcat = "2.2.1"
+kotlinx-serialization = "1.11.0"
+okhttp = "5.3.2"
 mockk = "1.13.12"
 junit = "4.13.2"
 
