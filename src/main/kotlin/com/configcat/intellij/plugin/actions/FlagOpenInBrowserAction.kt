@@ -41,16 +41,23 @@ class FlagOpenInBrowserAction : ConfigCatBaseAnAction() {
         val environments = try {
             environmentsService.getEnvironments(configModel.product.productId)
         } catch (exception: ApiException) {
-            ErrorHandler.errorNotify(exception, "Failed to get environment list. For more information check the logs.", e.project)
+            ErrorHandler.errorNotify(
+                exception,
+                "Failed to get environment list. For more information check the logs.",
+                e.project
+            )
             return
         }
         val evaluationVersion = configModel.evaluationVersion
         val orgId = productModel.organization.organizationId
         val url = if (!environments.isEmpty()) {
             if (evaluationVersion == EvaluationVersion.V1) {
-                state.dashboardBaseUrl + '/' + productModel.productId + '/' + configModel.configId + '/' + environments[0].environmentId + "?settingId=" + selectedNode.setting.settingId
+                state.dashboardBaseUrl + '/' + productModel.productId + '/' + configModel.configId +
+                    '/' + environments[0].environmentId + "?settingId=" + selectedNode.setting.settingId
             } else {
-                state.dashboardBaseUrl + "/v2/" + orgId + '/' + productModel.productId + '/' + configModel.configId + '/' + environments[0].environmentId + '/' + selectedNode.setting.settingId
+                state.dashboardBaseUrl + "/v2/" + orgId + '/' + productModel.productId +
+                    '/' + configModel.configId + '/' + environments[0].environmentId +
+                    '/' + selectedNode.setting.settingId
             }
         } else {
             ConfigCatNotifier.Notify.error(
@@ -70,6 +77,5 @@ class FlagOpenInBrowserAction : ConfigCatBaseAnAction() {
         val isEnabled = selectedElement?.userObject is FlagNode && configModel != null
         updateVisibility(e, isEnabled)
     }
-
-
 }
+

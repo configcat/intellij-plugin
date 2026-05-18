@@ -45,10 +45,21 @@ open class ConfigCatApplicationConfig :
             // 261+ uses (String, String, Boolean, Boolean); 241 uses (String, String, Class, Boolean, Boolean).
             // Use reflection to pick the right constructor and avoid deprecated-API bytecode references.
             try {
-                clazz.getConstructor(String::class.java, String::class.java, Boolean::class.javaPrimitiveType, Boolean::class.javaPrimitiveType)
+                clazz.getConstructor(
+                    String::class.java,
+                    String::class.java,
+                    Boolean::class.javaPrimitiveType,
+                    Boolean::class.javaPrimitiveType,
+                )
                     .newInstance(serviceName, key, false, false)
             } catch (_: NoSuchMethodException) {
-                clazz.getConstructor(String::class.java, String::class.java, Class::class.java, Boolean::class.javaPrimitiveType, Boolean::class.javaPrimitiveType)
+                clazz.getConstructor(
+                    String::class.java,
+                    String::class.java,
+                    Class::class.java,
+                    Boolean::class.javaPrimitiveType,
+                    Boolean::class.javaPrimitiveType,
+                )
                     .newInstance(serviceName, key, null, false, false)
             }
         }
@@ -64,9 +75,13 @@ open class ConfigCatApplicationConfig :
 
 
         override fun isConfigured(): Boolean {
-            return authConfiguration.isNotEmpty() && authConfiguration != EMPTY_CREDENTIALS && dashboardBaseUrl.isNotEmpty() && publicApiBaseUrl.isNotEmpty()
+            return authConfiguration.isNotEmpty() &&
+                authConfiguration != EMPTY_CREDENTIALS &&
+                dashboardBaseUrl.isNotEmpty() &&
+                publicApiBaseUrl.isNotEmpty()
         }
 
     }
 
 }
+

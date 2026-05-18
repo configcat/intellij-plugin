@@ -1,6 +1,8 @@
 package com.configcat.intellij.plugin.webview.cef
 
 import com.intellij.ide.BrowserUtil
+import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.diagnostic.thisLogger
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.callback.CefCallback
@@ -11,9 +13,9 @@ import java.net.URI
 
 private typealias CefResourceProvider = () -> CefResourceHandler?
 
-private const val distPrefix = "http://dist"
+private const val DIST_PREFIX = "http://dist"
 
-class CefLocalRequestHandler() : CefRequestHandlerAdapter() {
+class CefLocalRequestHandler : CefRequestHandlerAdapter() {
     private val myResources: MutableMap<String, CefResourceProvider> = HashMap()
 
     private val rejectingResourceHandler: CefResourceHandler =
@@ -38,7 +40,7 @@ class CefLocalRequestHandler() : CefRequestHandlerAdapter() {
         }
 
     internal fun isDistUrl(url: String?): Boolean {
-        return url?.startsWith(distPrefix, true) == true
+        return url?.startsWith(DIST_PREFIX, true) == true
     }
 
     internal fun shouldConsumeNavigation(
@@ -53,6 +55,7 @@ class CefLocalRequestHandler() : CefRequestHandlerAdapter() {
             val fileName = URI.create(url.orEmpty()).toURL().path.split("/").last()
             myResources[fileName]?.let { it() } ?: rejectingResourceHandler
         } catch (e: RuntimeException) {
+            thisLogger().warn("Failed to resolve resource handler for url: $url", e)
             rejectingResourceHandler
         }
     }

@@ -34,7 +34,7 @@ class EnvironmentSelectDialog(
         val sortedComboBoxModel = SortedComboBoxModel(environmentsDropDownComparator)
 
         val environmentDropDownList: List<EnvironmentDropDown> =
-            environments.map { it -> EnvironmentDropDown(it.name, it.environmentId.toString()) }
+            environments.map { EnvironmentDropDown(it.name, it.environmentId.toString()) }
 
 
         sortedComboBoxModel.addAll(environmentDropDownList)
@@ -87,3 +87,4 @@ class EnvironmentSelectDialog(
     }
 
 }
+

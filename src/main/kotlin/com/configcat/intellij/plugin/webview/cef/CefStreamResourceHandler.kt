@@ -2,6 +2,7 @@ package com.configcat.intellij.plugin.webview.cef
 
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.util.Disposer
 import org.cef.callback.CefCallback
 import org.cef.handler.CefResourceHandler
@@ -49,6 +50,7 @@ class CefStreamResourceHandler(
                 false to 0
             }
         } catch (e: IOException) {
+            thisLogger().warn("Failed to read response stream", e)
             onCancel()
             Disposer.dispose(this)
             false to 0

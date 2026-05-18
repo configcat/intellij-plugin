@@ -44,7 +44,11 @@ class FlagViewOpenAction : ConfigCatBaseAnAction() {
         val environments = try {
             environmentsService.getEnvironments(configModel.product.productId)
         } catch (exception: ApiException) {
-            ErrorHandler.errorNotify(exception, "Failed to get environment list. For more information check the logs.", e.project)
+            ErrorHandler.errorNotify(
+                exception,
+                "Failed to get environment list. For more information check the logs.",
+                e.project
+            )
             return
         }
         val selectedEnvironment: EnvironmentDropDown?
@@ -76,7 +80,8 @@ class FlagViewOpenAction : ConfigCatBaseAnAction() {
 
         e.project?.let { project ->
             val toolWindow =
-                ToolWindowManager.getInstance(project).getToolWindow(ConfigCatToolWindowFactory.CONFIGCAT_TOOL_WINDOW_ID)
+                ToolWindowManager.getInstance(project)
+                    .getToolWindow(ConfigCatToolWindowFactory.CONFIGCAT_TOOL_WINDOW_ID)
             toolWindow?.let { toolWindow ->
                 val featureFlagsViewPanel =
                     ConfigCatToolWindowFactory.ConfigCatFeatureFlagsViewToolWindow(appData)
@@ -99,6 +104,5 @@ class FlagViewOpenAction : ConfigCatBaseAnAction() {
         val isEnabled = selectedElement?.userObject is FlagNode && configModel != null
         updateVisibility(e, isEnabled)
     }
-
-
 }
+

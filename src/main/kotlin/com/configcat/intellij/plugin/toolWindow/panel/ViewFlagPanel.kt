@@ -1,7 +1,7 @@
 package com.configcat.intellij.plugin.toolWindow.panel
 
 import com.configcat.intellij.plugin.webview.AppData
-import com.configcat.intellij.plugin.webview.VIEW_TYPE
+import com.configcat.intellij.plugin.webview.ViewType
 
 import com.configcat.intellij.plugin.webview.WebViewPanelContainer
 import com.intellij.openapi.Disposable
@@ -12,10 +12,12 @@ class ViewFlagPanel(appData: AppData) : SimpleToolWindowPanel(false, false), Dis
     init {
         alignmentX = LEFT_ALIGNMENT
         alignmentY = TOP_ALIGNMENT
-        val webViewPanel = WebViewPanelContainer(appData, VIEW_TYPE.VIEW_FLAG, null)
+        val webViewPanel = WebViewPanelContainer(appData, ViewType.VIEW_FLAG, null)
         add(webViewPanel)
     }
 
     override fun dispose() {
+        // no-op
     }
 }
+

@@ -55,7 +55,7 @@ class ConfigCatToolWindowFactory : ToolWindowFactory {
         }
     }
 
-    class HelpToolWindow() {
+    class HelpToolWindow {
 
         private val helpPanel = HelpPanel()
 

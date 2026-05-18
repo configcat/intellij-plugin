@@ -133,7 +133,11 @@ class FlagNode(val setting: SettingModel, parent: SimpleNode) : SimpleNode(null,
     }
 
     override fun getName(): String {
-        return if (setting.name.isEmpty() && setting.key.isEmpty()) "<missing data>" else setting.name + " (${setting.key})"
+        return if (setting.name.isEmpty() && setting.key.isEmpty()) {
+            "<missing data>"
+        } else {
+            setting.name + " (${setting.key})"
+        }
     }
 }
 
@@ -156,3 +160,4 @@ class InfoNode(private val message: String) : SimpleNode() {
     }
 
 }
+

@@ -9,7 +9,7 @@ import javax.swing.JPanel
 
 class WebViewPanelContainer(
     appData: AppData,
-    viewType: VIEW_TYPE,
+    viewType: ViewType,
     val jsReceiverCallbackFunction: ((returnId: String?) -> Unit)?,
 ) : JPanel() {
 
@@ -30,10 +30,16 @@ class WebViewPanelContainer(
                             }
                         }
                         row {
-                            text("This plugin requires JCEF to load web views. JCEF can be unsupported when the IDE started with an alternative JDK.")
+                            text(
+                                "This plugin requires JCEF to load web views. " +
+                                    "JCEF can be unsupported when the IDE started with an alternative JDK."
+                            )
                         }
                         row {
-                            text("You can still manage your Feature Flags on the <a href=\"https://app.configcat.com/\">ConfigCat Dashboard</a>.")
+                            text(
+                                "You can still manage your Feature Flags on the " +
+                                    "<a href=\"https://app.configcat.com/\">ConfigCat Dashboard</a>."
+                            )
                         }
                     }
                 )

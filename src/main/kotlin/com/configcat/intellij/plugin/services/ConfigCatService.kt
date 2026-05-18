@@ -6,9 +6,7 @@ import com.intellij.openapi.components.Service
 
 
 @Service(Service.Level.APP)
-class ConfigCatService {
-
-    companion object {
+object ConfigCatService {
 
         private fun createApiClient(authConfig: PublicApiConfiguration, basePath: String): ApiClient {
             val apiClient = ApiClient()
@@ -41,5 +39,4 @@ class ConfigCatService {
             return EnvironmentsApi(createApiClient(authConfig, basePath))
         }
 
-    }
 }

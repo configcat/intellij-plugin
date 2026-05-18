@@ -231,8 +231,7 @@ class SettingsPanel(
         treeModel = null
     }
 
-    override fun dispose() {
-    }
+    override fun dispose() = Unit
 
     private fun refreshTree() {
         initTreeContent()
@@ -271,3 +270,4 @@ class SettingsPanel(
         return treeNode
     }
 }
+

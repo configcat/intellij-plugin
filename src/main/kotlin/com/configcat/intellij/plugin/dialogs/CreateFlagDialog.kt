@@ -6,7 +6,7 @@ import com.configcat.intellij.plugin.ErrorHandler
 import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.intellij.plugin.webview.AppData
-import com.configcat.intellij.plugin.webview.VIEW_TYPE
+import com.configcat.intellij.plugin.webview.ViewType
 import com.configcat.intellij.plugin.webview.WebViewPanelContainer
 import com.configcat.publicapi.java.client.ApiException
 import com.configcat.publicapi.java.client.model.ConfigModel
@@ -51,10 +51,11 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel) : DialogW
             "",
             ""
         )
-        return WebViewPanelContainer(appData, VIEW_TYPE.CREATE_FLAG, { returnId -> saveSuccess(returnId) })
+        return WebViewPanelContainer(appData, ViewType.CREATE_FLAG, { returnId -> saveSuccess(returnId) })
     }
 
 
+    @Suppress("UnusedParameter")
     fun saveSuccess(returnId: String?) {
         val configId = config.configId
         try {
@@ -70,3 +71,4 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel) : DialogW
         }
     }
 }
+

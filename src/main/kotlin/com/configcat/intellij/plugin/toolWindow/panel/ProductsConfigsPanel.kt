@@ -146,7 +146,11 @@ class ProductsConfigsPanel(
         val products = try {
                 productsService.products
         } catch (exception: ApiException) {
-            ErrorHandler.errorNotify(exception, "Failed to load products list. For more information check the logs.", null)
+            ErrorHandler.errorNotify(
+                exception,
+                "Failed to load products list. For more information check the logs.",
+                null
+            )
             return null
         }
 
@@ -157,10 +161,9 @@ class ProductsConfigsPanel(
         val treeModel: StructureTreeModel<FlagTreeStructure> = StructureTreeModel(treeStructure, this)
         val treeBuilder = AsyncTreeModel(treeModel, this)
 
-        // add TreeModelListener.treeNodesInserted to expand nodes that should be expanded after loading data
+        // Expand nodes that were expanded before refresh when children are inserted.
         treeBuilder.addTreeModelListener(object : TreeModelListener {
-            override fun treeNodesChanged(e: TreeModelEvent?) {
-            }
+            override fun treeNodesChanged(e: TreeModelEvent?) = Unit
 
             override fun treeNodesInserted(e: TreeModelEvent?) {
                 e?.children?.forEach { child ->
@@ -173,18 +176,16 @@ class ProductsConfigsPanel(
                 }
             }
 
-            override fun treeNodesRemoved(e: TreeModelEvent?) {
-            }
+            override fun treeNodesRemoved(e: TreeModelEvent?) = Unit
 
-            override fun treeStructureChanged(e: TreeModelEvent?) {
-            }
+            override fun treeStructureChanged(e: TreeModelEvent?) = Unit
         })
 
         tree.model = treeBuilder
         tree.setRootVisible(true)
         tree.selectionModel.selectionMode = TreeSelectionModel.SINGLE_TREE_SELECTION
 
-        // add TreeExpansionListener.treeExpanded to load configs of the expanded product node if not loaded yet, and refresh the node to show the configs
+        // Lazily load configs for expanded product nodes and refresh that node.
         tree.addTreeExpansionListener(object : TreeExpansionListener {
             override fun treeExpanded(event: TreeExpansionEvent) {
                 val treeNode = event.path.lastPathComponent as DefaultMutableTreeNode
@@ -203,8 +204,7 @@ class ProductsConfigsPanel(
                 }
             }
 
-            override fun treeCollapsed(event: TreeExpansionEvent) {
-            }
+            override fun treeCollapsed(event: TreeExpansionEvent) = Unit
         })
 
         // set treeModel - used to invalidate the tree
@@ -240,8 +240,7 @@ class ProductsConfigsPanel(
         }
     }
 
-    override fun dispose() {
-    }
+    override fun dispose() = Unit
 
     fun getSelectedNode(): DefaultMutableTreeNode? {
         val paths: Array<TreePath>? = tree?.selectionPaths
@@ -256,9 +255,9 @@ class ProductsConfigsPanel(
     }
 
     private fun refreshTree() {
-        // if the Tree is not initialized yet, do nothing, the tree will be loaded with the latest data when it's initialized
+        // If tree is not initialized yet, initial load will already include latest data.
         tree?.let {
-            // invalidate the tree and collect the expanded nodes before refreshing to keep the same nodes expanded after refresh
+            // Keep currently expanded product nodes expanded after refresh.
             it.invalidate()
             val collectExpandedPaths = collectExpandedPaths(it)
             expandedTreeNodes = mutableListOf()
@@ -278,3 +277,4 @@ class ProductsConfigsPanel(
         treeModel?.invalidate(TreePath(node), true)
     }
 }
+

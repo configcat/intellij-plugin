@@ -44,7 +44,7 @@ data class ViewData(
     val initialTheme: String,
 )
 
-enum class VIEW_TYPE(val type: String) {
+enum class ViewType(val type: String) {
     CREATE_CONFIG("createconfig"),
     CREATE_FLAG("createfeatureflag"),
     VIEW_FLAG("featureflagsetting")
@@ -55,7 +55,7 @@ private const val WINDOW_CONFIGCAT_APP_VIEW = "window.CONFIGCAT_APP_VIEW ="
 
 class WebViewPanel(
     appData: AppData,
-    viewType: VIEW_TYPE,
+    viewType: ViewType,
     val jsReceiverCallbackFunction: ((returnId: String?) -> Unit)?,
 ) : JPanel(), Disposable {
 
@@ -109,66 +109,50 @@ class WebViewPanel(
     }
 
     private fun initiateCefRequestHandler(viewData: ViewData, appData: AppData) {
-        val myRequestHandler = CefLocalRequestHandler()
-        myRequestHandler.addResource(INDEX_HTML) {
-            javaClass.classLoader.getResourceAsStream("${DIST_FOLDER_PATH}/${INDEX_HTML}")?.let {
-                // replace HTML placeholders with real data before providing the resource
-                val rawHtml = it.readAllBytes().toString(Charsets.UTF_8).replace(
-                    "$WINDOW_CONFIGCAT_APPDATA {};",
-                    "$WINDOW_CONFIGCAT_APPDATA " + Constants.json.encodeToString(appData) + ";"
-                ).replace(
-                    "$WINDOW_CONFIGCAT_APP_VIEW {};",
-                    "$WINDOW_CONFIGCAT_APP_VIEW " + Constants.json.encodeToString(viewData) + ";"
-                )
+        val requestHandler = CefLocalRequestHandler()
+
+        requestHandler.addResource(INDEX_HTML) {
+            javaClass.classLoader.getResourceAsStream("$DIST_FOLDER_PATH/$INDEX_HTML")?.let {
+                val rawHtml = it.readAllBytes()
+                    .toString(Charsets.UTF_8)
+                    .replace(
+                        "$WINDOW_CONFIGCAT_APPDATA {};",
+                        "$WINDOW_CONFIGCAT_APPDATA " + Constants.json.encodeToString(appData) + ";"
+                    )
+                    .replace(
+                        "$WINDOW_CONFIGCAT_APP_VIEW {};",
+                        "$WINDOW_CONFIGCAT_APP_VIEW " + Constants.json.encodeToString(viewData) + ";"
+                    )
 
                 CefStreamResourceHandler(rawHtml.byteInputStream(), "text/html")
             }
         }
-        // Main js load for index.html
-        myRequestHandler.addResource(MAIN_JS) {
-            javaClass.classLoader.getResourceAsStream("${DIST_FOLDER_PATH}/${MAIN_JS}")?.let {
-                CefStreamResourceHandler(it, "text/javascript")
-            }
-        }
-        // polyfills js load for index.html
-        myRequestHandler.addResource(POLYFILLS_JS) {
-            javaClass.classLoader.getResourceAsStream("${DIST_FOLDER_PATH}/${POLYFILLS_JS}")?.let {
-                CefStreamResourceHandler(it, "text/javascript")
-            }
-        }
-        // style csss load for index.html
-        myRequestHandler.addResource(STYLES_CSS) {
-            javaClass.classLoader.getResourceAsStream("${DIST_FOLDER_PATH}/${STYLES_CSS}")?.let {
-                CefStreamResourceHandler(it, "text/css")
+
+        fun addDistResource(resourceName: String, mimeType: String) {
+            requestHandler.addResource(resourceName) {
+                javaClass.classLoader.getResourceAsStream("$DIST_FOLDER_PATH/$resourceName")
+                    ?.let { CefStreamResourceHandler(it, mimeType) }
             }
         }
 
-        // setting type image loads
-        myRequestHandler.addResource(DECIMAL_SVG) {
-            javaClass.classLoader.getResourceAsStream("${DIST_FOLDER_PATH}/${ASSETS_IMAGES_FOLDER_PATH}/${SETTING_TYPES_FOLDER_PATH}/${DECIMAL_SVG}")
-                ?.let {
-                    CefStreamResourceHandler(it, "image/svg+xml")
-                }
+        addDistResource(MAIN_JS, "text/javascript")
+        addDistResource(POLYFILLS_JS, "text/javascript")
+        addDistResource(STYLES_CSS, "text/css")
+
+        fun addSettingTypeResource(fileName: String) {
+            requestHandler.addResource(fileName) {
+                javaClass.classLoader.getResourceAsStream(
+                    "$DIST_FOLDER_PATH/$ASSETS_IMAGES_FOLDER_PATH/$SETTING_TYPES_FOLDER_PATH/$fileName"
+                )?.let { CefStreamResourceHandler(it, "image/svg+xml") }
+            }
         }
-        myRequestHandler.addResource(TEXT_SVG) {
-            javaClass.classLoader.getResourceAsStream("${DIST_FOLDER_PATH}/${ASSETS_IMAGES_FOLDER_PATH}/${SETTING_TYPES_FOLDER_PATH}/${TEXT_SVG}")
-                ?.let {
-                    CefStreamResourceHandler(it, "image/svg+xml")
-                }
-        }
-        myRequestHandler.addResource(WHOLE_SVG) {
-            javaClass.classLoader.getResourceAsStream("${DIST_FOLDER_PATH}/${ASSETS_IMAGES_FOLDER_PATH}/${SETTING_TYPES_FOLDER_PATH}/${WHOLE_SVG}")
-                ?.let {
-                    CefStreamResourceHandler(it, "image/svg+xml")
-                }
-        }
-        myRequestHandler.addResource(FEATURE_FLAG_SVG) {
-            javaClass.classLoader.getResourceAsStream("${DIST_FOLDER_PATH}/${ASSETS_IMAGES_FOLDER_PATH}/${SETTING_TYPES_FOLDER_PATH}/${FEATURE_FLAG_SVG}")
-                ?.let {
-                    CefStreamResourceHandler(it, "image/svg+xml")
-                }
-        }
-        cefClient.addRequestHandler(myRequestHandler, jBCefBrowser.cefBrowser)
+
+        addSettingTypeResource(DECIMAL_SVG)
+        addSettingTypeResource(TEXT_SVG)
+        addSettingTypeResource(WHOLE_SVG)
+        addSettingTypeResource(FEATURE_FLAG_SVG)
+
+        cefClient.addRequestHandler(requestHandler, jBCefBrowser.cefBrowser)
 
         cefClient.addLifeSpanHandler(object : CefLifeSpanHandlerAdapter() {
             override fun onBeforePopup(
@@ -177,7 +161,7 @@ class WebViewPanel(
                 target_url: String?,
                 target_frame_name: String?,
             ): Boolean {
-                // Return true to cancel the popup and use the BrowserUtil.open based on the JBCefBrowserBase.enableExternalBrowserLinks
+                // Return true to cancel the popup and use BrowserUtil.open for external links.
                 if (target_url != null) {
                     BrowserUtil.open(target_url)
                 } else {
@@ -250,7 +234,7 @@ class WebViewPanel(
     }
 }
 
-class WebViewLafListener() : LafManagerListener {
+class WebViewLafListener : LafManagerListener {
 
     override fun lookAndFeelChanged(lafManager: LafManager) {
         val publisher: ThemeChangeNotifier = ApplicationManager.getApplication().messageBus.syncPublisher(

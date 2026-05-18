@@ -6,7 +6,7 @@ import com.configcat.intellij.plugin.ErrorHandler
 import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.intellij.plugin.webview.AppData
-import com.configcat.intellij.plugin.webview.VIEW_TYPE
+import com.configcat.intellij.plugin.webview.ViewType
 import com.configcat.intellij.plugin.webview.WebViewPanelContainer
 import com.configcat.publicapi.java.client.ApiException
 import com.configcat.publicapi.java.client.model.ProductModel
@@ -52,9 +52,10 @@ class CreateConfigDialog(val project: Project?, private val product: ProductMode
             ""
         )
 
-        return WebViewPanelContainer(appData, VIEW_TYPE.CREATE_CONFIG) { returnId -> saveSuccess(returnId) }
+        return WebViewPanelContainer(appData, ViewType.CREATE_CONFIG) { returnId -> saveSuccess(returnId) }
     }
 
+    @Suppress("UnusedParameter")
     fun saveSuccess(returnId: String?) {
         val productId = product.productId
         try {
@@ -72,3 +73,4 @@ class CreateConfigDialog(val project: Project?, private val product: ProductMode
 
 
 }
+

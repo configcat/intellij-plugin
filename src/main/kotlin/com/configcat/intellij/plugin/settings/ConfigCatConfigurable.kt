@@ -20,7 +20,7 @@ import javax.swing.JPasswordField
 import javax.swing.JTextField
 
 
-class ConfigCatConfigurable() : BoundConfigurable(displayName = "ConfigCat Feature Flags") {
+class ConfigCatConfigurable : BoundConfigurable(displayName = "ConfigCat Feature Flags") {
 
     private var stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigState =
         ConfigCatApplicationConfig.getInstance().state
@@ -33,14 +33,19 @@ class ConfigCatConfigurable() : BoundConfigurable(displayName = "ConfigCat Featu
 
 
     private val authenticationComment: String =
-        "<a href=\"%S/my-account/public-api-credentials\">Get your Basic Auth user name and password</a> to access ConfigCat Public API. Note! Your ConfigCat account's email address and password will not work here."
+        "<a href=\"%S/my-account/public-api-credentials\">Get your Basic Auth user name and password</a> " +
+            "to access ConfigCat Public API. Note! " +
+            "Your ConfigCat account's email address and password will not work here."
 
     override fun createPanel(): DialogPanel {
 
         return panel {
             group("Authentication", true) {
                 row {
-                    text("In order to use ConfigCat Feature Flags you have to authorize first with your ConfigCat Public API credentials.")
+                    text(
+                        "In order to use ConfigCat Feature Flags you have to authorize first " +
+                            "with your ConfigCat Public API credentials."
+                    )
                 }
                 row("Basic auth user name") {
                     cell(authUserNameField)
@@ -69,7 +74,10 @@ class ConfigCatConfigurable() : BoundConfigurable(displayName = "ConfigCat Featu
 
                 }
                 row {
-                    comment("ConfigCat Dashboard Base URL. Defaults to <a href=\"$DEFAULT_DASHBOARD_BASE_URL\">$DEFAULT_DASHBOARD_BASE_URL</a>.")
+                    comment(
+                        "ConfigCat Dashboard Base URL. " +
+                            "Defaults to <a href=\"$DEFAULT_DASHBOARD_BASE_URL\">$DEFAULT_DASHBOARD_BASE_URL</a>."
+                    )
                 }
 
                 row("Public API Base URL") {
@@ -79,7 +87,10 @@ class ConfigCatConfigurable() : BoundConfigurable(displayName = "ConfigCat Featu
                         .validationOnApply(urlValidation())
                 }
                 row {
-                    comment("ConfigCat Public Management Base URL. Defaults to <a href=\"$DEFAULT_PUBLIC_API_BASE_URL\">$DEFAULT_PUBLIC_API_BASE_URL</a>.")
+                    comment(
+                        "ConfigCat Public Management Base URL. " +
+                            "Defaults to <a href=\"$DEFAULT_PUBLIC_API_BASE_URL\">$DEFAULT_PUBLIC_API_BASE_URL</a>."
+                    )
                 }
             }
         }

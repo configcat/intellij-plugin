@@ -26,7 +26,10 @@ class HelpPanel : SimpleToolWindowPanel(false, false), Disposable {
             }
 
             row {
-                comment("Useful links to open Config Cat's Documentation and Dashboard, and allows you to report issues.")
+                comment(
+                    "Useful links to open Config Cat's Documentation and Dashboard, " +
+                        "and allows you to report issues."
+                )
             }
         }
         centeredInfoPanel.add(panel)
@@ -34,5 +37,7 @@ class HelpPanel : SimpleToolWindowPanel(false, false), Disposable {
     }
 
     override fun dispose() {
+        // no-op
     }
 }
+
