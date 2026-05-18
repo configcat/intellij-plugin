@@ -1,4 +1,5 @@
 import com.github.gradle.node.npm.task.NpmTask
+import io.gitlab.arturbosch.detekt.Detekt
 import org.jetbrains.changelog.Changelog
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.changelog.markdownToHTML
@@ -14,6 +15,8 @@ plugins {
     alias(libs.plugins.kover) // Gradle Kover Plugin
     alias(libs.plugins.serialization) // Kotlin serialization
     alias(libs.plugins.node) //node-gradle.node
+    alias(libs.plugins.sonarqube)
+    alias(libs.plugins.detekt)
 }
 
 group = providers.gradleProperty("pluginGroup").get()
@@ -81,6 +84,36 @@ kotlin {
         // Avoid generating compatibility bridges for default interface methods.
         // This keeps ToolWindowFactory bytecode free from synthetic overrides of internal APIs.
         jvmDefault = JvmDefaultMode.NO_COMPATIBILITY
+    }
+}
+
+detekt {
+    config.setFrom("$rootDir/detekt.yml")
+    buildUponDefaultConfig = true
+    parallel = true
+}
+
+tasks.withType<Detekt>().configureEach {
+    setSource(project.files(project.projectDir.resolve("src/main/kotlin")))
+    include("**/*.kt")
+    reports {
+        html.required.set(true)
+        xml.required.set(true)
+        txt.required.set(true)
+        sarif.required.set(true)
+    }
+}
+
+sonarqube {
+    properties {
+        property("sonar.projectKey", "configcat_intellij-plugin")
+        property("sonar.projectName", "intellij-plugin")
+        property("sonar.projectVersion", "$version")
+        property("sonar.organization", "configcat")
+        property("sonar.host.url", "https://sonarcloud.io")
+        property("sonar.sources", "src/main/kotlin/com/configcat")
+        property("sonar.tests", "src/test/kotlin/com/configcat")
+        property("sonar.kotlin.detekt.reportPaths", "detekt.xml")
     }
 }
 

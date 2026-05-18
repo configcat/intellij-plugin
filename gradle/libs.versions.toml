@@ -5,6 +5,9 @@ changelog = "2.5.0"
 intellijPlatform = "2.15.0"
 kover = "0.9.7"
 node = "7.1.0"
+sonarqube = "5.0.0.4638"
+detekt = "1.23.6"
+
 #libraries
 configcat = "2.2.1"
 kotlinx-serialization = "1.11.0"
@@ -19,7 +22,8 @@ kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 node = { id = "com.github.node-gradle.node", version.ref = "node" }
-
+sonarqube = { id = "org.sonarqube", version.ref = "sonarqube" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 
 [libraries]
 configcat-java = { module = "com.configcat:configcat-publicapi-java-client", version.ref = "configcat" }
