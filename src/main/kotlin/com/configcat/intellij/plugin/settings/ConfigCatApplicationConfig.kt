@@ -21,7 +21,7 @@ open class ConfigCatApplicationConfig :
 
     companion object {
         fun getInstance(): ConfigCatApplicationConfig {
-            return ApplicationManager.getApplication().getService(ConfigCatApplicationConfig()::class.java)
+            return ApplicationManager.getApplication().getService(ConfigCatApplicationConfig::class.java)
         }
     }
 
@@ -64,11 +64,17 @@ open class ConfigCatApplicationConfig :
             }
         }
 
+        private var authConfigurationCache: String? = null
+
         override var authConfiguration: String
             get() {
-                return PasswordSafe.instance.getPassword(credentialAttributes) ?: ""
+                if (authConfigurationCache == null) {
+                    authConfigurationCache = PasswordSafe.instance.getPassword(credentialAttributes) ?: ""
+                }
+                return authConfigurationCache!!
             }
             set(value) {
+                authConfigurationCache = value
                 val credentials = Credentials("", value)
                 PasswordSafe.instance.set(credentialAttributes, credentials)
             }
@@ -84,4 +90,3 @@ open class ConfigCatApplicationConfig :
     }
 
 }
-
