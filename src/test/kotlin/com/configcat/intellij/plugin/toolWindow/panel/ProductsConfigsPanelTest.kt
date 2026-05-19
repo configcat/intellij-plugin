@@ -26,6 +26,7 @@ import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import java.lang.reflect.Field
+import java.lang.reflect.Method
 import java.util.UUID
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeModel
@@ -53,7 +54,7 @@ class ProductsConfigsPanelTest : LightPlatformTestCase() {
         mockkObject(ConfigCatNodeDataService.Companion)
         every { ConfigCatNodeDataService.getInstance() } returns mockNodeDataService
 
-        mockkObject(ConfigCatService.Companion)
+        mockkObject(ConfigCatService)
         every { ConfigCatService.createProductsService(any(), any()) } returns mockProductsApi
 
         mockkObject(ErrorHandler)
@@ -214,6 +215,61 @@ class ProductsConfigsPanelTest : LightPlatformTestCase() {
         assertTrue("Selected userObject must be ConfigNode", selectedNode!!.userObject is ConfigNode)
     }
 
+    fun testSelectConfigIfPresent_selectsMatchingConfigNode() {
+        every { mockState.isConfigured() } returns false
+
+        val panel = buildPanel()
+        val productNode = createProductNodeForTest()
+        val targetConfigId = UUID.randomUUID()
+        val targetConfigNode = createConfigNodeForTest(productNode, targetConfigId)
+        val otherConfigNode = createConfigNodeForTest(productNode, UUID.randomUUID())
+
+        val root = DefaultMutableTreeNode("root")
+        val productTreeNode = DefaultMutableTreeNode(productNode)
+        val targetConfigTreeNode = DefaultMutableTreeNode(targetConfigNode)
+        val otherConfigTreeNode = DefaultMutableTreeNode(otherConfigNode)
+        root.add(productTreeNode)
+        productTreeNode.add(otherConfigTreeNode)
+        productTreeNode.add(targetConfigTreeNode)
+
+        val swingTree = Tree(DefaultTreeModel(root))
+        setTreeField(panel, swingTree)
+        setPendingConfigSelection(panel, targetConfigId.toString())
+
+        // treeNodesInserted found the matching child and delegates here with that child node.
+        invokeSelectConfigIfPresent(panel, targetConfigTreeNode)
+
+        val selected = panel.getSelectedNode()
+        assertSame("The matching config tree node must become the selection", targetConfigTreeNode, selected)
+        assertNull("pendingSelectionConfigId must be cleared after a successful selection", pendingSelectionConfigIdField(panel))
+    }
+
+
+    fun testSelectConfigIfPresent_missingConfig_keepsCurrentSelection() {
+        every { mockState.isConfigured() } returns false
+
+        val panel = buildPanel()
+        val productNode = createProductNodeForTest()
+
+        val root = DefaultMutableTreeNode("root")
+        val productTreeNode = DefaultMutableTreeNode(productNode)
+        root.add(productTreeNode)
+
+        val swingTree = Tree(DefaultTreeModel(root))
+        setTreeField(panel, swingTree)
+
+        val pendingConfigId = UUID.randomUUID().toString()
+        // Simulate what refreshTreeNode does: pre-select the product and store the pending ID.
+        swingTree.selectionPath = TreePath(arrayOf<Any>(root, productTreeNode))
+        setPendingConfigSelection(panel, pendingConfigId)
+
+        // No matching config node is inserted, so selectConfigIfPresent is never invoked.
+        // The product node remains selected and the pending ID is still set.
+        val selected = panel.getSelectedNode()
+        assertSame("Product node must remain selected when the new config node has not arrived yet", productTreeNode, selected)
+        assertEquals("Pending config ID must remain set until a matching config node is inserted", pendingConfigId, pendingSelectionConfigIdField(panel))
+    }
+
     // -------------------------------------------------------------------------
     // refreshTree failure cases (triggered via the message bus)
     // -------------------------------------------------------------------------
@@ -320,11 +376,33 @@ class ProductsConfigsPanelTest : LightPlatformTestCase() {
         return ProductNode(productModel, ProductRootNode(emptyList()))
     }
 
-    private fun createConfigNodeForTest(parent: ProductNode): ConfigNode {
+    private fun createConfigNodeForTest(parent: ProductNode, configId: UUID = UUID.randomUUID()): ConfigNode {
         val configModel = mockk<ConfigModel>(relaxed = true)
+        every { configModel.configId } returns configId
         every { configModel.description } returns "config description"
         every { configModel.name } returns "Config A"
         return ConfigNode(configModel, parent)
+    }
+
+    private fun invokeSelectConfigIfPresent(panel: ProductsConfigsPanel, configTreeNode: DefaultMutableTreeNode) {
+        val method: Method = ProductsConfigsPanel::class.java.getDeclaredMethod(
+            "selectConfigIfPresent",
+            DefaultMutableTreeNode::class.java
+        )
+        method.isAccessible = true
+        method.invoke(panel, configTreeNode)
+    }
+
+    private fun setPendingConfigSelection(panel: ProductsConfigsPanel, configId: String?) {
+        val configField: Field = ProductsConfigsPanel::class.java.getDeclaredField("pendingSelectionConfigId")
+        configField.isAccessible = true
+        configField.set(panel, configId)
+    }
+
+    private fun pendingSelectionConfigIdField(panel: ProductsConfigsPanel): String? {
+        val field: Field = ProductsConfigsPanel::class.java.getDeclaredField("pendingSelectionConfigId")
+        field.isAccessible = true
+        return field.get(panel) as String?
     }
 
     private fun treeModelField(panel: ProductsConfigsPanel): Any? {
@@ -333,10 +411,5 @@ class ProductsConfigsPanelTest : LightPlatformTestCase() {
         return field.get(panel)
     }
 }
-
-
-
-
-
 
 

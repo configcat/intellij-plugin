@@ -59,7 +59,7 @@ class FlagOpenInBrowserActionTest : LightPlatformTestCase() {
         every { BrowserLauncher.instance } returns mockBrowserLauncher
 
         mockEnvironmentsApi = mockk(relaxed = true)
-        mockkObject(ConfigCatService.Companion)
+        mockkObject(ConfigCatService)
         every { ConfigCatService.createEnvironmentsService(any(), any()) } returns mockEnvironmentsApi
     }
 
@@ -271,5 +271,3 @@ class FlagOpenInBrowserActionTest : LightPlatformTestCase() {
     }
 
 }
-
-

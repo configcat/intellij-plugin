@@ -79,7 +79,7 @@ class WebViewPanelContainerTest : LightPlatformTestCase() {
     fun testJcefNotSupported_errorPanelShownForAllViewTypes() {
         every { JBCefApp.isSupported() } returns false
 
-        for (viewType in VIEW_TYPE.entries) {
+        for (viewType in ViewType.entries) {
             val container = buildContainer(viewType = viewType)
 
             assertEquals(
@@ -101,7 +101,7 @@ class WebViewPanelContainerTest : LightPlatformTestCase() {
     // -------------------------------------------------------------------------
 
     private fun buildContainer(
-        viewType: VIEW_TYPE = VIEW_TYPE.CREATE_FLAG,
+        viewType: ViewType = ViewType.CREATE_FLAG,
         callback: ((String?) -> Unit)? = null,
     ): WebViewPanelContainer =
         WebViewPanelContainer(

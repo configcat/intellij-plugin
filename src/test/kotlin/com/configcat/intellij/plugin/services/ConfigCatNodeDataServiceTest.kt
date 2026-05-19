@@ -45,7 +45,7 @@ class ConfigCatNodeDataServiceTest : LightPlatformTestCase() {
         mockkObject(ConfigCatApplicationConfig.Companion)
         every { ConfigCatApplicationConfig.getInstance() } returns mockConfig
 
-        mockkObject(ConfigCatService.Companion)
+        mockkObject(ConfigCatService)
         every { ConfigCatService.createConfigsService(any(), any()) } returns mockConfigsApi
         every { ConfigCatService.createFeatureFlagsSettingsService(any(), any()) } returns mockFeatureFlagsApi
 

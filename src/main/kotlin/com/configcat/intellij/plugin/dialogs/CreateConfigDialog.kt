@@ -20,6 +20,9 @@ import javax.swing.JComponent
 
 class CreateConfigDialog(val project: Project?, private val product: ProductModel) : DialogWrapper(true) {
 
+    var createdConfigId: String? = null
+        private set
+
     init {
         title = "Create Config"
         init()
@@ -55,9 +58,9 @@ class CreateConfigDialog(val project: Project?, private val product: ProductMode
         return WebViewPanelContainer(appData, ViewType.CREATE_CONFIG) { returnId -> saveSuccess(returnId) }
     }
 
-    @Suppress("UnusedParameter")
     fun saveSuccess(returnId: String?) {
         val productId = product.productId
+        createdConfigId = returnId?.ifBlank { null }
         try {
             ConfigCatNotifier.Notify.info("Config Successfully created.")
             val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
@@ -73,4 +76,3 @@ class CreateConfigDialog(val project: Project?, private val product: ProductMode
 
 
 }
-

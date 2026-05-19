@@ -44,7 +44,7 @@ class FlagViewOpenActionTest : LightPlatformTestCase() {
         every { ErrorHandler.errorNotify(any<ApiException>(), any(), any()) } just Runs
         mockSettingsPanel = mockk(relaxed = true)
         mockEnvironmentsApi = mockk(relaxed = true)
-        mockkObject(ConfigCatService.Companion)
+        mockkObject(ConfigCatService)
         every { ConfigCatService.createEnvironmentsService(any(), any()) } returns mockEnvironmentsApi
     }
 

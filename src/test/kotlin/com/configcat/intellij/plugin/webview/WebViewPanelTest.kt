@@ -72,9 +72,9 @@ class WebViewPanelTest : LightPlatformTestCase() {
     // -------------------------------------------------------------------------
 
     fun testViewType_hasCorrectTypeValues() {
-        assertEquals("createconfig", VIEW_TYPE.CREATE_CONFIG.type)
-        assertEquals("createfeatureflag", VIEW_TYPE.CREATE_FLAG.type)
-        assertEquals("featureflagsetting", VIEW_TYPE.VIEW_FLAG.type)
+        assertEquals("createconfig", ViewType.CREATE_CONFIG.type)
+        assertEquals("createfeatureflag", ViewType.CREATE_FLAG.type)
+        assertEquals("featureflagsetting", ViewType.VIEW_FLAG.type)
     }
 
     // -------------------------------------------------------------------------
@@ -109,7 +109,7 @@ class WebViewPanelTest : LightPlatformTestCase() {
 
         var callbackInvoked = false
         val callback: (String?) -> Unit = { callbackInvoked = true }
-        val panel = WebViewPanel(createTestAppData(), VIEW_TYPE.CREATE_FLAG, callback)
+        val panel = WebViewPanel(createTestAppData(), ViewType.CREATE_FLAG, callback)
         try {
             assertNotNull("jsReceiverCallbackFunction must be set", panel.jsReceiverCallbackFunction)
         } finally {
@@ -120,7 +120,7 @@ class WebViewPanelTest : LightPlatformTestCase() {
     fun testWebViewPanel_allViewTypes_canBeInstantiated() {
         if (!JBCefApp.isSupported()) return
 
-        for (viewType in VIEW_TYPE.entries) {
+        for (viewType in ViewType.entries) {
             val panel = WebViewPanel(createTestAppData(), viewType, null)
             try {
                 assertTrue(
@@ -136,7 +136,7 @@ class WebViewPanelTest : LightPlatformTestCase() {
     fun testWebViewPanel_lookAndFeelChanged_doesNotThrow() {
         if (!JBCefApp.isSupported()) return
 
-        val panel = WebViewPanel(createTestAppData(), VIEW_TYPE.CREATE_FLAG, null)
+        val panel = WebViewPanel(createTestAppData(), ViewType.CREATE_FLAG, null)
         try {
             // Should not throw even without a loaded page
             panel.lookAndFeelChanged()
@@ -148,7 +148,7 @@ class WebViewPanelTest : LightPlatformTestCase() {
     fun testWebViewPanel_dispose_doesNotThrow() {
         if (!JBCefApp.isSupported()) return
 
-        val panel = WebViewPanel(createTestAppData(), VIEW_TYPE.CREATE_CONFIG, null)
+        val panel = WebViewPanel(createTestAppData(), ViewType.CREATE_CONFIG, null)
         // dispose should clean up resources without throwing
         Disposer.dispose(panel)
     }
@@ -156,7 +156,7 @@ class WebViewPanelTest : LightPlatformTestCase() {
     fun testWebViewPanel_themeChangeViaMessageBus_triggersLookAndFeelChanged() {
         if (!JBCefApp.isSupported()) return
 
-        val panel = WebViewPanel(createTestAppData(), VIEW_TYPE.CREATE_FLAG, null)
+        val panel = WebViewPanel(createTestAppData(), ViewType.CREATE_FLAG, null)
         try {
             val publisher = com.intellij.openapi.application.ApplicationManager.getApplication()
                 .messageBus.syncPublisher(ThemeChangeNotifier.THEME_CHANGE_TOPIC)

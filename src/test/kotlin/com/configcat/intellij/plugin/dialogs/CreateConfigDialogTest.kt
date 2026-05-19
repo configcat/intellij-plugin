@@ -113,6 +113,28 @@ class CreateConfigDialogTest : LightPlatformTestCase() {
         }
     }
 
+    fun testSaveSuccess_setsCreatedConfigIdWhenReturnIdIsNotBlank() {
+        val dialog = buildDialog()
+        try {
+            dialog.saveSuccess("new-config-id")
+
+            assertEquals("new-config-id", dialog.createdConfigId)
+        } finally {
+            safeDispose(dialog)
+        }
+    }
+
+    fun testSaveSuccess_blankReturnId_keepsCreatedConfigIdNull() {
+        val dialog = buildDialog()
+        try {
+            dialog.saveSuccess("   ")
+
+            assertNull(dialog.createdConfigId)
+        } finally {
+            safeDispose(dialog)
+        }
+    }
+
     fun testSaveSuccess_nullReturnId_stillNotifiesAndLoadsConfigs() {
         val dialog = buildDialog()
         try {

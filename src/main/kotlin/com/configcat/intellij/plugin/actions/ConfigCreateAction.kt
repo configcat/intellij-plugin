@@ -27,8 +27,12 @@ class ConfigCreateAction : ConfigCatBaseAnAction() {
             )
             return
         }
-        CreateConfigDialog(e.project, selectedNode.product).showAndGet()
-        nodeRefreshPublish(selectedElement)
+
+        val dialog = CreateConfigDialog(e.project, selectedNode.product)
+        val isSuccessful = dialog.showAndGet()
+        val configIdToSelect = if (isSuccessful) dialog.createdConfigId else null
+
+        nodeRefreshPublish(selectedElement, configIdToSelect)
     }
 
     override fun update(e: AnActionEvent) {
@@ -37,11 +41,11 @@ class ConfigCreateAction : ConfigCatBaseAnAction() {
         updateVisibility(e, selectedNode is ProductNode)
     }
 
-    private fun nodeRefreshPublish(node: DefaultMutableTreeNode) {
+    private fun nodeRefreshPublish(node: DefaultMutableTreeNode, configIdToSelect: String?) {
         val publisher: ProductsConfigsTreeChangeNotifier = ApplicationManager.getApplication().messageBus.syncPublisher(
             ProductsConfigsTreeChangeNotifier.TREE_REFRESH_TOPIC
         )
-        publisher.notifyTreeNodeRefresh(node)
+        publisher.notifyTreeNodeRefresh(node, configIdToSelect)
     }
 
 }

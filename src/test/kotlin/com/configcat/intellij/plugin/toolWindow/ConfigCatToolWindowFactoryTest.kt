@@ -42,7 +42,7 @@ class ConfigCatToolWindowFactoryTest : LightPlatformTestCase() {
         mockkObject(ConfigCatPropertiesService.Companion)
         every { ConfigCatPropertiesService.getInstance() } returns mockk(relaxed = true)
 
-        mockkObject(ConfigCatService.Companion)
+        mockkObject(ConfigCatService)
         every { ConfigCatService.createProductsService(any(), any()) } returns mockk<ProductsApi>(relaxed = true)
         every { ConfigCatService.createConfigsService(any(), any()) } returns mockk<ConfigsApi>(relaxed = true)
         every { ConfigCatService.createFeatureFlagsSettingsService(any(), any()) } returns mockk<FeatureFlagsSettingsApi>(relaxed = true)
@@ -209,4 +209,3 @@ class ConfigCatToolWindowFactoryTest : LightPlatformTestCase() {
         settingId = "setting-id",
     )
 }
-

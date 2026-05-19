@@ -65,7 +65,7 @@ class SettingsPanelTest : LightPlatformTestCase() {
         mockkObject(ConfigCatPropertiesService.Companion)
         every { ConfigCatPropertiesService.getInstance() } returns mockPropertiesService
 
-        mockkObject(ConfigCatService.Companion)
+        mockkObject(ConfigCatService)
         every { ConfigCatService.createConfigsService(any(), any()) } returns mockConfigsApi
         every { ConfigCatService.createFeatureFlagsSettingsService(any(), any()) } returns mockFeatureFlagsApi
 
@@ -561,4 +561,3 @@ class SettingsPanelTest : LightPlatformTestCase() {
         return field.get(panel)
     }
 }
-

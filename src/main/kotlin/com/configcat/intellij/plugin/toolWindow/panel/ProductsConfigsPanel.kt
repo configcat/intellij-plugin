@@ -8,6 +8,7 @@ import com.configcat.intellij.plugin.messaging.ProductsConfigsTreeChangeNotifier
 import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
 import com.configcat.intellij.plugin.services.ConfigCatService
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
+import com.configcat.intellij.plugin.toolWindow.tree.ConfigNode
 import com.configcat.intellij.plugin.toolWindow.tree.FlagTreeStructure
 import com.configcat.intellij.plugin.toolWindow.tree.ProductNode
 import com.configcat.intellij.plugin.toolWindow.tree.ProductRootNode
@@ -59,6 +60,7 @@ class ProductsConfigsPanel(
     private var tree: Tree? = null
     private var treeModel: StructureTreeModel<FlagTreeStructure>? = null
     private var expandedTreeNodes = mutableListOf<String>()
+    private var pendingSelectionConfigId: String? = null
     private val toolbarActionGroup = DefaultActionGroup()
     private val actionPopup = DefaultActionGroup()
 
@@ -80,8 +82,8 @@ class ProductsConfigsPanel(
                 refreshTree()
             }
 
-            override fun notifyTreeNodeRefresh(node: DefaultMutableTreeNode) {
-                refreshTreeNode(node)
+            override fun notifyTreeNodeRefresh(node: DefaultMutableTreeNode, configIdToSelect: String?) {
+                refreshTreeNode(node, configIdToSelect)
             }
         }
         ApplicationManager.getApplication().messageBus.connect(this)
@@ -167,10 +169,16 @@ class ProductsConfigsPanel(
 
             override fun treeNodesInserted(e: TreeModelEvent?) {
                 e?.children?.forEach { child ->
-                    val childUserObject = (child as DefaultMutableTreeNode).userObject
+                    val childTreeNode = child as DefaultMutableTreeNode
+                    val childUserObject = childTreeNode.userObject
                     if (childUserObject is ProductNode) {
                         if (expandedTreeNodes.contains(childUserObject.product.productId.toString())) {
-                            TreeUtil.promiseExpand(tree, TreeUtil.getPathFromRoot(child))
+                            TreeUtil.promiseExpand(tree, TreeUtil.getPathFromRoot(childTreeNode))
+                        }
+                    } else if (childUserObject is ConfigNode) {
+                        val configId = childUserObject.config.configId.toString()
+                        if (configId == pendingSelectionConfigId) {
+                            selectConfigIfPresent(childTreeNode)
                         }
                     }
                 }
@@ -274,7 +282,25 @@ class ProductsConfigsPanel(
     }
 
     private fun refreshTreeNode(node: DefaultMutableTreeNode) {
+        refreshTreeNode(node, null)
+    }
+
+    private fun refreshTreeNode(node: DefaultMutableTreeNode, configIdToSelect: String?) {
+        val productNode = node.userObject as? ProductNode
+        pendingSelectionConfigId = null
+        if (productNode != null) {
+            tree?.selectionPath = TreeUtil.getPathFromRoot(node)
+            if (!configIdToSelect.isNullOrBlank()) {
+                pendingSelectionConfigId = configIdToSelect
+            }
+        }
+
         treeModel?.invalidate(TreePath(node), true)
+    }
+
+    private fun selectConfigIfPresent(configTreeNode: DefaultMutableTreeNode) {
+        tree?.selectionPath = TreeUtil.getPathFromRoot(configTreeNode)
+        pendingSelectionConfigId = null
     }
 }
 

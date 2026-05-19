@@ -1,13 +1,16 @@
 package com.configcat.intellij.plugin.actions
 
 import com.configcat.intellij.plugin.ConfigCatNotifier
+import com.configcat.intellij.plugin.messaging.ProductsConfigsTreeChangeNotifier
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.intellij.plugin.toolWindow.panel.ProductsConfigsPanel
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.Presentation
 import com.intellij.testFramework.LightPlatformTestCase
 import io.mockk.*
+import java.lang.reflect.Method
 import javax.swing.tree.DefaultMutableTreeNode
 
 class ConfigCreateActionTest : LightPlatformTestCase() {
@@ -80,6 +83,52 @@ class ConfigCreateActionTest : LightPlatformTestCase() {
         verify { ConfigCatNotifier.Notify.error(any(), match { it.contains("Create Config") }) }
     }
 
+    fun testNodeRefreshPublish_withConfigId_publishesSelectionRequest() {
+        val action = ConfigCreateAction()
+        val published = arrayOfNulls<Any>(2)
+        val connection = ApplicationManager.getApplication().messageBus.connect(testRootDisposable)
+        connection.subscribe(
+            ProductsConfigsTreeChangeNotifier.TREE_REFRESH_TOPIC,
+            object : ProductsConfigsTreeChangeNotifier {
+                override fun notifyTreeRefresh() = Unit
+
+                override fun notifyTreeNodeRefresh(node: DefaultMutableTreeNode, configIdToSelect: String?) {
+                    published[0] = node
+                    published[1] = configIdToSelect
+                }
+            }
+        )
+
+        val node = DefaultMutableTreeNode(ActionTestFixtures.createProductNode())
+        invokeNodeRefreshPublish(action, node, "created-config-id")
+
+        assertSame(node, published[0])
+        assertEquals("created-config-id", published[1])
+    }
+
+    fun testNodeRefreshPublish_withoutConfigId_publishesNullSelectionRequest() {
+        val action = ConfigCreateAction()
+        val published = arrayOfNulls<Any>(2)
+        val connection = ApplicationManager.getApplication().messageBus.connect(testRootDisposable)
+        connection.subscribe(
+            ProductsConfigsTreeChangeNotifier.TREE_REFRESH_TOPIC,
+            object : ProductsConfigsTreeChangeNotifier {
+                override fun notifyTreeRefresh() = Unit
+
+                override fun notifyTreeNodeRefresh(node: DefaultMutableTreeNode, configIdToSelect: String?) {
+                    published[0] = node
+                    published[1] = configIdToSelect
+                }
+            }
+        )
+
+        val node = DefaultMutableTreeNode(ActionTestFixtures.createProductNode())
+        invokeNodeRefreshPublish(action, node, null)
+
+        assertSame(node, published[0])
+        assertNull(published[1])
+    }
+
     // -------------------------------------------------------------------------
     // update
     // -------------------------------------------------------------------------
@@ -146,5 +195,15 @@ class ConfigCreateActionTest : LightPlatformTestCase() {
             "CONFIGCAT_CONFIG_CREATE_ACTION_ID",
             ConfigCreateAction.CONFIGCAT_CONFIG_CREATE_ACTION_ID
         )
+    }
+
+    private fun invokeNodeRefreshPublish(action: ConfigCreateAction, node: DefaultMutableTreeNode, configId: String?) {
+        val method: Method = ConfigCreateAction::class.java.getDeclaredMethod(
+            "nodeRefreshPublish",
+            DefaultMutableTreeNode::class.java,
+            String::class.java
+        )
+        method.isAccessible = true
+        method.invoke(action, node, configId)
     }
 }
