@@ -1,12 +1,18 @@
 package com.configcat.intellij.plugin.actions
 
 import com.configcat.intellij.plugin.ConfigCatNotifier
+import com.configcat.intellij.plugin.Constants
 import com.configcat.intellij.plugin.dialogs.CreateFlagDialog
 import com.configcat.intellij.plugin.messaging.SettingsTreeChangeNotifier
+import com.configcat.intellij.plugin.services.ConfigCatService
+import com.configcat.intellij.plugin.services.FlagViewOpenHandler
 import com.configcat.intellij.plugin.toolWindow.panel.SettingsPanel
+import com.configcat.publicapi.java.client.ApiException
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
+import com.intellij.openapi.diagnostic.thisLogger
+import com.configcat.publicapi.java.client.model.ConfigModel
 
 
 class FlagCreateAction : ConfigCatBaseAnAction() {
@@ -24,7 +30,13 @@ class FlagCreateAction : ConfigCatBaseAnAction() {
 
         val dialog = CreateFlagDialog(e.project, configModel)
         val isSuccessful = dialog.showAndGet()
-        val flagIdToSelect = if (isSuccessful) dialog.createdFlagId else null
+        val flagIdToSelect = if (isSuccessful) {
+            openCreatedFlagView(configModel, dialog.createdFlagId, e)
+            dialog.createdFlagId
+        } else {
+            thisLogger().error("Flag creation was not successful. Skipping feature flag view opening.")
+            null
+        }
         nodeRefreshPublish(flagIdToSelect)
     }
 
@@ -39,4 +51,33 @@ class FlagCreateAction : ConfigCatBaseAnAction() {
         publisher.notifyTreeRefresh(flagIdToSelect)
     }
 
+    private fun openCreatedFlagView(configModel: ConfigModel, createdFlagId: Int?, e: AnActionEvent) {
+        if (createdFlagId == null) {
+            return
+        }
+
+        val featureFlagsSettingsService = ConfigCatService.createFeatureFlagsSettingsService(
+            Constants.decodePublicApiConfiguration(state.authConfiguration),
+            state.publicApiBaseUrl
+        )
+        val settingName = try {
+            featureFlagsSettingsService.getSetting(createdFlagId).name
+        } catch (exception: ApiException) {
+            thisLogger().error("Failed to resolve setting for created flag ID: $createdFlagId. Skipping view opening.", exception)
+            return
+        }
+        if (settingName.isEmpty()) {
+            thisLogger().error("Created flag setting name is missing for ID: $createdFlagId. Skipping view opening.")
+            return
+        }
+
+        FlagViewOpenHandler.openFlagView(
+            e.project,
+            state,
+            configModel,
+            createdFlagId,
+            settingName
+        )
+    }
 }
+
