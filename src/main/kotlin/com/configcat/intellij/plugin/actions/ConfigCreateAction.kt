@@ -3,6 +3,7 @@ package com.configcat.intellij.plugin.actions
 import com.configcat.intellij.plugin.ConfigCatNotifier
 import com.configcat.intellij.plugin.dialogs.CreateConfigDialog
 import com.configcat.intellij.plugin.messaging.ProductsConfigsTreeChangeNotifier
+import com.configcat.intellij.plugin.services.ConfigConnectionHandler
 import com.configcat.intellij.plugin.toolWindow.panel.ProductsConfigsPanel
 import com.configcat.intellij.plugin.toolWindow.tree.ProductNode
 import com.intellij.openapi.actionSystem.AnActionEvent

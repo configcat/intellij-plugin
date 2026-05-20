@@ -1,6 +1,7 @@
 package com.configcat.intellij.plugin.actions
 
 import com.configcat.intellij.plugin.ConfigCatNotifier
+import com.configcat.intellij.plugin.services.ConfigConnectionHandler
 import com.configcat.intellij.plugin.toolWindow.panel.ProductsConfigsPanel
 import com.configcat.intellij.plugin.toolWindow.tree.ConfigNode
 import com.intellij.openapi.actionSystem.AnActionEvent
