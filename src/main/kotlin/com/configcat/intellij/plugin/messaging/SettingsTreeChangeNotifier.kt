@@ -5,7 +5,7 @@ import javax.swing.tree.DefaultMutableTreeNode
 
 interface SettingsTreeChangeNotifier {
 
-    fun notifyTreeRefresh()
+    fun notifyTreeRefresh(flagIdToSelect: Int? = null)
 
     fun notifyTreeNodeRefresh(node: DefaultMutableTreeNode) {}
 

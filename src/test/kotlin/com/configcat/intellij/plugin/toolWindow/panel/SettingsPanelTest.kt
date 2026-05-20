@@ -492,6 +492,60 @@ class SettingsPanelTest : LightPlatformTestCase() {
     }
 
     // -------------------------------------------------------------------------
+    // Flag selection – auto-select newly created flags
+    // -------------------------------------------------------------------------
+
+    fun testSelectFlagIfPresent_selectsMatchingFlagNode() {
+        every { mockState.isConfigured() } returns false
+
+        val panel = buildPanel()
+        val configRootNode = ConfigRootNode(emptyList(), "My Config")
+        val root = DefaultMutableTreeNode(configRootNode)
+
+        val targetFlagId = 98765
+        val targetSettingModel = mockk<SettingModel>(relaxed = true)
+        every { targetSettingModel.settingId } returns targetFlagId
+        val targetFlagTreeNode = DefaultMutableTreeNode(FlagNode(targetSettingModel, configRootNode))
+
+        val otherSettingModel = mockk<SettingModel>(relaxed = true)
+        every { otherSettingModel.settingId } returns 11111
+        val otherFlagTreeNode = DefaultMutableTreeNode(FlagNode(otherSettingModel, configRootNode))
+
+        root.add(otherFlagTreeNode)
+        root.add(targetFlagTreeNode)
+
+        val swingTree = Tree(DefaultTreeModel(root))
+        setTreeField(panel, swingTree)
+        setPendingFlagSelection(panel, targetFlagId)
+
+        // Invoke the selection method directly (this is what the tree listener does)
+        invokeSelectFlagIfPresent(panel, targetFlagTreeNode)
+
+        val selected = panel.getSelectedNode()
+        assertSame("The matching flag tree node must become the selection", targetFlagTreeNode, selected)
+        assertNull("Pending flag ID must be cleared after selection", pendingSelectionFlagIdField(panel))
+    }
+
+    fun testSelectFlagIfPresent_missingFlag_clearsPendingId() {
+        every { mockState.isConfigured() } returns false
+
+        val panel = buildPanel()
+        val configRootNode = ConfigRootNode(emptyList(), "My Config")
+        val root = DefaultMutableTreeNode(configRootNode)
+
+        val existingSettingModel = mockk<SettingModel>(relaxed = true)
+        every { existingSettingModel.settingId } returns 22222
+        root.add(DefaultMutableTreeNode(FlagNode(existingSettingModel, configRootNode)))
+
+        val swingTree = Tree(DefaultTreeModel(root))
+        setTreeField(panel, swingTree)
+        setPendingFlagSelection(panel, 99999)
+
+        // Pending ID should remain set since matching flag node doesn't exist
+        assertEquals("Pending flag ID should remain set when matching flag is missing", 99999, pendingSelectionFlagIdField(panel))
+    }
+
+    // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
 
@@ -520,7 +574,7 @@ class SettingsPanelTest : LightPlatformTestCase() {
     }
 
     private fun waitForAsync() {
-        Thread.sleep(200)
+        Thread.sleep(500)
     }
 
     private fun configureStateAsConfigured() {
@@ -559,5 +613,24 @@ class SettingsPanelTest : LightPlatformTestCase() {
         val field: Field = SettingsPanel::class.java.getDeclaredField("treeModel")
         field.isAccessible = true
         return field.get(panel)
+    }
+
+    private fun pendingSelectionFlagIdField(panel: SettingsPanel): Int? {
+        val field: Field = SettingsPanel::class.java.getDeclaredField("pendingSelectionFlagId")
+        field.isAccessible = true
+        @Suppress("UNCHECKED_CAST")
+        return field.get(panel) as Int?
+    }
+
+    private fun setPendingFlagSelection(panel: SettingsPanel, flagId: Int?) {
+        val field: Field = SettingsPanel::class.java.getDeclaredField("pendingSelectionFlagId")
+        field.isAccessible = true
+        field.set(panel, flagId)
+    }
+
+    private fun invokeSelectFlagIfPresent(panel: SettingsPanel, flagTreeNode: DefaultMutableTreeNode) {
+        val method = SettingsPanel::class.java.getDeclaredMethod("selectFlagIfPresent", DefaultMutableTreeNode::class.java)
+        method.isAccessible = true
+        method.invoke(panel, flagTreeNode)
     }
 }

@@ -11,6 +11,7 @@ import com.configcat.intellij.plugin.services.ConfigCatPropertiesService
 import com.configcat.intellij.plugin.services.ConfigCatService
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.intellij.plugin.toolWindow.tree.ConfigRootNode
+import com.configcat.intellij.plugin.toolWindow.tree.FlagNode
 import com.configcat.intellij.plugin.toolWindow.tree.FlagTreeStructure
 import com.configcat.publicapi.java.client.ApiException
 import com.configcat.publicapi.java.client.model.ConfigModel
@@ -31,6 +32,7 @@ import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.tree.AsyncTreeModel
 import com.intellij.ui.tree.StructureTreeModel
 import com.intellij.ui.treeStructure.Tree
+import com.intellij.util.ui.tree.TreeUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -39,6 +41,8 @@ import java.awt.GridBagLayout
 import java.util.*
 import javax.swing.JComponent
 import javax.swing.JPanel
+import javax.swing.event.TreeModelEvent
+import javax.swing.event.TreeModelListener
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.TreePath
 import javax.swing.tree.TreeSelectionModel
@@ -61,6 +65,7 @@ class SettingsPanel(
     private var tree: Tree? = null
     private var treeModel: StructureTreeModel<FlagTreeStructure>? = null
     private var connectedConfig: ConfigModel? = null
+    private var pendingSelectionFlagId: Int? = null
     val toolbarActionGroup = DefaultActionGroup()
     val actionPopup = DefaultActionGroup()
 
@@ -86,8 +91,8 @@ class SettingsPanel(
             .subscribe(ConnectedConfigChangeNotifier.CONNECTED_CONFIG_CHANGE_TOPIC, handleConnectedConfigChange)
 
         val handleTreeNotify = object : SettingsTreeChangeNotifier {
-            override fun notifyTreeRefresh() {
-                refreshTree()
+            override fun notifyTreeRefresh(flagIdToSelect: Int?) {
+                refreshTree(flagIdToSelect)
             }
 
             override fun notifyTreeNodeRefresh(node: DefaultMutableTreeNode) {
@@ -218,6 +223,29 @@ class SettingsPanel(
         val treeModel: StructureTreeModel<FlagTreeStructure> = StructureTreeModel(treeStructure, this)
         this.treeModel = treeModel
         val treeBuilder = AsyncTreeModel(treeModel, this)
+        
+        // Listen for flag node insertions to enable auto-selection of newly created flags
+        treeBuilder.addTreeModelListener(object : TreeModelListener {
+            override fun treeNodesChanged(e: TreeModelEvent?) = Unit
+
+            override fun treeNodesInserted(e: TreeModelEvent?) {
+                e?.children?.forEach { child ->
+                    val childTreeNode = child as DefaultMutableTreeNode
+                    val childUserObject = childTreeNode.userObject
+                    if (childUserObject is FlagNode) {
+                        val flagId = childUserObject.setting.settingId
+                        if (flagId == pendingSelectionFlagId) {
+                            selectFlagIfPresent(childTreeNode)
+                        }
+                    }
+                }
+            }
+
+            override fun treeNodesRemoved(e: TreeModelEvent?) = Unit
+
+            override fun treeStructureChanged(e: TreeModelEvent?) = Unit
+        })
+        
         val tree = Tree()
         tree.model = treeBuilder
 
@@ -234,11 +262,21 @@ class SettingsPanel(
     override fun dispose() = Unit
 
     private fun refreshTree() {
+        refreshTree(null)
+    }
+
+    private fun refreshTree(flagIdToSelect: Int?) {
+        pendingSelectionFlagId = flagIdToSelect
         initTreeContent()
     }
 
     private fun refreshTreeNode(node: DefaultMutableTreeNode) {
         treeModel?.invalidate(TreePath(node), true)
+    }
+
+    private fun selectFlagIfPresent(flagTreeNode: DefaultMutableTreeNode) {
+        tree?.selectionPath = TreeUtil.getPathFromRoot(flagTreeNode)
+        pendingSelectionFlagId = null
     }
 
     fun loadConnectedConfig(): ConfigModel? {

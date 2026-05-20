@@ -1,11 +1,13 @@
 package com.configcat.intellij.plugin.actions
 
 import com.configcat.intellij.plugin.ConfigCatNotifier
+import com.configcat.intellij.plugin.messaging.SettingsTreeChangeNotifier
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.intellij.plugin.toolWindow.panel.SettingsPanel
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.Presentation
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.testFramework.LightPlatformTestCase
 import io.mockk.*
 
@@ -70,6 +72,50 @@ class FlagCreateActionTest : LightPlatformTestCase() {
     }
 
     // -------------------------------------------------------------------------
+    // actionPerformed - publish contract
+    // -------------------------------------------------------------------------
+
+    fun testNodeRefreshPublish_withFlagId_publishesSelectionRequest() {
+        var published: Int? =  null
+        var publishedCount = 0
+        val connection = ApplicationManager.getApplication().messageBus.connect(testRootDisposable)
+        connection.subscribe(
+            SettingsTreeChangeNotifier.TREE_REFRESH_TOPIC,
+            object : SettingsTreeChangeNotifier {
+                override fun notifyTreeRefresh(flagIdToSelect: Int?) {
+                    published = flagIdToSelect
+                    publishedCount++
+                }
+            }
+        )
+        val action = FlagCreateAction()
+        invokeNodeRefreshPublish(action, 54321)
+
+        assertEquals("notifyTreeRefresh must be called exactly once", 1, publishedCount)
+        assertEquals("notifyTreeRefresh must be called with provided flagId", 54321, published)
+    }
+
+    fun testNodeRefreshPublish_withoutFlagId_publishesNull() {
+        var published: Int? =  null
+        var publishedCount = 0
+        val connection = ApplicationManager.getApplication().messageBus.connect(testRootDisposable)
+        connection.subscribe(
+            SettingsTreeChangeNotifier.TREE_REFRESH_TOPIC,
+            object : SettingsTreeChangeNotifier {
+                override fun notifyTreeRefresh(flagIdToSelect: Int?) {
+                    published = flagIdToSelect
+                    publishedCount++
+                }
+            }
+        )
+        val action = FlagCreateAction()
+        invokeNodeRefreshPublish(action, null)
+
+        assertEquals("notifyTreeRefresh must be called exactly once", 1, publishedCount)
+        assertNull("published flagId must be null when not provided", published)
+    }
+
+    // -------------------------------------------------------------------------
     // update
     // -------------------------------------------------------------------------
 
@@ -107,5 +153,15 @@ class FlagCreateActionTest : LightPlatformTestCase() {
             "CONFIGCAT_FLAG_CREATE_ACTION_ID",
             FlagCreateAction.CONFIGCAT_FLAG_CREATE_ACTION_ID
         )
+    }
+
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    private fun invokeNodeRefreshPublish(action: FlagCreateAction, flagId: Int?) {
+        val method = FlagCreateAction::class.java.getDeclaredMethod("nodeRefreshPublish", Int::class.javaObjectType)
+        method.isAccessible = true
+        method.invoke(action, flagId)
     }
 }

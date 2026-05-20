@@ -22,19 +22,21 @@ class FlagCreateAction : ConfigCatBaseAnAction() {
             return
         }
 
-        CreateFlagDialog(e.project, configModel).showAndGet()
-        nodeRefreshPublish()
+        val dialog = CreateFlagDialog(e.project, configModel)
+        val isSuccessful = dialog.showAndGet()
+        val flagIdToSelect = if (isSuccessful) dialog.createdFlagId else null
+        nodeRefreshPublish(flagIdToSelect)
     }
 
     override fun update(e: AnActionEvent) {
         updateVisibility(e, true)
     }
 
-    private fun nodeRefreshPublish() {
+    private fun nodeRefreshPublish(flagIdToSelect: Int? = null) {
         val publisher: SettingsTreeChangeNotifier = ApplicationManager.getApplication().messageBus.syncPublisher(
             SettingsTreeChangeNotifier.TREE_REFRESH_TOPIC
         )
-        publisher.notifyTreeRefresh()
+        publisher.notifyTreeRefresh(flagIdToSelect)
     }
 
 }

@@ -20,6 +20,9 @@ import javax.swing.JComponent
 
 class CreateFlagDialog(val project: Project?, val config: ConfigModel) : DialogWrapper(true) {
 
+    var createdFlagId: Int? = null
+        private set
+
     init {
         title = "Create Flag"
         init()
@@ -54,9 +57,8 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel) : DialogW
         return WebViewPanelContainer(appData, ViewType.CREATE_FLAG, { returnId -> saveSuccess(returnId) })
     }
 
-
-    @Suppress("UnusedParameter")
     fun saveSuccess(returnId: String?) {
+        createdFlagId = returnId?.toIntOrNull()
         val configId = config.configId
         try {
             ConfigCatNotifier.Notify.info("Feature Flag Successfully created.")

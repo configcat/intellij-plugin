@@ -90,6 +90,43 @@ class CreateFlagDialogTest : LightPlatformTestCase() {
     }
 
     // -------------------------------------------------------------------------
+    // saveSuccess – ID capture
+    // -------------------------------------------------------------------------
+
+    fun testSaveSuccess_setsCreatedFlagIdWhenReturnIdIsValidInt() {
+        val dialog = buildDialog()
+        try {
+            dialog.saveSuccess("12345")
+
+            assertEquals("createdFlagId must capture the settingId from returnId", 12345, dialog.createdFlagId)
+        } finally {
+            safeDispose(dialog)
+        }
+    }
+
+    fun testSaveSuccess_invalidIntReturnId_keepsCreatedFlagIdNull() {
+        val dialog = buildDialog()
+        try {
+            dialog.saveSuccess("not-a-number")
+
+            assertNull("createdFlagId must remain null when returnId is not a valid integer", dialog.createdFlagId)
+        } finally {
+            safeDispose(dialog)
+        }
+    }
+
+    fun testSaveSuccess_nullReturnId_keepsCreatedFlagIdNull() {
+        val dialog = buildDialog()
+        try {
+            dialog.saveSuccess(null)
+
+            assertNull("createdFlagId must remain null when returnId is null", dialog.createdFlagId)
+        } finally {
+            safeDispose(dialog)
+        }
+    }
+
+    // -------------------------------------------------------------------------
     // saveSuccess – happy path
     // -------------------------------------------------------------------------
 
