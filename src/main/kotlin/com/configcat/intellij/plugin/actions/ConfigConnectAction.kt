@@ -1,15 +1,10 @@
 package com.configcat.intellij.plugin.actions
 
 import com.configcat.intellij.plugin.ConfigCatNotifier
-import com.configcat.intellij.plugin.messaging.ConnectedConfigChangeNotifier
-import com.configcat.intellij.plugin.services.ConfigCatPropertiesService
-import com.configcat.intellij.plugin.toolWindow.ConfigCatToolWindowFactory
 import com.configcat.intellij.plugin.toolWindow.panel.ProductsConfigsPanel
 import com.configcat.intellij.plugin.toolWindow.tree.ConfigNode
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
-import com.intellij.openapi.wm.ToolWindowManager
 import javax.swing.tree.DefaultMutableTreeNode
 
 
@@ -29,21 +24,7 @@ class ConfigConnectAction : ConfigCatBaseAnAction() {
             )
             return
         }
-        val configCatPropertiesService = ConfigCatPropertiesService.getInstance()
-        configCatPropertiesService.setConnectedConfig(selectedNode.config.configId.toString())
-        val publisher: ConnectedConfigChangeNotifier = ApplicationManager.getApplication().messageBus.syncPublisher(
-            ConnectedConfigChangeNotifier.CONNECTED_CONFIG_CHANGE_TOPIC
-        )
-        publisher.notifyConnectedConfigChange()
-        e.project?.let {
-            val toolWindow =
-                ToolWindowManager.getInstance(it).getToolWindow(ConfigCatToolWindowFactory.CONFIGCAT_TOOL_WINDOW_ID)
-            val settingsContent = toolWindow?.contentManager?.getContent(1)
-            settingsContent?.let { content ->
-                toolWindow.contentManager.setSelectedContent(content)
-            }
-
-        }
+        ConfigConnectionHandler.connectConfig(e.project, selectedNode.config.configId.toString())
 
     }
 

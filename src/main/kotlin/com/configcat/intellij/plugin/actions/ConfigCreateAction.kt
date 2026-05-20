@@ -8,6 +8,8 @@ import com.configcat.intellij.plugin.toolWindow.tree.ProductNode
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
+import com.intellij.openapi.diagnostic.thisLogger
+import com.intellij.openapi.project.Project
 import javax.swing.tree.DefaultMutableTreeNode
 
 
@@ -30,7 +32,10 @@ class ConfigCreateAction : ConfigCatBaseAnAction() {
 
         val dialog = CreateConfigDialog(e.project, selectedNode.product)
         val isSuccessful = dialog.showAndGet()
-        val configIdToSelect = if (isSuccessful) dialog.createdConfigId else null
+        val configIdToSelect = if (isSuccessful) {
+            autoConnectCreatedConfig(e.project,  dialog.createdConfigId)
+            dialog.createdConfigId
+        } else null
 
         nodeRefreshPublish(selectedElement, configIdToSelect)
     }
@@ -46,6 +51,14 @@ class ConfigCreateAction : ConfigCatBaseAnAction() {
             ProductsConfigsTreeChangeNotifier.TREE_REFRESH_TOPIC
         )
         publisher.notifyTreeNodeRefresh(node, configIdToSelect)
+    }
+
+    private fun autoConnectCreatedConfig(project: Project?, createdConfigId: String?) {
+        if (createdConfigId.isNullOrBlank()) {
+            thisLogger().error("Config was created successfully but returned config ID is missing. Skipping auto-connect.")
+            return
+        }
+        ConfigConnectionHandler.connectConfig(project, createdConfigId)
     }
 
 }

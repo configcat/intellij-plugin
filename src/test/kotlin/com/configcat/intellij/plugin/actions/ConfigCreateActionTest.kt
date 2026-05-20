@@ -1,6 +1,7 @@
 package com.configcat.intellij.plugin.actions
 
 import com.configcat.intellij.plugin.ConfigCatNotifier
+import com.configcat.intellij.plugin.dialogs.CreateConfigDialog
 import com.configcat.intellij.plugin.messaging.ProductsConfigsTreeChangeNotifier
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.intellij.plugin.toolWindow.panel.ProductsConfigsPanel
@@ -8,6 +9,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.Presentation
+import com.intellij.testFramework.LoggedErrorProcessor
 import com.intellij.testFramework.LightPlatformTestCase
 import io.mockk.*
 import java.lang.reflect.Method
@@ -81,6 +83,49 @@ class ConfigCreateActionTest : LightPlatformTestCase() {
         action.actionPerformed(event)
 
         verify { ConfigCatNotifier.Notify.error(any(), match { it.contains("Create Config") }) }
+    }
+
+    fun testAutoConnectCreatedConfig_successfulCreate_withConfigId_autoConnectsCreatedConfig() {
+        val action = ConfigCreateAction()
+        val createdConfigId = "created-config-id"
+        val mockProject = mockk<com.intellij.openapi.project.Project>(relaxed = true)
+
+        mockkObject(ConfigConnectionHandler)
+        every { ConfigConnectionHandler.connectConfig(any(), any()) } just Runs
+
+        invokeAutoConnectCreatedConfig(action, mockProject, createdConfigId)
+
+        verify(exactly = 1) { ConfigConnectionHandler.connectConfig(mockProject, createdConfigId) }
+    }
+
+    fun testAutoConnectCreatedConfig_successfulCreate_withoutConfigId_doesNotAutoConnect() {
+        val action = ConfigCreateAction()
+        val mockProject = mockk<com.intellij.openapi.project.Project>(relaxed = true)
+
+        mockkObject(ConfigConnectionHandler)
+        every { ConfigConnectionHandler.connectConfig(any(), any()) } just Runs
+
+        suppressLogErrors {
+            invokeAutoConnectCreatedConfig(action, mockProject, "   ")
+        }
+
+        verify(exactly = 0) { ConfigConnectionHandler.connectConfig(any(), any()) }
+    }
+
+    fun testAutoConnectCreatedConfig_unsuccessfulCreate_doesNotAutoConnect() {
+        val action = ConfigCreateAction()
+        val selectedElement = DefaultMutableTreeNode(ActionTestFixtures.createProductNode())
+        val event = ActionTestFixtures.createProductsConfigsEvent(mockProductsConfigsPanel, selectedElement)
+
+        mockkObject(ConfigConnectionHandler)
+        every { ConfigConnectionHandler.connectConfig(any(), any()) } just Runs
+
+        mockkConstructor(CreateConfigDialog::class)
+        every { anyConstructed<CreateConfigDialog>().showAndGet() } returns false
+
+        action.actionPerformed(event)
+
+        verify(exactly = 0) { ConfigConnectionHandler.connectConfig(any(), any()) }
     }
 
     fun testNodeRefreshPublish_withConfigId_publishesSelectionRequest() {
@@ -205,5 +250,31 @@ class ConfigCreateActionTest : LightPlatformTestCase() {
         )
         method.isAccessible = true
         method.invoke(action, node, configId)
+    }
+
+    private fun invokeAutoConnectCreatedConfig(
+        action: ConfigCreateAction,
+        project: com.intellij.openapi.project.Project?,
+        createdConfigId: String?
+    ) {
+        val method: Method = ConfigCreateAction::class.java.getDeclaredMethod(
+            "autoConnectCreatedConfig",
+            com.intellij.openapi.project.Project::class.java,
+            String::class.java
+        )
+        method.isAccessible = true
+        method.invoke(action, project, createdConfigId)
+    }
+
+    private fun suppressLogErrors(action: () -> Unit) {
+        val noOpProcessor = object : LoggedErrorProcessor() {
+            override fun processError(
+                category: String,
+                message: String,
+                details: Array<String>,
+                t: Throwable?,
+            ): Set<Action> = emptySet()
+        }
+        LoggedErrorProcessor.executeWith<Throwable>(noOpProcessor) { action() }
     }
 }
