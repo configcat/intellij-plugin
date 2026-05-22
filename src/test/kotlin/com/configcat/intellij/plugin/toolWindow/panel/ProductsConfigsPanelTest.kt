@@ -1,6 +1,7 @@
 package com.configcat.intellij.plugin.toolWindow.panel
 
 import com.configcat.intellij.plugin.ErrorHandler
+import com.configcat.intellij.plugin.messaging.ConfigChangeNotifier
 import com.configcat.intellij.plugin.messaging.ProductsConfigsTreeChangeNotifier
 import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
 import com.configcat.intellij.plugin.services.ConfigCatService
@@ -15,6 +16,7 @@ import com.configcat.publicapi.java.client.model.ProductModel
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.util.Disposer
 import com.intellij.testFramework.LightPlatformTestCase
+import com.intellij.ui.SearchTextField
 import com.intellij.ui.treeStructure.Tree
 import io.mockk.every
 import io.mockk.just
@@ -438,6 +440,83 @@ class ProductsConfigsPanelTest : LightPlatformTestCase() {
     }
 
     // -------------------------------------------------------------------------
+    // Filter field – visibility and query propagation
+    // -------------------------------------------------------------------------
+
+    fun testInitTree_success_searchTextFieldIsCreated() {
+        every { mockState.isConfigured() } returns true
+        every { mockState.authConfiguration } returns """{"basicAuthUserName":"user","basicAuthPassword":"pass"}"""
+        every { mockState.publicApiBaseUrl } returns "https://api.example.com"
+        every { mockProductsApi.products } returns emptyList()
+
+        val panel = buildPanel()
+        waitForAsyncWithEdt()
+
+        assertNotNull("searchTextField must be set after a successful initTree()", searchTextFieldField(panel))
+    }
+
+    fun testInitTree_apiFailure_searchTextFieldRemainsNull() {
+        every { mockState.isConfigured() } returns true
+        every { mockState.authConfiguration } returns """{"basicAuthUserName":"user","basicAuthPassword":"pass"}"""
+        every { mockState.publicApiBaseUrl } returns "https://api.example.com"
+        every { mockProductsApi.products } throws ApiException(500, "Internal Server Error")
+
+        val panel = buildPanel()
+        waitForAsyncWithEdt()
+
+        assertNull("searchTextField must remain null when tree fails to initialize", searchTextFieldField(panel))
+    }
+
+    fun testNotConfigured_searchTextFieldIsNull() {
+        every { mockState.isConfigured() } returns false
+
+        val panel = buildPanel()
+
+        assertNull("searchTextField must be null when plugin is not configured", searchTextFieldField(panel))
+    }
+
+    fun testResetTreeView_pluginBecomesUnconfigured_searchTextFieldIsCleared() {
+        every { mockState.isConfigured() } returns true
+        every { mockState.authConfiguration } returns """{"basicAuthUserName":"user","basicAuthPassword":"pass"}"""
+        every { mockState.publicApiBaseUrl } returns "https://api.example.com"
+        every { mockProductsApi.products } returns emptyList()
+
+        val panel = buildPanel()
+        waitForAsyncWithEdt()
+        assertNotNull("Pre-condition: searchTextField must exist after successful init", searchTextFieldField(panel))
+
+        every { mockState.isConfigured() } returns false
+        ApplicationManager.getApplication().messageBus
+            .syncPublisher(ConfigChangeNotifier.CONFIG_CHANGE_TOPIC)
+            .notifyConfigChange()
+
+        assertNull("searchTextField must be null after resetTreeView() clears it", searchTextFieldField(panel))
+    }
+
+    fun testFilter_typingInSearchField_updatesProductRootNodeQuery() {
+        every { mockState.isConfigured() } returns true
+        every { mockState.authConfiguration } returns """{"basicAuthUserName":"user","basicAuthPassword":"pass"}"""
+        every { mockState.publicApiBaseUrl } returns "https://api.example.com"
+        every { mockProductsApi.products } returns emptyList()
+
+        val panel = buildPanel()
+        waitForAsyncWithEdt()
+
+        val searchField = searchTextFieldField(panel)
+        assertNotNull("Pre-condition: searchTextField must exist", searchField)
+
+        searchField!!.text = "my_filter"
+
+        val productRoot = productRootNodeField(panel)
+        assertNotNull("Pre-condition: productRootNode must exist", productRoot)
+        assertEquals(
+            "productRootNode.filterQuery must reflect what was typed in the search field",
+            "my_filter",
+            productRoot!!.filterQuery
+        )
+    }
+
+    // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
 
@@ -530,6 +609,23 @@ class ProductsConfigsPanelTest : LightPlatformTestCase() {
         val field: Field = ProductsConfigsPanel::class.java.getDeclaredField("treeModel")
         field.isAccessible = true
         return field.get(panel)
+    }
+
+    private fun waitForAsyncWithEdt() {
+        Thread.sleep(300)
+        com.intellij.util.ui.UIUtil.dispatchAllInvocationEvents()
+    }
+
+    private fun searchTextFieldField(panel: ProductsConfigsPanel): SearchTextField? {
+        val field: Field = ProductsConfigsPanel::class.java.getDeclaredField("searchTextField")
+        field.isAccessible = true
+        return field.get(panel) as SearchTextField?
+    }
+
+    private fun productRootNodeField(panel: ProductsConfigsPanel): ProductRootNode? {
+        val field: Field = ProductsConfigsPanel::class.java.getDeclaredField("productRootNode")
+        field.isAccessible = true
+        return field.get(panel) as ProductRootNode?
     }
 }
 

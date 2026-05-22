@@ -8,8 +8,33 @@ import com.intellij.ide.projectView.PresentationData
 import com.intellij.ui.SimpleTextAttributes
 import com.intellij.ui.treeStructure.SimpleNode
 
+fun addHighlightedText(
+    presentation: PresentationData,
+    text: String,
+    query: String,
+    normalAttrs: SimpleTextAttributes,
+    highlightAttrs: SimpleTextAttributes
+) {
+    val lowerText = text.lowercase()
+    val lowerQuery = query.lowercase()
+    var lastIndex = 0
+    var matchIndex = lowerText.indexOf(lowerQuery, lastIndex)
+    while (matchIndex != -1) {
+        if (matchIndex > lastIndex) {
+            presentation.addText(text.substring(lastIndex, matchIndex), normalAttrs)
+        }
+        presentation.addText(text.substring(matchIndex, matchIndex + query.length), highlightAttrs)
+        lastIndex = matchIndex + query.length
+        matchIndex = lowerText.indexOf(lowerQuery, lastIndex)
+    }
+    if (lastIndex < text.length) {
+        presentation.addText(text.substring(lastIndex), normalAttrs)
+    }
+}
+
 class ProductRootNode(private val products: List<ProductModel>) : SimpleNode() {
     private var productNodes: MutableList<SimpleNode> = ArrayList()
+    var filterQuery: String = ""
 
     init {
         for (product in products) {
@@ -65,6 +90,8 @@ class ConfigRootNode(val flags: List<SettingModel>, val configName: String) : Si
 
 class ProductNode(val product: ProductModel, parent: SimpleNode) : SimpleNode(null, parent) {
 
+    internal val productRoot: ProductRootNode? = parent as? ProductRootNode
+
     init {
         presentation.tooltip = product.description
     }
@@ -79,17 +106,18 @@ class ProductNode(val product: ProductModel, parent: SimpleNode) : SimpleNode(nu
         val configs: List<ConfigModel>? = configCatNodeDataService.getProductConfigs(productId)
         if (configs == null) {
             return arrayOf(InfoNode("Loading..."))
-        } else {
-            if (configs.isEmpty()) {
-                return arrayOf(InfoNode("No configs."))
-            } else {
-                val configNodes: MutableList<SimpleNode> = ArrayList()
-                for (config in configs) {
-                    configNodes.add(ConfigNode(config, this))
-                }
-                return configNodes.toTypedArray()
-            }
         }
+        if (configs.isEmpty()) {
+            return arrayOf(InfoNode("No configs."))
+        }
+        val query = productRoot?.filterQuery?.trim() ?: ""
+        val filteredConfigs = if (query.isBlank() || product.name.contains(query, ignoreCase = true)) {
+            configs
+        } else {
+            configs.filter { it.name.contains(query, ignoreCase = true) }
+        }
+        if (filteredConfigs.isEmpty()) return arrayOf(InfoNode("No matching config."))
+        return filteredConfigs.map { ConfigNode(it, this) }.toTypedArray()
     }
 
     override fun getName(): String {
@@ -99,12 +127,27 @@ class ProductNode(val product: ProductModel, parent: SimpleNode) : SimpleNode(nu
 
 class ConfigNode(val config: ConfigModel, parent: SimpleNode) : SimpleNode(null, parent) {
 
+    private val productRoot: ProductRootNode? = (parent as? ProductNode)?.productRoot
+
     init {
         presentation.tooltip = config.description
     }
 
     override fun isAutoExpandNode(): Boolean {
         return true
+    }
+
+    override fun doUpdate(presentation: PresentationData) {
+        val query = productRoot?.filterQuery?.trim() ?: ""
+        if (query.isBlank()) {
+            presentation.addText(config.name, SimpleTextAttributes.REGULAR_ATTRIBUTES)
+        } else {
+            addHighlightedText(
+                presentation, config.name, query,
+                SimpleTextAttributes.REGULAR_ATTRIBUTES,
+                SimpleTextAttributes(SimpleTextAttributes.STYLE_SEARCH_MATCH, null)
+            )
+        }
     }
 
     override fun getChildren(): Array<SimpleNode> {
@@ -149,29 +192,6 @@ class FlagNode(val setting: SettingModel, parentNode: SimpleNode) : SimpleNode(n
         }
     }
 
-    private fun addHighlightedText(
-        presentation: PresentationData,
-        text: String,
-        query: String,
-        normalAttrs: SimpleTextAttributes,
-        highlightAttrs: SimpleTextAttributes
-    ) {
-        val lowerText = text.lowercase()
-        val lowerQuery = query.lowercase()
-        var lastIndex = 0
-        var matchIndex = lowerText.indexOf(lowerQuery, lastIndex)
-        while (matchIndex != -1) {
-            if (matchIndex > lastIndex) {
-                presentation.addText(text.substring(lastIndex, matchIndex), normalAttrs)
-            }
-            presentation.addText(text.substring(matchIndex, matchIndex + query.length), highlightAttrs)
-            lastIndex = matchIndex + query.length
-            matchIndex = lowerText.indexOf(lowerQuery, lastIndex)
-        }
-        if (lastIndex < text.length) {
-            presentation.addText(text.substring(lastIndex), normalAttrs)
-        }
-    }
 
     override fun getChildren(): Array<SimpleNode> {
         return NO_CHILDREN

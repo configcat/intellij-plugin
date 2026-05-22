@@ -294,6 +294,203 @@ class ConfigCatNodesTest : LightPlatformTestCase() {
         verify(exactly = 0) { presentation.addText(any(), SimpleTextAttributes.REGULAR_BOLD_ATTRIBUTES) }
     }
 
+    // -------------------------------------------------------------------------
+    // ProductRootNode – filter tests
+    // -------------------------------------------------------------------------
+
+    fun testProductRootNodeFilterByLoadedConfigName_returnsNotModifiedProducts() {
+        val nodeDataService = mockk<ConfigCatNodeDataService>()
+        mockkObject(ConfigCatNodeDataService.Companion)
+        every { ConfigCatNodeDataService.getInstance() } returns nodeDataService
+
+        val productA = createProductModel(name = "Alpha Product")
+        val productB = createProductModel(name = "Beta Product")
+        val configWithMatch = createConfigModel(name = "Special Config")
+        every { nodeDataService.getProductConfigs(productA.productId) } returns emptyList()
+        every { nodeDataService.getProductConfigs(productB.productId) } returns listOf(configWithMatch)
+
+        val root = ProductRootNode(listOf(productA, productB))
+
+        root.filterQuery = "Special"
+        val children = root.children
+
+        assertEquals(2, children.size)
+    }
+
+    // -------------------------------------------------------------------------
+    // ProductNode – filter tests (getChildren)
+    // -------------------------------------------------------------------------
+
+    fun testProductNodeFilterByProductNameMatch_returnsAllConfigs() {
+        val nodeDataService = mockk<ConfigCatNodeDataService>()
+        mockkObject(ConfigCatNodeDataService.Companion)
+        every { ConfigCatNodeDataService.getInstance() } returns nodeDataService
+
+        val root = ProductRootNode(emptyList())
+        root.filterQuery = "product"
+        val product = createProductModel(name = "My Product")
+        val configA = createConfigModel(name = "Config A")
+        val configB = createConfigModel(name = "Config B")
+        every { nodeDataService.getProductConfigs(product.productId) } returns listOf(configA, configB)
+
+        val node = ProductNode(product, root)
+        val children = node.children
+
+        assertEquals(2, children.size)
+        assertTrue(children.all { it is ConfigNode })
+        assertEquals(listOf("Config A", "Config B"), children.map { it.name })
+    }
+
+    fun testProductNodeFilterByConfigName_returnsOnlyMatchingConfigs() {
+        val nodeDataService = mockk<ConfigCatNodeDataService>()
+        mockkObject(ConfigCatNodeDataService.Companion)
+        every { ConfigCatNodeDataService.getInstance() } returns nodeDataService
+
+        val root = ProductRootNode(emptyList())
+        root.filterQuery = "Special"
+        val product = createProductModel(name = "My Product")
+        val configA = createConfigModel(name = "Special Config")
+        val configB = createConfigModel(name = "Other Config")
+        every { nodeDataService.getProductConfigs(product.productId) } returns listOf(configA, configB)
+
+        val node = ProductNode(product, root)
+        val children = node.children
+
+        assertEquals(1, children.size)
+        assertTrue(children[0] is ConfigNode)
+        assertEquals("Special Config", children[0].name)
+    }
+
+    fun testProductNodeFilterNoMatch_returnsNoMatchingConfigInfoNode() {
+        val nodeDataService = mockk<ConfigCatNodeDataService>()
+        mockkObject(ConfigCatNodeDataService.Companion)
+        every { ConfigCatNodeDataService.getInstance() } returns nodeDataService
+
+        val root = ProductRootNode(emptyList())
+        root.filterQuery = "xyz"
+        val product = createProductModel(name = "My Product")
+        val configA = createConfigModel(name = "Config A")
+        val configB = createConfigModel(name = "Config B")
+        every { nodeDataService.getProductConfigs(product.productId) } returns listOf(configA, configB)
+
+        val node = ProductNode(product, root)
+        val children = node.children
+
+        assertEquals(1, children.size)
+        assertTrue(children[0] is InfoNode)
+        assertEquals("No matching config.", children[0].name)
+    }
+
+    fun testProductNodeFilterIsCaseInsensitive() {
+        val nodeDataService = mockk<ConfigCatNodeDataService>()
+        mockkObject(ConfigCatNodeDataService.Companion)
+        every { ConfigCatNodeDataService.getInstance() } returns nodeDataService
+
+        val root = ProductRootNode(emptyList())
+        root.filterQuery = "SPECIAL"
+        val product = createProductModel(name = "My Product")
+        val configMatch = createConfigModel(name = "Special Config")
+        val configOther = createConfigModel(name = "Other Config")
+        every { nodeDataService.getProductConfigs(product.productId) } returns listOf(configMatch, configOther)
+
+        val node = ProductNode(product, root)
+        val children = node.children
+
+        assertEquals(1, children.size)
+        assertEquals("Special Config", children[0].name)
+    }
+
+    fun testProductNodeFilterClearedReturnsAllConfigs() {
+        val nodeDataService = mockk<ConfigCatNodeDataService>()
+        mockkObject(ConfigCatNodeDataService.Companion)
+        every { ConfigCatNodeDataService.getInstance() } returns nodeDataService
+
+        val root = ProductRootNode(emptyList())
+        val product = createProductModel(name = "My Product")
+        val configA = createConfigModel(name = "Config A")
+        val configB = createConfigModel(name = "Config B")
+        every { nodeDataService.getProductConfigs(product.productId) } returns listOf(configA, configB)
+
+        root.filterQuery = "Config A"
+        val node = ProductNode(product, root)
+        assertEquals(1, node.children.size)
+
+        root.filterQuery = ""
+        val children = node.children
+
+        assertEquals(2, children.size)
+        assertTrue(children.all { it is ConfigNode })
+    }
+
+    // -------------------------------------------------------------------------
+    // ConfigNode – doUpdate highlight tests
+    // -------------------------------------------------------------------------
+
+    fun testConfigNodeDoUpdate_noQuery_rendersConfigName() {
+        val product = createProductModel()
+        val config = createConfigModel(name = "My Config")
+        val root = ProductRootNode(emptyList())
+        val productNode = ProductNode(product, root)
+        val node = ConfigNode(config, productNode)
+        val presentation = mockk<PresentationData>(relaxed = true)
+
+        invokeDoUpdate(node, presentation)
+
+        verify(exactly = 1) { presentation.addText("My Config", SimpleTextAttributes.REGULAR_ATTRIBUTES) }
+        verify(exactly = 0) {
+            presentation.addText(any(), SimpleTextAttributes(SimpleTextAttributes.STYLE_SEARCH_MATCH, null))
+        }
+    }
+
+    fun testConfigNodeDoUpdate_withQuery_highlightsMatchInName() {
+        val product = createProductModel()
+        val config = createConfigModel(name = "My Config")
+        val root = ProductRootNode(emptyList())
+        root.filterQuery = "Config"
+        val productNode = ProductNode(product, root)
+        val node = ConfigNode(config, productNode)
+        val presentation = mockk<PresentationData>(relaxed = true)
+
+        invokeDoUpdate(node, presentation)
+
+        val highlightAttrs = SimpleTextAttributes(SimpleTextAttributes.STYLE_SEARCH_MATCH, null)
+        verify(exactly = 1) { presentation.addText("My ", SimpleTextAttributes.REGULAR_ATTRIBUTES) }
+        verify(exactly = 1) { presentation.addText("Config", highlightAttrs) }
+    }
+
+    fun testConfigNodeDoUpdate_queryNoMatch_rendersFullNameNormally() {
+        val product = createProductModel()
+        val config = createConfigModel(name = "My Config")
+        val root = ProductRootNode(emptyList())
+        root.filterQuery = "xyz"
+        val productNode = ProductNode(product, root)
+        val node = ConfigNode(config, productNode)
+        val presentation = mockk<PresentationData>(relaxed = true)
+
+        invokeDoUpdate(node, presentation)
+
+        verify(exactly = 1) { presentation.addText("My Config", SimpleTextAttributes.REGULAR_ATTRIBUTES) }
+        verify(exactly = 0) {
+            presentation.addText(any(), SimpleTextAttributes(SimpleTextAttributes.STYLE_SEARCH_MATCH, null))
+        }
+    }
+
+    fun testConfigNodeDoUpdate_multipleMatchesInName_highlightsAll() {
+        val product = createProductModel()
+        val config = createConfigModel(name = "ab test ab")
+        val root = ProductRootNode(emptyList())
+        root.filterQuery = "ab"
+        val productNode = ProductNode(product, root)
+        val node = ConfigNode(config, productNode)
+        val presentation = mockk<PresentationData>(relaxed = true)
+
+        invokeDoUpdate(node, presentation)
+
+        val highlightAttrs = SimpleTextAttributes(SimpleTextAttributes.STYLE_SEARCH_MATCH, null)
+        verify(exactly = 2) { presentation.addText("ab", highlightAttrs) }
+        verify(exactly = 1) { presentation.addText(" test ", SimpleTextAttributes.REGULAR_ATTRIBUTES) }
+    }
+
     private fun invokeDoUpdate(node: Any, presentation: PresentationData) {
         val method = node.javaClass.getDeclaredMethod("doUpdate", PresentationData::class.java)
         method.isAccessible = true

@@ -12,6 +12,7 @@ import com.configcat.intellij.plugin.toolWindow.tree.ConfigNode
 import com.configcat.intellij.plugin.toolWindow.tree.FlagTreeStructure
 import com.configcat.intellij.plugin.toolWindow.tree.ProductNode
 import com.configcat.intellij.plugin.toolWindow.tree.ProductRootNode
+import com.intellij.ui.SearchTextField
 import com.configcat.publicapi.java.client.ApiException
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.Disposable
@@ -33,10 +34,15 @@ import com.intellij.ui.treeStructure.Tree
 import com.intellij.util.ui.tree.TreeUtil
 import com.intellij.util.ui.tree.TreeUtil.collectExpandedPaths
 import kotlinx.coroutines.*
+import java.awt.BorderLayout
 import java.awt.CardLayout
+import java.awt.FlowLayout
 import java.awt.GridBagLayout
 import javax.swing.JComponent
 import javax.swing.JPanel
+import javax.swing.JSeparator
+import javax.swing.event.DocumentEvent
+import javax.swing.event.DocumentListener
 import javax.swing.event.TreeExpansionEvent
 import javax.swing.event.TreeExpansionListener
 import javax.swing.event.TreeModelEvent
@@ -59,6 +65,8 @@ class ProductsConfigsPanel(
     private val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
     private var tree: Tree? = null
     private var treeModel: StructureTreeModel<FlagTreeStructure>? = null
+    private var productRootNode: ProductRootNode? = null
+    private var searchTextField: SearchTextField? = null
     private var expandedTreeNodes = mutableListOf<String>()
     private var pendingSelectionConfigId: String? = null
     private var pendingSelectionProductId: String? = null
@@ -115,14 +123,43 @@ class ProductsConfigsPanel(
             tree = initTree()
 
             cs.launch(Dispatchers.EDT) {
-                val loadedContent: JComponent = JPanel(CardLayout())
                 if (tree != null) {
+                    val loadedContent = JPanel(BorderLayout())
                     // add action popup to the tree
                     PopupHandler.installPopupMenu(
                         tree!!, actionPopup, ActionPlaces.POPUP
                     )
-                    loadedContent.add(ScrollPaneFactory.createScrollPane(tree, true))
+
+                    val currentFilter = searchTextField?.text ?: ""
+                    val searchField = SearchTextField(true)
+                    searchField.text = currentFilter
+                    searchField.textEditor.emptyText.text = "Search configs by name"
+                    searchField.textEditor.columns = 25
+                    searchTextField = searchField
+                    // Re-apply any existing filter text to the freshly built root node
+                    productRootNode?.filterQuery = currentFilter
+
+                    searchField.addDocumentListener(object : DocumentListener {
+                        override fun insertUpdate(e: DocumentEvent?) = applyFilter()
+                        override fun removeUpdate(e: DocumentEvent?) = applyFilter()
+                        override fun changedUpdate(e: DocumentEvent?) = applyFilter()
+                        private fun applyFilter() {
+                            productRootNode?.filterQuery = searchField.text
+                            treeModel?.invalidate()
+                        }
+                    })
+
+                    val filterPanel = JPanel(FlowLayout(FlowLayout.LEFT, 4, 3))
+                    filterPanel.add(searchField)
+                    val filterContainer = JPanel(BorderLayout())
+                    filterContainer.add(filterPanel, BorderLayout.CENTER)
+                    filterContainer.add(JSeparator(), BorderLayout.SOUTH)
+
+                    loadedContent.add(filterContainer, BorderLayout.NORTH)
+                    loadedContent.add(ScrollPaneFactory.createScrollPane(tree, true), BorderLayout.CENTER)
+                    setContent(loadedContent)
                 } else {
+                    val loadedContent: JComponent = JPanel(CardLayout())
                     val centeredErrorPanel = JPanel(GridBagLayout())
                     val errorPanel = panel {
                         row {
@@ -135,8 +172,8 @@ class ProductsConfigsPanel(
                     }
                     centeredErrorPanel.add(errorPanel)
                     loadedContent.add(centeredErrorPanel)
+                    setContent(loadedContent)
                 }
-                setContent(loadedContent)
             }
 
         }
@@ -160,7 +197,9 @@ class ProductsConfigsPanel(
         configCatNodeDataService.resetProductConfigsData()
 
         val tree = Tree()
-        val treeStructure = FlagTreeStructure(ProductRootNode(products))
+        val rootNode = ProductRootNode(products)
+        productRootNode = rootNode
+        val treeStructure = FlagTreeStructure(rootNode)
         val treeModel: StructureTreeModel<FlagTreeStructure> = StructureTreeModel(treeStructure, this)
         val treeBuilder = AsyncTreeModel(treeModel, this)
 
@@ -265,6 +304,8 @@ class ProductsConfigsPanel(
     private fun resetTreeView() {
         tree = null
         treeModel = null
+        productRootNode = null
+        searchTextField = null
     }
 
     private fun refreshTree() {
