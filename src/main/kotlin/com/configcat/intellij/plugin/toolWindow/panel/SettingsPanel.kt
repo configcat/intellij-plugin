@@ -66,6 +66,7 @@ class SettingsPanel(
     private var treeModel: StructureTreeModel<FlagTreeStructure>? = null
     private var connectedConfig: ConfigModel? = null
     private var pendingSelectionFlagId: Int? = null
+    private var pendingSelectionConfigRootSelection: Boolean = false
     val toolbarActionGroup = DefaultActionGroup()
     val actionPopup = DefaultActionGroup()
 
@@ -235,7 +236,7 @@ class SettingsPanel(
                     if (childUserObject is FlagNode) {
                         val flagId = childUserObject.setting.settingId
                         if (flagId == pendingSelectionFlagId) {
-                            selectFlagIfPresent(childTreeNode)
+                            selectNodeIfPresent(childTreeNode)
                         }
                     }
                 }
@@ -245,9 +246,17 @@ class SettingsPanel(
 
             override fun treeStructureChanged(e: TreeModelEvent?) = Unit
         })
-        
+
+
+
         val tree = Tree()
         tree.model = treeBuilder
+
+        if (pendingSelectionConfigRootSelection) {
+            TreeUtil.promiseSelectFirst(tree).onSuccess {
+                pendingSelectionConfigRootSelection = false
+            }
+        }
 
         tree.setRootVisible(true)
         tree.selectionModel.selectionMode = TreeSelectionModel.SINGLE_TREE_SELECTION
@@ -261,12 +270,27 @@ class SettingsPanel(
 
     override fun dispose() = Unit
 
-    private fun refreshTree() {
-        refreshTree(null)
-    }
-
     private fun refreshTree(flagIdToSelect: Int?) {
-        pendingSelectionFlagId = flagIdToSelect
+        if (flagIdToSelect != null) {
+            // Explicit new-item selection: use it directly and clear any restore flag.
+            pendingSelectionFlagId = flagIdToSelect
+            pendingSelectionConfigRootSelection = false
+        } else {
+            // Snapshot current selection so it can be restored after reload.
+            val selectedUserObject = getSelectedNode()?.userObject
+
+            when (selectedUserObject) {
+                is FlagNode -> pendingSelectionFlagId = selectedUserObject.setting.settingId
+                is ConfigRootNode -> {
+                    pendingSelectionFlagId = null
+                    pendingSelectionConfigRootSelection = true
+                }
+                else -> {
+                    pendingSelectionFlagId = null
+                    pendingSelectionConfigRootSelection = false
+                }
+            }
+        }
         initTreeContent()
     }
 
@@ -274,9 +298,10 @@ class SettingsPanel(
         treeModel?.invalidate(TreePath(node), true)
     }
 
-    private fun selectFlagIfPresent(flagTreeNode: DefaultMutableTreeNode) {
-        tree?.selectionPath = TreeUtil.getPathFromRoot(flagTreeNode)
+    private fun selectNodeIfPresent(treeNode: DefaultMutableTreeNode) {
+        tree?.selectionPath = TreeUtil.getPathFromRoot(treeNode)
         pendingSelectionFlagId = null
+        pendingSelectionConfigRootSelection = false
     }
 
     fun loadConnectedConfig(): ConfigModel? {

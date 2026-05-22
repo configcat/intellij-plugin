@@ -492,6 +492,99 @@ class SettingsPanelTest : LightPlatformTestCase() {
     }
 
     // -------------------------------------------------------------------------
+    // Selection persistence on refresh – snapshot tests
+    // -------------------------------------------------------------------------
+
+    fun testRefreshTree_withFlagSelected_snapshotsFlagIdAsPending() {
+        every { mockState.isConfigured() } returns false
+
+        val panel = buildPanel()
+        val configRootNode = ConfigRootNode(emptyList(), "My Config")
+        val root = DefaultMutableTreeNode(configRootNode)
+        val settingModel = mockk<SettingModel>(relaxed = true)
+        every { settingModel.settingId } returns 42
+        val flagNode = FlagNode(settingModel, configRootNode)
+        val flagTreeNode = DefaultMutableTreeNode(flagNode)
+        root.add(flagTreeNode)
+        val swingTree = Tree(DefaultTreeModel(root))
+        swingTree.selectionPath = TreePath(arrayOf<Any>(root, flagTreeNode))
+        setTreeField(panel, swingTree)
+
+        invokeRefreshTree(panel, null)
+
+        assertEquals(
+            "pendingSelectionFlagId must be snapshotted from the currently selected FlagNode", 42,
+            pendingSelectionFlagIdField(panel)
+        )
+        assertFalse(
+            "pendingSelectionConfigRootSelection must be false when a FlagNode is selected",
+            pendingSelectionConfigRootSelectionField(panel)
+        )
+    }
+
+    fun testRefreshTree_withRootSelected_setsConfigRootSelectionFlag() {
+        every { mockState.isConfigured() } returns false
+
+        val panel = buildPanel()
+        val configRootNode = ConfigRootNode(emptyList(), "My Config")
+        val root = DefaultMutableTreeNode(configRootNode)
+        val swingTree = Tree(DefaultTreeModel(root))
+        swingTree.selectionPath = TreePath(arrayOf<Any>(root))
+        setTreeField(panel, swingTree)
+
+        invokeRefreshTree(panel, null)
+
+        assertNull(
+            "pendingSelectionFlagId must be null when only ConfigRootNode is selected",
+            pendingSelectionFlagIdField(panel)
+        )
+        assertTrue(
+            "pendingSelectionConfigRootSelection must be true when ConfigRootNode is selected",
+            pendingSelectionConfigRootSelectionField(panel)
+        )
+    }
+
+    fun testRefreshTree_withNoSelection_clearsAllPendingSelections() {
+        every { mockState.isConfigured() } returns false
+
+        val panel = buildPanel()
+        val root = DefaultMutableTreeNode("root")
+        val swingTree = Tree(DefaultTreeModel(root))
+        setTreeField(panel, swingTree)
+        setPendingFlagSelection(panel, 99)
+        setPendingConfigRootSelection(panel, true)
+
+        invokeRefreshTree(panel, null)
+
+        assertNull(
+            "pendingSelectionFlagId must be null when nothing is selected",
+            pendingSelectionFlagIdField(panel)
+        )
+        assertFalse(
+            "pendingSelectionConfigRootSelection must be false when nothing is selected",
+            pendingSelectionConfigRootSelectionField(panel)
+        )
+    }
+
+    fun testRefreshTree_withExplicitFlagId_usesThatIdAndClearsRootFlag() {
+        every { mockState.isConfigured() } returns false
+
+        val panel = buildPanel()
+        setPendingConfigRootSelection(panel, true)
+
+        invokeRefreshTree(panel, 77)
+
+        assertEquals(
+            "pendingSelectionFlagId must be set to the explicitly provided flag ID", 77,
+            pendingSelectionFlagIdField(panel)
+        )
+        assertFalse(
+            "pendingSelectionConfigRootSelection must be cleared when explicit flag ID is provided",
+            pendingSelectionConfigRootSelectionField(panel)
+        )
+    }
+
+    // -------------------------------------------------------------------------
     // Flag selection – auto-select newly created flags
     // -------------------------------------------------------------------------
 
@@ -519,7 +612,7 @@ class SettingsPanelTest : LightPlatformTestCase() {
         setPendingFlagSelection(panel, targetFlagId)
 
         // Invoke the selection method directly (this is what the tree listener does)
-        invokeSelectFlagIfPresent(panel, targetFlagTreeNode)
+        invokeSelectNodeIfPresent(panel, targetFlagTreeNode)
 
         val selected = panel.getSelectedNode()
         assertSame("The matching flag tree node must become the selection", targetFlagTreeNode, selected)
@@ -628,8 +721,26 @@ class SettingsPanelTest : LightPlatformTestCase() {
         field.set(panel, flagId)
     }
 
-    private fun invokeSelectFlagIfPresent(panel: SettingsPanel, flagTreeNode: DefaultMutableTreeNode) {
-        val method = SettingsPanel::class.java.getDeclaredMethod("selectFlagIfPresent", DefaultMutableTreeNode::class.java)
+    private fun setPendingConfigRootSelection(panel: SettingsPanel, value: Boolean) {
+        val field: Field = SettingsPanel::class.java.getDeclaredField("pendingSelectionConfigRootSelection")
+        field.isAccessible = true
+        field.set(panel, value)
+    }
+
+    private fun pendingSelectionConfigRootSelectionField(panel: SettingsPanel): Boolean {
+        val field: Field = SettingsPanel::class.java.getDeclaredField("pendingSelectionConfigRootSelection")
+        field.isAccessible = true
+        return field.get(panel) as Boolean
+    }
+
+    private fun invokeRefreshTree(panel: SettingsPanel, flagIdToSelect: Int?) {
+        val method = SettingsPanel::class.java.getDeclaredMethod("refreshTree", Int::class.javaObjectType)
+        method.isAccessible = true
+        method.invoke(panel, flagIdToSelect)
+    }
+
+    private fun invokeSelectNodeIfPresent(panel: SettingsPanel, flagTreeNode: DefaultMutableTreeNode) {
+        val method = SettingsPanel::class.java.getDeclaredMethod("selectNodeIfPresent", DefaultMutableTreeNode::class.java)
         method.isAccessible = true
         method.invoke(panel, flagTreeNode)
     }

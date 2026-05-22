@@ -237,7 +237,7 @@ class ProductsConfigsPanelTest : LightPlatformTestCase() {
         setPendingConfigSelection(panel, targetConfigId.toString())
 
         // treeNodesInserted found the matching child and delegates here with that child node.
-        invokeSelectConfigIfPresent(panel, targetConfigTreeNode)
+        invokeSelectNodeIfPresent(panel, targetConfigTreeNode)
 
         val selected = panel.getSelectedNode()
         assertSame("The matching config tree node must become the selection", targetConfigTreeNode, selected)
@@ -335,6 +335,109 @@ class ProductsConfigsPanelTest : LightPlatformTestCase() {
     }
 
     // -------------------------------------------------------------------------
+    // Selection persistence on refresh – snapshot tests
+    // -------------------------------------------------------------------------
+
+    fun testRefreshTree_withConfigSelected_snapshotsConfigIdAsPending() {
+        every { mockState.isConfigured() } returns false
+
+        val panel = buildPanel()
+        val productNode = createProductNodeForTest()
+        val targetConfigId = UUID.randomUUID()
+        val configNode = createConfigNodeForTest(productNode, targetConfigId)
+        val root = DefaultMutableTreeNode("root")
+        val productTreeNode = DefaultMutableTreeNode(productNode)
+        val configTreeNode = DefaultMutableTreeNode(configNode)
+        root.add(productTreeNode)
+        productTreeNode.add(configTreeNode)
+        val swingTree = Tree(DefaultTreeModel(root))
+        swingTree.selectionPath = TreePath(arrayOf(root, productTreeNode, configTreeNode))
+        setTreeField(panel, swingTree)
+
+        invokeRefreshTree(panel)
+
+        assertEquals(
+            "pendingSelectionConfigId must be snapshotted from the currently selected ConfigNode",
+            targetConfigId.toString(),
+            pendingSelectionConfigIdField(panel)
+        )
+        assertNull(
+            "pendingSelectionProductId must be null when a ConfigNode is selected",
+            pendingSelectionProductIdField(panel)
+        )
+    }
+
+    fun testRefreshTree_withProductSelected_snapshotsProductIdAsPending() {
+        every { mockState.isConfigured() } returns false
+
+        val panel = buildPanel()
+        val productNode = createProductNodeForTest()
+        val productId = productNode.product.productId.toString()
+        val root = DefaultMutableTreeNode("root")
+        val productTreeNode = DefaultMutableTreeNode(productNode)
+        root.add(productTreeNode)
+        val swingTree = Tree(DefaultTreeModel(root))
+        swingTree.selectionPath = TreePath(arrayOf(root, productTreeNode))
+        setTreeField(panel, swingTree)
+
+        invokeRefreshTree(panel)
+
+        assertEquals(
+            "pendingSelectionProductId must be snapshotted from the currently selected ProductNode",
+            productId,
+            pendingSelectionProductIdField(panel)
+        )
+        assertNull(
+            "pendingSelectionConfigId must be null when a ProductNode is selected",
+            pendingSelectionConfigIdField(panel)
+        )
+    }
+
+    fun testRefreshTree_withNoSelection_clearsAllPendingSelections() {
+        every { mockState.isConfigured() } returns false
+
+        val panel = buildPanel()
+        val root = DefaultMutableTreeNode("root")
+        val swingTree = Tree(DefaultTreeModel(root))
+        setTreeField(panel, swingTree)
+        setPendingConfigSelection(panel, "some-config-id")
+        setPendingProductSelection(panel, "some-product-id")
+
+        invokeRefreshTree(panel)
+
+        assertNull(
+            "pendingSelectionConfigId must be null when nothing is selected",
+            pendingSelectionConfigIdField(panel)
+        )
+        assertNull(
+            "pendingSelectionProductId must be null when nothing is selected",
+            pendingSelectionProductIdField(panel)
+        )
+    }
+
+    fun testSelectProductIfPresent_selectsMatchingProductNode() {
+        every { mockState.isConfigured() } returns false
+
+        val panel = buildPanel()
+        val productNode = createProductNodeForTest()
+        val otherProductNode = createProductNodeForTest()
+        val root = DefaultMutableTreeNode("root")
+        val targetProductTreeNode = DefaultMutableTreeNode(productNode)
+        val otherProductTreeNode = DefaultMutableTreeNode(otherProductNode)
+        root.add(otherProductTreeNode)
+        root.add(targetProductTreeNode)
+        val swingTree = Tree(DefaultTreeModel(root))
+        setTreeField(panel, swingTree)
+        setPendingProductSelection(panel, productNode.product.productId.toString())
+
+        invokeSelectNodeIfPresent(panel, targetProductTreeNode)
+
+        val selected = panel.getSelectedNode()
+        assertSame("The matching product tree node must become the selection", targetProductTreeNode, selected)
+        assertNull("pendingSelectionProductId must be cleared after a successful selection", pendingSelectionProductIdField(panel))
+    }
+
+    // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
 
@@ -384,9 +487,9 @@ class ProductsConfigsPanelTest : LightPlatformTestCase() {
         return ConfigNode(configModel, parent)
     }
 
-    private fun invokeSelectConfigIfPresent(panel: ProductsConfigsPanel, configTreeNode: DefaultMutableTreeNode) {
+    private fun invokeSelectNodeIfPresent(panel: ProductsConfigsPanel, configTreeNode: DefaultMutableTreeNode) {
         val method: Method = ProductsConfigsPanel::class.java.getDeclaredMethod(
-            "selectConfigIfPresent",
+            "selectNodeIfPresent",
             DefaultMutableTreeNode::class.java
         )
         method.isAccessible = true
@@ -397,6 +500,24 @@ class ProductsConfigsPanelTest : LightPlatformTestCase() {
         val configField: Field = ProductsConfigsPanel::class.java.getDeclaredField("pendingSelectionConfigId")
         configField.isAccessible = true
         configField.set(panel, configId)
+    }
+
+    private fun setPendingProductSelection(panel: ProductsConfigsPanel, productId: String?) {
+        val field: Field = ProductsConfigsPanel::class.java.getDeclaredField("pendingSelectionProductId")
+        field.isAccessible = true
+        field.set(panel, productId)
+    }
+
+    private fun pendingSelectionProductIdField(panel: ProductsConfigsPanel): String? {
+        val field: Field = ProductsConfigsPanel::class.java.getDeclaredField("pendingSelectionProductId")
+        field.isAccessible = true
+        return field.get(panel) as String?
+    }
+
+    private fun invokeRefreshTree(panel: ProductsConfigsPanel) {
+        val method: Method = ProductsConfigsPanel::class.java.getDeclaredMethod("refreshTree")
+        method.isAccessible = true
+        method.invoke(panel)
     }
 
     private fun pendingSelectionConfigIdField(panel: ProductsConfigsPanel): String? {

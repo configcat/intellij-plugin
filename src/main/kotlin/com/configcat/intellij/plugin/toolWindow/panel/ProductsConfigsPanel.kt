@@ -61,6 +61,7 @@ class ProductsConfigsPanel(
     private var treeModel: StructureTreeModel<FlagTreeStructure>? = null
     private var expandedTreeNodes = mutableListOf<String>()
     private var pendingSelectionConfigId: String? = null
+    private var pendingSelectionProductId: String? = null
     private val toolbarActionGroup = DefaultActionGroup()
     private val actionPopup = DefaultActionGroup()
 
@@ -172,13 +173,17 @@ class ProductsConfigsPanel(
                     val childTreeNode = child as DefaultMutableTreeNode
                     val childUserObject = childTreeNode.userObject
                     if (childUserObject is ProductNode) {
-                        if (expandedTreeNodes.contains(childUserObject.product.productId.toString())) {
+                        val productId = childUserObject.product.productId.toString()
+                        if (expandedTreeNodes.contains(productId)) {
                             TreeUtil.promiseExpand(tree, TreeUtil.getPathFromRoot(childTreeNode))
+                        }
+                        if (productId == pendingSelectionProductId) {
+                            selectNodeIfPresent(childTreeNode)
                         }
                     } else if (childUserObject is ConfigNode) {
                         val configId = childUserObject.config.configId.toString()
                         if (configId == pendingSelectionConfigId) {
-                            selectConfigIfPresent(childTreeNode)
+                            selectNodeIfPresent(childTreeNode)
                         }
                     }
                 }
@@ -277,6 +282,23 @@ class ProductsConfigsPanel(
                     }
                 }
             }
+
+            // Snapshot current selection so it can be restored after reload.
+            val selectedUserObject = getSelectedNode()?.userObject
+            when {
+                selectedUserObject is ConfigNode -> {
+                    pendingSelectionConfigId = selectedUserObject.config.configId.toString()
+                    pendingSelectionProductId = null
+                }
+                selectedUserObject is ProductNode -> {
+                    pendingSelectionProductId = selectedUserObject.product.productId.toString()
+                    pendingSelectionConfigId = null
+                }
+                else -> {
+                    pendingSelectionConfigId = null
+                    pendingSelectionProductId = null
+                }
+            }
         }
         initTreeContent()
     }
@@ -287,20 +309,20 @@ class ProductsConfigsPanel(
 
     private fun refreshTreeNode(node: DefaultMutableTreeNode, configIdToSelect: String?) {
         val productNode = node.userObject as? ProductNode
-        pendingSelectionConfigId = null
         if (productNode != null) {
-            tree?.selectionPath = TreeUtil.getPathFromRoot(node)
             if (!configIdToSelect.isNullOrBlank()) {
                 pendingSelectionConfigId = configIdToSelect
+                pendingSelectionProductId = null
             }
         }
 
         treeModel?.invalidate(TreePath(node), true)
     }
 
-    private fun selectConfigIfPresent(configTreeNode: DefaultMutableTreeNode) {
-        tree?.selectionPath = TreeUtil.getPathFromRoot(configTreeNode)
+    private fun selectNodeIfPresent(treeNode: DefaultMutableTreeNode) {
+        tree?.selectionPath = TreeUtil.getPathFromRoot(treeNode)
         pendingSelectionConfigId = null
+        pendingSelectionProductId = null
     }
 }
 
