@@ -18,6 +18,7 @@ import com.configcat.publicapi.java.client.model.SettingModel
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.util.Disposer
 import com.intellij.testFramework.LightPlatformTestCase
+import com.intellij.ui.SearchTextField
 import com.intellij.ui.treeStructure.Tree
 import io.mockk.every
 import io.mockk.just
@@ -639,6 +640,72 @@ class SettingsPanelTest : LightPlatformTestCase() {
     }
 
     // -------------------------------------------------------------------------
+    // Filter field – search text input presence and behaviour
+    // -------------------------------------------------------------------------
+
+    fun testInitTree_success_searchTextFieldIsCreated() {
+        configureStateAsConfigured()
+        configureConnectedConfigSuccess()
+        every { mockFeatureFlagsApi.getSettings(any()) } returns emptyList()
+
+        val panel = buildPanel()
+        waitForAsync()
+
+        assertNotNull("searchTextField must be set after a successful initTree()", searchTextFieldField(panel))
+    }
+
+    fun testInitTree_getSettingsFailure_searchTextFieldRemainsNull() {
+        configureStateAsConfigured()
+        configureConnectedConfigSuccess()
+        every { mockFeatureFlagsApi.getSettings(any()) } throws ApiException(500, "Server Error")
+
+        val panel = buildPanel()
+        waitForAsync()
+
+        assertNull("searchTextField must remain null when tree fails to initialize", searchTextFieldField(panel))
+    }
+
+    fun testResetTreeView_pluginBecomesUnconfigured_searchTextFieldIsCleared() {
+        configureStateAsConfigured()
+        configureConnectedConfigSuccess()
+        every { mockFeatureFlagsApi.getSettings(any()) } returns emptyList()
+
+        val panel = buildPanel()
+        waitForAsync()
+        assertNotNull("Pre-condition: searchTextField must exist after successful init", searchTextFieldField(panel))
+
+        every { mockState.isConfigured() } returns false
+        publishConfigChange()
+
+        assertNull("searchTextField must be null after resetTreeView() clears it", searchTextFieldField(panel))
+    }
+
+    fun testFilter_typingInSearchField_updatesConfigRootNodeQuery() {
+        configureStateAsConfigured()
+        configureConnectedConfigSuccess()
+        val flag = mockk<SettingModel>(relaxed = true)
+        every { flag.name } returns "My Flag"
+        every { flag.key } returns "my_flag_key"
+        every { mockFeatureFlagsApi.getSettings(any()) } returns listOf(flag)
+
+        val panel = buildPanel()
+        waitForAsync()
+
+        val searchField = searchTextFieldField(panel)
+        assertNotNull("Pre-condition: searchTextField must exist", searchField)
+
+        searchField!!.text = "my_flag"
+
+        val configRoot = configRootNodeField(panel)
+        assertNotNull("Pre-condition: configRootNode must exist", configRoot)
+        assertEquals(
+            "configRootNode.filterQuery must reflect what was typed in the search field",
+            "my_flag",
+            configRoot!!.filterQuery
+        )
+    }
+
+    // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
 
@@ -668,6 +735,7 @@ class SettingsPanelTest : LightPlatformTestCase() {
 
     private fun waitForAsync() {
         Thread.sleep(500)
+        com.intellij.util.ui.UIUtil.dispatchAllInvocationEvents()
     }
 
     private fun configureStateAsConfigured() {
@@ -743,5 +811,17 @@ class SettingsPanelTest : LightPlatformTestCase() {
         val method = SettingsPanel::class.java.getDeclaredMethod("selectNodeIfPresent", DefaultMutableTreeNode::class.java)
         method.isAccessible = true
         method.invoke(panel, flagTreeNode)
+    }
+
+    private fun searchTextFieldField(panel: SettingsPanel): SearchTextField? {
+        val field: Field = SettingsPanel::class.java.getDeclaredField("searchTextField")
+        field.isAccessible = true
+        return field.get(panel) as SearchTextField?
+    }
+
+    private fun configRootNodeField(panel: SettingsPanel): ConfigRootNode? {
+        val field: Field = SettingsPanel::class.java.getDeclaredField("configRootNode")
+        field.isAccessible = true
+        return field.get(panel) as ConfigRootNode?
     }
 }

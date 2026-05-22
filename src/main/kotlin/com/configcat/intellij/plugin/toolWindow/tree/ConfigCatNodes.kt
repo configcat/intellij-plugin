@@ -36,6 +36,7 @@ class ProductRootNode(private val products: List<ProductModel>) : SimpleNode() {
 class ConfigRootNode(val flags: List<SettingModel>, val configName: String) : SimpleNode() {
 
     val flagNodes: MutableList<SimpleNode> = ArrayList()
+    var filterQuery: String = ""
 
     init {
         for (flag in flags) {
@@ -44,10 +45,17 @@ class ConfigRootNode(val flags: List<SettingModel>, val configName: String) : Si
     }
 
     override fun getChildren(): Array<SimpleNode> {
-        if (flagNodes.isEmpty()) {
-            return arrayOf(InfoNode("No flags."))
+        val query = filterQuery.trim()
+        if (query.isBlank()) {
+            if (flagNodes.isEmpty()) return arrayOf(InfoNode("No flags."))
+            return flagNodes.toTypedArray()
         }
-        return flagNodes.toTypedArray()
+        val filtered = flagNodes.filterIsInstance<FlagNode>().filter { node ->
+            node.setting.name.contains(query, ignoreCase = true) ||
+                node.setting.key.contains(query, ignoreCase = true)
+        }
+        if (filtered.isEmpty()) return arrayOf(InfoNode("No matching flag."))
+        return filtered.toTypedArray()
     }
 
     override fun getName(): String {
@@ -109,7 +117,9 @@ class ConfigNode(val config: ConfigModel, parent: SimpleNode) : SimpleNode(null,
 
 }
 
-class FlagNode(val setting: SettingModel, parent: SimpleNode) : SimpleNode(null, parent) {
+class FlagNode(val setting: SettingModel, parentNode: SimpleNode) : SimpleNode(null, parentNode) {
+
+    private val configRoot: ConfigRootNode? = parentNode as? ConfigRootNode
 
     init {
         presentation.tooltip = setting.hint
@@ -118,9 +128,48 @@ class FlagNode(val setting: SettingModel, parent: SimpleNode) : SimpleNode(null,
     override fun doUpdate(presentation: PresentationData) {
         if (setting.name.isEmpty() && setting.key.isEmpty()) {
             presentation.addText("<missing data>", SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES)
-        } else {
+            return
+        }
+        val query = configRoot?.filterQuery?.trim() ?: ""
+        if (query.isBlank()) {
             presentation.addText(setting.name, SimpleTextAttributes.REGULAR_BOLD_ATTRIBUTES)
             presentation.addText(" ${setting.key}", SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES)
+        } else {
+            addHighlightedText(
+                presentation, setting.name, query,
+                SimpleTextAttributes.REGULAR_BOLD_ATTRIBUTES,
+                SimpleTextAttributes(SimpleTextAttributes.STYLE_BOLD or SimpleTextAttributes.STYLE_SEARCH_MATCH, null)
+            )
+            presentation.addText(" ", SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES)
+            addHighlightedText(
+                presentation, setting.key, query,
+                SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES,
+                SimpleTextAttributes(SimpleTextAttributes.STYLE_ITALIC or SimpleTextAttributes.STYLE_SEARCH_MATCH, null)
+            )
+        }
+    }
+
+    private fun addHighlightedText(
+        presentation: PresentationData,
+        text: String,
+        query: String,
+        normalAttrs: SimpleTextAttributes,
+        highlightAttrs: SimpleTextAttributes
+    ) {
+        val lowerText = text.lowercase()
+        val lowerQuery = query.lowercase()
+        var lastIndex = 0
+        var matchIndex = lowerText.indexOf(lowerQuery, lastIndex)
+        while (matchIndex != -1) {
+            if (matchIndex > lastIndex) {
+                presentation.addText(text.substring(lastIndex, matchIndex), normalAttrs)
+            }
+            presentation.addText(text.substring(matchIndex, matchIndex + query.length), highlightAttrs)
+            lastIndex = matchIndex + query.length
+            matchIndex = lowerText.indexOf(lowerQuery, lastIndex)
+        }
+        if (lastIndex < text.length) {
+            presentation.addText(text.substring(lastIndex), normalAttrs)
         }
     }
 
@@ -160,4 +209,3 @@ class InfoNode(private val message: String) : SimpleNode() {
     }
 
 }
-

@@ -68,6 +68,73 @@ class ConfigCatNodesTest : LightPlatformTestCase() {
         assertEquals(listOf("Flag A (a)", "Flag B (b)"), firstChildren.map { it.name })
     }
 
+    fun testConfigRootNodeFilterByNameReturnsOnlyMatchingNode() {
+        val flagA = createSettingModel(name = "Alpha Flag", key = "a")
+        val flagB = createSettingModel(name = "Beta Flag", key = "b")
+        val root = ConfigRootNode(listOf(flagA, flagB), "Test Config")
+
+        root.filterQuery = "alpha"
+        val children = root.children
+
+        assertEquals(1, children.size)
+        assertTrue(children[0] is FlagNode)
+        assertEquals("Alpha Flag (a)", children[0].name)
+    }
+
+    fun testConfigRootNodeFilterByKeyReturnsOnlyMatchingNode() {
+        val flagA = createSettingModel(name = "Alpha Flag", key = "alpha_key")
+        val flagB = createSettingModel(name = "Beta Flag", key = "beta_key")
+        val root = ConfigRootNode(listOf(flagA, flagB), "Test Config")
+
+        root.filterQuery = "beta_key"
+        val children = root.children
+
+        assertEquals(1, children.size)
+        assertTrue(children[0] is FlagNode)
+        assertEquals("Beta Flag (beta_key)", children[0].name)
+    }
+
+    fun testConfigRootNodeFilterIsCaseInsensitive() {
+        val flagA = createSettingModel(name = "Alpha Flag", key = "a")
+        val flagB = createSettingModel(name = "Beta Flag", key = "b")
+        val root = ConfigRootNode(listOf(flagA, flagB), "Test Config")
+
+        root.filterQuery = "ALPHA"
+        val children = root.children
+
+        assertEquals(1, children.size)
+        assertTrue(children[0] is FlagNode)
+        assertEquals("Alpha Flag (a)", children[0].name)
+    }
+
+    fun testConfigRootNodeFilterWithNoMatchReturnsNoMatchingFlagInfoNode() {
+        val flagA = createSettingModel(name = "Alpha Flag", key = "a")
+        val flagB = createSettingModel(name = "Beta Flag", key = "b")
+        val root = ConfigRootNode(listOf(flagA, flagB), "Test Config")
+
+        root.filterQuery = "xyz"
+        val children = root.children
+
+        assertEquals(1, children.size)
+        assertTrue(children[0] is InfoNode)
+        assertEquals("No matching flag.", children[0].name)
+    }
+
+    fun testConfigRootNodeFilterClearedReturnsAllNodes() {
+        val flagA = createSettingModel(name = "Alpha Flag", key = "a")
+        val flagB = createSettingModel(name = "Beta Flag", key = "b")
+        val root = ConfigRootNode(listOf(flagA, flagB), "Test Config")
+
+        root.filterQuery = "alpha"
+        assertEquals(1, root.children.size)
+
+        root.filterQuery = ""
+        val children = root.children
+
+        assertEquals(2, children.size)
+        assertTrue(children.all { it is FlagNode })
+    }
+
     fun testProductNodeWithNullConfigsReturnsLoadingInfoNode() {
         val nodeDataService = mockk<ConfigCatNodeDataService>()
         mockkObject(ConfigCatNodeDataService.Companion)
@@ -165,18 +232,66 @@ class ConfigCatNodesTest : LightPlatformTestCase() {
         assertEquals("My Flag (my_flag_key)", node.name)
     }
 
-    fun testInfoNodeRendersMessageAndIsLeaf() {
-        val node = InfoNode("Loading...")
+    fun testFlagNodeHighlightsMatchInNameOnly() {
+        val setting = createSettingModel(name = "My Flag", key = "some_key")
+        val root = ConfigRootNode(emptyList(), "Config")
+        root.filterQuery = "flag"
+        val node = FlagNode(setting, root)
         val presentation = mockk<PresentationData>(relaxed = true)
 
         invokeDoUpdate(node, presentation)
 
-        verify(exactly = 1) {
-            presentation.addText("Loading...", SimpleTextAttributes.GRAY_ITALIC_ATTRIBUTES)
-        }
-        assertEquals("Loading...", node.name)
-        assertTrue(node.isAlwaysLeaf)
-        assertEquals(0, node.children.size)
+        val highlightAttrs = SimpleTextAttributes(SimpleTextAttributes.STYLE_BOLD or SimpleTextAttributes.STYLE_SEARCH_MATCH, null)
+        verify(exactly = 1) { presentation.addText("My ", SimpleTextAttributes.REGULAR_BOLD_ATTRIBUTES) }
+        verify(exactly = 1) { presentation.addText("Flag", highlightAttrs) }
+        verify(exactly = 1) { presentation.addText(" ", SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES) }
+        verify(exactly = 1) { presentation.addText("some_key", SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES) }
+    }
+
+    fun testFlagNodeHighlightsMatchInKeyOnly() {
+        val setting = createSettingModel(name = "My Flag", key = "my_key_abc")
+        val root = ConfigRootNode(emptyList(), "Config")
+        root.filterQuery = "key"
+        val node = FlagNode(setting, root)
+        val presentation = mockk<PresentationData>(relaxed = true)
+
+        invokeDoUpdate(node, presentation)
+
+        val highlightAttrs = SimpleTextAttributes(SimpleTextAttributes.STYLE_ITALIC or SimpleTextAttributes.STYLE_SEARCH_MATCH, null)
+        verify(exactly = 1) { presentation.addText("My Flag", SimpleTextAttributes.REGULAR_BOLD_ATTRIBUTES) }
+        verify(exactly = 1) { presentation.addText(" ", SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES) }
+        verify(exactly = 1) { presentation.addText("my_", SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES) }
+        verify(exactly = 1) { presentation.addText("key", highlightAttrs) }
+        verify(exactly = 1) { presentation.addText("_abc", SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES) }
+    }
+
+    fun testFlagNodeHighlightsMultipleMatchesInName() {
+        val setting = createSettingModel(name = "ab yes ab", key = "k")
+        val root = ConfigRootNode(emptyList(), "Config")
+        root.filterQuery = "ab"
+        val node = FlagNode(setting, root)
+        val presentation = mockk<PresentationData>(relaxed = true)
+
+        invokeDoUpdate(node, presentation)
+
+        val highlightAttrs = SimpleTextAttributes(SimpleTextAttributes.STYLE_BOLD or SimpleTextAttributes.STYLE_SEARCH_MATCH, null)
+        verify(exactly = 2) { presentation.addText("ab", highlightAttrs) }
+        verify(exactly = 1) { presentation.addText(" yes ", SimpleTextAttributes.REGULAR_BOLD_ATTRIBUTES) }
+        verify(exactly = 1) { presentation.addText(" ", SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES) }
+        verify(exactly = 1) { presentation.addText("k", SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES) }
+    }
+
+    fun testFlagNodeMissingDataNotAffectedByFilter() {
+        val setting = createSettingModel(name = "", key = "")
+        val root = ConfigRootNode(emptyList(), "Config")
+        root.filterQuery = "something"
+        val node = FlagNode(setting, root)
+        val presentation = mockk<PresentationData>(relaxed = true)
+
+        invokeDoUpdate(node, presentation)
+
+        verify(exactly = 1) { presentation.addText("<missing data>", SimpleTextAttributes.GRAYED_ITALIC_ATTRIBUTES) }
+        verify(exactly = 0) { presentation.addText(any(), SimpleTextAttributes.REGULAR_BOLD_ATTRIBUTES) }
     }
 
     private fun invokeDoUpdate(node: Any, presentation: PresentationData) {
