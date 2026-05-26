@@ -46,6 +46,7 @@ class CreateConfigDialog(val project: Project?, private val product: ProductMode
             authConf.basicAuthUserName,
             authConf.basicAuthPassword,
             stateConfig.dashboardBaseUrl,
+            true, //TODO
             product.productId.toString(),
             product.name,
             "",

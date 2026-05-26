@@ -48,6 +48,7 @@ object FlagViewOpenHandler {
             authConf.basicAuthUserName,
             authConf.basicAuthPassword,
             state.dashboardBaseUrl,
+            true, //TODO
             configModel.product.productId.toString(),
             "",
             configModel.configId.toString(),

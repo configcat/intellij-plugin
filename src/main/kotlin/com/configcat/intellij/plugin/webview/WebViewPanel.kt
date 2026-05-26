@@ -29,6 +29,7 @@ data class AppData(
     val basicAuthUsername: String,
     val basicAuthPassword: String,
     val dashboardBasePath: String,
+    val isAuthorized: Boolean = false,
     val productId: String,
     val productName: String,
     val configId: String,
@@ -47,7 +48,8 @@ data class ViewData(
 enum class ViewType(val type: String) {
     CREATE_CONFIG("createconfig"),
     CREATE_FLAG("createfeatureflag"),
-    VIEW_FLAG("featureflagsetting")
+    VIEW_FLAG("featureflagsetting"),
+    AUTHORIZATION("authorization")
 }
 
 private const val WINDOW_CONFIGCAT_APPDATA = "window.CONFIGCAT_APPDATA ="
@@ -192,13 +194,14 @@ class WebViewPanel(
                     transitionType: CefRequest.TransitionType?,
                 ) {
                     // enable this if you need the devtools on load.
-//                     jBCefBrowser.openDevtools()
+                    // jBCefBrowser.openDevtools()
                 }
 
                 override fun onLoadEnd(browser: CefBrowser?, frame: CefFrame?, httpStatusCode: Int) {
                     if (browser == null || frame?.isMain != true) return
                     // fire ng load event to properly renderer
                     //override CONFIGCAT_SUCCESS_METHOD to make jsQuery calls
+                    //TODO auth success and logout should be here as well
                     browser.executeJavaScript(
                         "document.dispatchEvent(new Event('startNgLoad'));" +
                                 "window['configCatSuccessMethod'] = function(returnId) {" +

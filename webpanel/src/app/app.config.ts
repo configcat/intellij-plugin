@@ -6,7 +6,7 @@ import { CONFIGCAT_PUBLICAPI_UI_CONFIGURATION, provideConfigCatPublicApiUi } fro
 import { AppData } from "./app-data";
 
 export class ViewData {
-  public view: "none" | "featureflagsetting" | "createfeatureflag" | "createconfig" = "none";
+  public view: "none" | "featureflagsetting" | "createfeatureflag" | "createconfig" | "authorization" = "none";
   public initialTheme: "dark" | "light" = "dark";
 }
 
@@ -15,6 +15,8 @@ declare global {
     CONFIGCAT_APPDATA: AppData;
     CONFIGCAT_APP_VIEW: ViewData;
     configCatSuccessMethod: (arg0: string) => void;
+    configCatAuthorizationSuccessMethod: (arg0: string) => void;
+    configCatUnAuthorizationSuccessMethod: () => void;
   }
 }
 export const appConfig: ApplicationConfig = {

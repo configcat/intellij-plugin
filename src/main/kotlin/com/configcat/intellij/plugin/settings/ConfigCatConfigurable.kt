@@ -3,13 +3,13 @@ package com.configcat.intellij.plugin.settings
 import com.configcat.intellij.plugin.ConfigCatNotifier
 import com.configcat.intellij.plugin.Constants
 import com.configcat.intellij.plugin.ErrorHandler
+import com.configcat.intellij.plugin.dialogs.AuthorizationDialog
 import com.configcat.intellij.plugin.messaging.ConfigChangeNotifier
 import com.configcat.intellij.plugin.services.ConfigCatService
 import com.configcat.intellij.plugin.services.PublicApiConfiguration
 import com.configcat.publicapi.java.client.ApiException
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.options.BoundConfigurable
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.openapi.ui.ValidationInfo
@@ -40,6 +40,24 @@ class ConfigCatConfigurable : BoundConfigurable(displayName = "ConfigCat Feature
     override fun createPanel(): DialogPanel {
 
         return panel {
+            group("Authentication Web", true) {
+                //TODO if return handeld. we should apply it and show success notification
+                //TODO after auth web view - reloaded and show logout? - or button show login and logout and call dialog?
+                //TODO Use dialog on dialog? maybe?
+//                return WebViewPanelContainer(appData, ViewType.CREATE_CONFIG) { returnId -> saveSuccess(returnId) }
+                row {
+                    text(
+                        "In order to use ConfigCat Feature Flags you have to authorize first " +
+                                "with your ConfigCat Public API credentials."
+                    )
+                }
+                row {
+                    button("Authorize with Web") {
+                        AuthorizationDialog().showAndGet()
+                    }
+                }
+            }
+
             group("Authentication", true) {
                 row {
                     text(

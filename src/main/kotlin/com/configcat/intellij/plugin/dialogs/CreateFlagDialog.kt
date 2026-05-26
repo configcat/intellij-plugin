@@ -10,7 +10,6 @@ import com.configcat.intellij.plugin.webview.ViewType
 import com.configcat.intellij.plugin.webview.WebViewPanelContainer
 import com.configcat.publicapi.java.client.ApiException
 import com.configcat.publicapi.java.client.model.ConfigModel
-import com.configcat.publicapi.java.client.model.SettingType
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.jetbrains.rd.util.remove
@@ -46,6 +45,7 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel) : DialogW
             authConf.basicAuthUserName,
             authConf.basicAuthPassword,
             stateConfig.dashboardBaseUrl,
+            stateConfig.isConfigured(), //TODO maybe just pass true
             config.product.productId.toString(),
             config.product.name,
             config.configId.toString(),
