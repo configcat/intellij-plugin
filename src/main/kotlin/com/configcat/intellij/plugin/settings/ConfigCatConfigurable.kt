@@ -53,7 +53,8 @@ class ConfigCatConfigurable : BoundConfigurable(displayName = "ConfigCat Feature
                             if (success) {
                                 val authorizationModel = dialog.authorizationModel
                                 credentials = if (authorizationModel != null) {
-                                    PublicApiConfiguration(authorizationModel.basicAuthUsername, authorizationModel.basicAuthPassword)
+                                    PublicApiConfiguration(authorizationModel.basicAuthUsername,
+                                        authorizationModel.basicAuthPassword)
                                 } else {
                                     PublicApiConfiguration("", "")
                                 }
@@ -105,7 +106,8 @@ class ConfigCatConfigurable : BoundConfigurable(displayName = "ConfigCat Feature
 
     private fun refreshAuthenticationUi() {
         val loggedIn = credentials.basicAuthUserName.isNotEmpty()
-        authStatusLabel.text = if (loggedIn) "Logged in as ${credentials.basicAuthUserName}" else "Login to use ConfigCat Feature Flags"
+        authStatusLabel.text = if (loggedIn) "Logged in as ${credentials.basicAuthUserName}"
+            else "Login to use ConfigCat Feature Flags"
         authActionButton.text = if (loggedIn) "Unauthorize" else "Authorize"
         authStatusLabel.revalidate()
         authStatusLabel.repaint()
