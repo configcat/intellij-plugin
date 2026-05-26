@@ -115,6 +115,7 @@ class WebViewPanelContainerTest : LightPlatformTestCase() {
         basicAuthUsername = "testUser",
         basicAuthPassword = "testPass",
         dashboardBasePath = "https://app.configcat.com",
+        isAuthorized = true,
         productId = "test-product-id",
         productName = "Test Product",
         configId = "test-config-id",

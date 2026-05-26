@@ -201,7 +201,6 @@ class WebViewPanel(
                     if (browser == null || frame?.isMain != true) return
                     // fire ng load event to properly renderer
                     //override CONFIGCAT_SUCCESS_METHOD to make jsQuery calls
-                    //TODO auth success and logout should be here as well
                     browser.executeJavaScript(
                         "document.dispatchEvent(new Event('startNgLoad'));" +
                                 "window['configCatSuccessMethod'] = function(returnId) {" +

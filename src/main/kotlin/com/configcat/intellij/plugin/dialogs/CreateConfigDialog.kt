@@ -40,13 +40,14 @@ class CreateConfigDialog(val project: Project?, private val product: ProductMode
         val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigState =
             ConfigCatApplicationConfig.getInstance().state
         val authConf = Constants.decodePublicApiConfiguration(stateConfig.authConfiguration)
+        val isAuthorized = authConf.basicAuthUserName.isEmpty().not() && authConf.basicAuthPassword.isEmpty().not()
 
         val appData = AppData(
             stateConfig.publicApiBaseUrl,
             authConf.basicAuthUserName,
             authConf.basicAuthPassword,
             stateConfig.dashboardBaseUrl,
-            true, //TODO
+            isAuthorized,
             product.productId.toString(),
             product.name,
             "",

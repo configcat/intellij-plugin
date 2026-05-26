@@ -13,7 +13,8 @@ import io.mockk.mockkObject
 import io.mockk.runs
 import io.mockk.unmockkAll
 import io.mockk.verify
-import javax.swing.JPasswordField
+import javax.swing.JButton
+import javax.swing.JLabel
 import javax.swing.JTextField
 
 class ConfigCatConfigurableTest : LightPlatformTestCase() {
@@ -49,15 +50,17 @@ class ConfigCatConfigurableTest : LightPlatformTestCase() {
         assertEquals("Config Cat Plugin Settings", configurable.displayName)
     }
 
-    fun testReset_populatesFieldsFromState_andIsModifiedIsFalse() {
+    fun testReset_updatesAuthenticationUiFromState_andIsModifiedIsFalse() {
         val configurable = ConfigCatConfigurable()
         val state = buildState()
         setStateConfig(configurable, state)
+        configurable.createPanel()
 
         configurable.reset()
 
-        assertEquals("demo-user", textField(configurable, "authUserNameField").text)
-        assertEquals("demo-pass", String(passwordField(configurable, "authPasswordField").password))
+        assertEquals(PublicApiConfiguration("demo-user", "demo-pass"), credentials(configurable))
+        assertEquals("Logged in as demo-user", label(configurable, "authStatusLabel").text)
+        assertEquals("Unauthorize", button(configurable, "authActionButton").text)
         assertEquals("https://dashboard.example.com", textField(configurable, "dashboardBaseUrlField").text)
         assertEquals("https://api.example.com", textField(configurable, "publicApiBaseUrlField").text)
         assertFalse(configurable.isModified)
@@ -68,7 +71,7 @@ class ConfigCatConfigurableTest : LightPlatformTestCase() {
         setStateConfig(configurable, buildState())
         configurable.reset()
 
-        textField(configurable, "authUserNameField").text = "changed-user"
+        setCredentials(configurable, PublicApiConfiguration("changed-user", "demo-pass"))
         assertTrue(configurable.isModified)
 
         configurable.reset()
@@ -82,32 +85,30 @@ class ConfigCatConfigurableTest : LightPlatformTestCase() {
         configurable.createPanel()
         configurable.reset()
 
-        textField(configurable, "authUserNameField").text = ""
-        passwordField(configurable, "authPasswordField").text = ""
         textField(configurable, "publicApiBaseUrlField").text = ""
         configurable.apply()
-0
+
         verify(exactly = 1) { ConfigCatNotifier.Notify.error("Public API Base URL cannot be empty.") }
     }
 
-    fun testApply_emptyCredentials_logsOutAndPersistsUpdatedState() {
+    fun testApply_updatedCredentials_logsOutAndPersistsUpdatedAuthenticationState() {
         val configurable = ConfigCatConfigurable()
         val state = buildState()
         setStateConfig(configurable, state)
         configurable.createPanel()
         configurable.reset()
 
-        textField(configurable, "authUserNameField").text = ""
-        passwordField(configurable, "authPasswordField").text = ""
+        setCredentials(configurable, PublicApiConfiguration("", ""))
         textField(configurable, "dashboardBaseUrlField").text = "https://dashboard.new.example.com"
         textField(configurable, "publicApiBaseUrlField").text = "https://api.new.example.com"
 
         configurable.apply()
 
-        verify(exactly = 1) { ConfigCatNotifier.Notify.info("Logged out from ConfigCat.") }
         val savedAuth = Constants.decodePublicApiConfiguration(state.authConfiguration)
         assertEquals("", savedAuth.basicAuthUserName)
         assertEquals("", savedAuth.basicAuthPassword)
+        assertEquals("Login to use ConfigCat Feature Flags", label(configurable, "authStatusLabel").text)
+        assertEquals("Authorize", button(configurable, "authActionButton").text)
     }
 
     private fun buildState(
@@ -139,10 +140,28 @@ class ConfigCatConfigurableTest : LightPlatformTestCase() {
         return field.get(configurable) as JTextField
     }
 
-    private fun passwordField(configurable: ConfigCatConfigurable, fieldName: String): JPasswordField {
+    private fun label(configurable: ConfigCatConfigurable, fieldName: String): JLabel {
         val field = ConfigCatConfigurable::class.java.getDeclaredField(fieldName)
         field.isAccessible = true
-        return field.get(configurable) as JPasswordField
+        return field.get(configurable) as JLabel
+    }
+
+    private fun button(configurable: ConfigCatConfigurable, fieldName: String): JButton {
+        val field = ConfigCatConfigurable::class.java.getDeclaredField(fieldName)
+        field.isAccessible = true
+        return field.get(configurable) as JButton
+    }
+
+    private fun credentials(configurable: ConfigCatConfigurable): PublicApiConfiguration {
+        val field = ConfigCatConfigurable::class.java.getDeclaredField("credentials")
+        field.isAccessible = true
+        return field.get(configurable) as PublicApiConfiguration
+    }
+
+    private fun setCredentials(configurable: ConfigCatConfigurable, credentials: PublicApiConfiguration) {
+        val field = ConfigCatConfigurable::class.java.getDeclaredField("credentials")
+        field.isAccessible = true
+        field.set(configurable, credentials)
     }
 }
 

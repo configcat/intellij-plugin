@@ -200,6 +200,7 @@ class ConfigCatToolWindowFactoryTest : LightPlatformTestCase() {
         basicAuthUsername = "test-user",
         basicAuthPassword = "test-pass",
         dashboardBasePath = "https://app.configcat.com",
+        isAuthorized = true,
         productId = "product-id",
         productName = "Product",
         configId = "config-id",

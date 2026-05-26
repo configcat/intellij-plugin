@@ -39,13 +39,15 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel) : DialogW
         val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigState =
             ConfigCatApplicationConfig.getInstance().state
         val authConf = Constants.decodePublicApiConfiguration(stateConfig.authConfiguration)
+        val isAuthorized = authConf.basicAuthUserName.isEmpty().not() && authConf.basicAuthPassword.isEmpty().not()
+
 
         val appData = AppData(
             stateConfig.publicApiBaseUrl,
             authConf.basicAuthUserName,
             authConf.basicAuthPassword,
             stateConfig.dashboardBaseUrl,
-            stateConfig.isConfigured(), //TODO maybe just pass true
+            isAuthorized,
             config.product.productId.toString(),
             config.product.name,
             config.configId.toString(),

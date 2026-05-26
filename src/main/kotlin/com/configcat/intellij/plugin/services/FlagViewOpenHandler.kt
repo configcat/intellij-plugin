@@ -43,12 +43,14 @@ object FlagViewOpenHandler {
         val selectedEnvironment = dialog.selectedEnvironment
 
         val authConf = Constants.decodePublicApiConfiguration(state.authConfiguration)
+        val isAuthorized = authConf.basicAuthUserName.isEmpty().not() && authConf.basicAuthPassword.isEmpty().not()
+
         val appData = AppData(
             state.publicApiBaseUrl,
             authConf.basicAuthUserName,
             authConf.basicAuthPassword,
             state.dashboardBaseUrl,
-            true, //TODO
+            isAuthorized,
             configModel.product.productId.toString(),
             "",
             configModel.configId.toString(),
