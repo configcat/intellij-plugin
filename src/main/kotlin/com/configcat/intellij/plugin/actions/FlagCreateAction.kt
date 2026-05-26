@@ -63,7 +63,8 @@ class FlagCreateAction : ConfigCatBaseAnAction() {
         val settingName = try {
             featureFlagsSettingsService.getSetting(createdFlagId).name
         } catch (exception: ApiException) {
-            thisLogger().error("Failed to resolve setting for created flag ID: $createdFlagId. Skipping view opening.", exception)
+            thisLogger().error("Failed to resolve setting for created flag ID: $createdFlagId." +
+                    " Skipping view opening.", exception)
             return
         }
         if (settingName.isEmpty()) {

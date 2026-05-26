@@ -4,12 +4,13 @@ import { ViewData } from "./app.config";
 import { ConfigCreateComponent } from "./create-config/create-config.component";
 import { CreateFeatureFlagSettingComponent } from "./create-feature-flag/create-feature-flag-setting.component";
 import { FeatureFlagSettingComponent } from "./feature-flag-setting/feature-flag-setting.component";
+import {AuthComponent} from "./authorization/authorization.component";
 
 @Component({
   selector: "configcat-intellij-root",
   templateUrl: "./app.component.html",
   styles: [],
-  imports: [CreateFeatureFlagSettingComponent, FeatureFlagSettingComponent, ConfigCreateComponent],
+  imports: [CreateFeatureFlagSettingComponent, FeatureFlagSettingComponent, ConfigCreateComponent, AuthComponent],
 
 })
 export class AppComponent implements OnInit, OnDestroy {

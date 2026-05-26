@@ -56,7 +56,8 @@ class ConfigCreateAction : ConfigCatBaseAnAction() {
 
     private fun autoConnectCreatedConfig(project: Project?, createdConfigId: String?) {
         if (createdConfigId.isNullOrBlank()) {
-            thisLogger().error("Config was created successfully but returned config ID is missing. Skipping auto-connect.")
+            thisLogger().error("Config was created successfully but returned config ID is missing." +
+                    " Skipping auto-connect.")
             return
         }
         ConfigConnectionHandler.connectConfig(project, createdConfigId)

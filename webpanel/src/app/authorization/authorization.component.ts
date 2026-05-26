@@ -20,11 +20,11 @@ export class AuthComponent {
   loading = true;
 
   login(authorizationParameters: AuthorizationModel) {
-    window["configCatAuthorizationSuccessMethod"].call(this, JSON.stringify(authorizationParameters));
+    window["configCatSuccessMethod"].call(this, JSON.stringify(authorizationParameters));
   }
 
   unauthorize() {
-    window["configCatUnAuthorizationSuccessMethod"].call(this);
+    window["configCatSuccessMethod"].call(this, "unauthorize");
   }
 
 }

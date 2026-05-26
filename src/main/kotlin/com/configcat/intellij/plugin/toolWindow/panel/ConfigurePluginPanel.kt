@@ -1,5 +1,6 @@
 package com.configcat.intellij.plugin.toolWindow.panel
 
+import com.configcat.intellij.plugin.dialogs.AuthorizationDialog
 import com.configcat.intellij.plugin.settings.ConfigCatConfigurable
 import com.intellij.openapi.options.ShowSettingsUtil
 import com.intellij.util.ui.JBUI

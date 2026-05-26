@@ -2,21 +2,18 @@ package com.configcat.intellij.plugin.settings
 
 import com.configcat.intellij.plugin.ConfigCatNotifier
 import com.configcat.intellij.plugin.Constants
-import com.configcat.intellij.plugin.ErrorHandler
 import com.configcat.intellij.plugin.dialogs.AuthorizationDialog
 import com.configcat.intellij.plugin.messaging.ConfigChangeNotifier
-import com.configcat.intellij.plugin.services.ConfigCatService
 import com.configcat.intellij.plugin.services.PublicApiConfiguration
-import com.configcat.publicapi.java.client.ApiException
-import com.intellij.icons.AllIcons
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.options.BoundConfigurable
 import com.intellij.openapi.ui.DialogPanel
 import com.intellij.openapi.ui.ValidationInfo
 import com.intellij.ui.dsl.builder.*
 import com.intellij.ui.layout.ValidationInfoBuilder
+import javax.swing.JButton
 import javax.swing.JEditorPane
-import javax.swing.JPasswordField
+import javax.swing.JLabel
 import javax.swing.JTextField
 
 
@@ -24,13 +21,13 @@ class ConfigCatConfigurable : BoundConfigurable(displayName = "ConfigCat Feature
 
     private var stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigState =
         ConfigCatApplicationConfig.getInstance().state
-    private val authUserNameField = JTextField()
-    private val authPasswordField = JPasswordField()
     private val dashboardBaseUrlField = JTextField()
     private val publicApiBaseUrlField = JTextField()
     private lateinit var commentAuthenticationGroup: Cell<JEditorPane>
-    private lateinit var loginFailedRow: Row
-
+    private val authStatusLabel = JLabel()
+    private val authActionButton = JButton()
+    private var credentials: PublicApiConfiguration =
+        Constants.decodePublicApiConfiguration(stateConfig.authConfiguration)
 
     private val authenticationComment: String =
         "<a href=\"%S/my-account/public-api-credentials\">Get your Basic Auth user name and password</a> " +
@@ -39,12 +36,8 @@ class ConfigCatConfigurable : BoundConfigurable(displayName = "ConfigCat Feature
 
     override fun createPanel(): DialogPanel {
 
-        return panel {
-            group("Authentication Web", true) {
-                //TODO if return handeld. we should apply it and show success notification
-                //TODO after auth web view - reloaded and show logout? - or button show login and logout and call dialog?
-                //TODO Use dialog on dialog? maybe?
-//                return WebViewPanelContainer(appData, ViewType.CREATE_CONFIG) { returnId -> saveSuccess(returnId) }
+        val dialogPanel = panel {
+            group("Authentication", true) {
                 row {
                     text(
                         "In order to use ConfigCat Feature Flags you have to authorize first " +
@@ -52,36 +45,29 @@ class ConfigCatConfigurable : BoundConfigurable(displayName = "ConfigCat Feature
                     )
                 }
                 row {
-                    button("Authorize with Web") {
-                        AuthorizationDialog().showAndGet()
+                    cell(authStatusLabel)
+                    cell(authActionButton).applyToComponent {
+                        addActionListener {
+                            val dialog = AuthorizationDialog()
+                            val success = dialog.showAndGet()
+                            if (success) {
+                                val authorizationModel = dialog.authorizationModel
+                                credentials = if (authorizationModel != null) {
+                                    PublicApiConfiguration(authorizationModel.basicAuthUsername, authorizationModel.basicAuthPassword)
+                                } else {
+                                    PublicApiConfiguration("", "")
+                                }
+                                apply()
+                            }
+                        }
                     }
-                }
-            }
-
-            group("Authentication", true) {
-                row {
-                    text(
-                        "In order to use ConfigCat Feature Flags you have to authorize first " +
-                            "with your ConfigCat Public API credentials."
-                    )
-                }
-                row("Basic auth user name") {
-                    cell(authUserNameField)
-                        .columns(COLUMNS_MEDIUM)
-                }
-                row("Basic auth password") {
-                    cell(authPasswordField)
-                        .columns(COLUMNS_MEDIUM)
                 }
                 row {
                     commentAuthenticationGroup =
                         comment(authenticationComment.format(stateConfig.dashboardBaseUrl))
                 }
-                loginFailedRow = row {
-                    icon(AllIcons.General.Error)
-                    text("Failed to authorize! Invalid Basic auth user name or password.")
-                }.visible(false)
             }
+
             group("Plugin Settings", true) {
                 row("Dashboard Base URL") {
                     cell(dashboardBaseUrlField)
@@ -112,6 +98,19 @@ class ConfigCatConfigurable : BoundConfigurable(displayName = "ConfigCat Feature
                 }
             }
         }
+
+        refreshAuthenticationUi()
+        return dialogPanel
+    }
+
+    private fun refreshAuthenticationUi() {
+        val loggedIn = credentials.basicAuthUserName.isNotEmpty()
+        authStatusLabel.text = if (loggedIn) "Logged in as ${credentials.basicAuthUserName}" else "Login to use ConfigCat Feature Flags"
+        authActionButton.text = if (loggedIn) "Unauthorize" else "Authorize"
+        authStatusLabel.revalidate()
+        authStatusLabel.repaint()
+        authActionButton.revalidate()
+        authActionButton.repaint()
     }
 
     private fun urlValidation(): ValidationInfoBuilder.(JTextField) -> ValidationInfo? = {
@@ -123,7 +122,6 @@ class ConfigCatConfigurable : BoundConfigurable(displayName = "ConfigCat Feature
     }
 
     override fun isModified(): Boolean {
-        val credentials = PublicApiConfiguration(authUserNameField.text, String(authPasswordField.password))
         val stateAuthConfiguration: PublicApiConfiguration =
             Constants.decodePublicApiConfiguration(stateConfig.authConfiguration)
         return credentials != stateAuthConfiguration
@@ -142,27 +140,13 @@ class ConfigCatConfigurable : BoundConfigurable(displayName = "ConfigCat Feature
             ConfigCatNotifier.Notify.error("Public API Base URL cannot be empty.")
             return
         }
-        val credentials = PublicApiConfiguration(authUserNameField.text, String(authPasswordField.password))
-
-        if (authUserNameField.text.isEmpty() && authPasswordField.password.isEmpty()) {
-            ConfigCatNotifier.Notify.info("Logged out from ConfigCat.")
-        } else {
-            val meService = ConfigCatService.createMeService(credentials, publicApiBaseUrlField.text)
-            try {
-                val me = meService.me
-                ConfigCatNotifier.Notify.info("Logged in to ConfigCat. Email: ${me.email}")
-            } catch (exception: ApiException) {
-                loginFailedRow.visible(true)
-                ErrorHandler.errorNotify(exception)
-                return
-            }
-        }
         stateConfig.authConfiguration = Constants.encodePublicApiConfiguration(credentials)
         stateConfig.dashboardBaseUrl = dashboardBaseUrlField.text
         stateConfig.publicApiBaseUrl = publicApiBaseUrlField.text
         configChangedPublish()
         commentAuthenticationGroup.component.text = authenticationComment.format(stateConfig.dashboardBaseUrl)
         commentAuthenticationGroup.component.updateUI()
+        refreshAuthenticationUi()
     }
 
     private fun configChangedPublish() {
@@ -178,11 +162,9 @@ class ConfigCatConfigurable : BoundConfigurable(displayName = "ConfigCat Feature
     override fun reset() {
         val stateAuthConfiguration: PublicApiConfiguration =
             Constants.decodePublicApiConfiguration(stateConfig.authConfiguration)
-
-        authUserNameField.text = stateAuthConfiguration.basicAuthUserName
-        authPasswordField.text = stateAuthConfiguration.basicAuthPassword
+        credentials = stateAuthConfiguration
         dashboardBaseUrlField.text = stateConfig.dashboardBaseUrl
         publicApiBaseUrlField.text = stateConfig.publicApiBaseUrl
+        refreshAuthenticationUi()
     }
 }
-
