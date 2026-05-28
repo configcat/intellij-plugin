@@ -5,7 +5,7 @@ changelog = "2.5.0"
 intellijPlatform = "2.15.0"
 kover = "0.9.8"
 node = "7.1.0"
-sonarqube = "5.0.0.4638"
+sonarqube = "7.3.0.8198"
 detekt = "1.23.6"
 
 #libraries

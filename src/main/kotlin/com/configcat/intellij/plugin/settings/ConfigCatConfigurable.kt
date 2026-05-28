@@ -30,7 +30,7 @@ class ConfigCatConfigurable : BoundConfigurable(displayName = "ConfigCat Feature
         Constants.decodePublicApiConfiguration(stateConfig.authConfiguration)
 
     private val authenticationComment: String =
-        "<a href=\"%S/my-account/public-api-credentials\">Get your Basic Auth user name and password</a> " +
+        "<a href=\"%s/my-account/public-api-credentials\">Get your Basic Auth user name and password</a> " +
             "to access ConfigCat Public API. Note! " +
             "Your ConfigCat account's email address and password will not work here."
 
@@ -88,6 +88,7 @@ class ConfigCatConfigurable : BoundConfigurable(displayName = "ConfigCat Feature
                 row("Public API Base URL") {
                     cell(publicApiBaseUrlField)
                         .columns(COLUMNS_MEDIUM)
+                        .bindText(stateConfig::publicApiBaseUrl)
                         .validationOnInput(urlValidation())
                         .validationOnApply(urlValidation())
                 }
@@ -132,7 +133,6 @@ class ConfigCatConfigurable : BoundConfigurable(displayName = "ConfigCat Feature
     }
 
     override fun apply() {
-        super.apply()
         if (dashboardBaseUrlField.text.isEmpty()) {
             ConfigCatNotifier.Notify.error("Dashboard Base URL cannot be empty.")
             return
@@ -142,6 +142,7 @@ class ConfigCatConfigurable : BoundConfigurable(displayName = "ConfigCat Feature
             ConfigCatNotifier.Notify.error("Public API Base URL cannot be empty.")
             return
         }
+        super.apply()
         stateConfig.authConfiguration = Constants.encodePublicApiConfiguration(credentials)
         stateConfig.dashboardBaseUrl = dashboardBaseUrlField.text
         stateConfig.publicApiBaseUrl = publicApiBaseUrlField.text
@@ -157,9 +158,6 @@ class ConfigCatConfigurable : BoundConfigurable(displayName = "ConfigCat Feature
         publisher.notifyConfigChange()
     }
 
-    override fun getDisplayName(): String {
-        return "Config Cat Plugin Settings"
-    }
 
     override fun reset() {
         val stateAuthConfiguration: PublicApiConfiguration =

@@ -11,6 +11,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 @Service(Service.Level.APP)
 class ConfigCatNodeDataService {
@@ -18,14 +19,14 @@ class ConfigCatNodeDataService {
     private val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigState =
         ConfigCatApplicationConfig.getInstance().state
 
-    private var productConfigs: MutableMap<UUID, List<ConfigModel>> = mutableMapOf()
-    private var configFlags: MutableMap<UUID, List<SettingModel>> = mutableMapOf()
+    private var productConfigs: MutableMap<UUID, List<ConfigModel>> = ConcurrentHashMap()
+    private var configFlags: MutableMap<UUID, List<SettingModel>> = ConcurrentHashMap()
 
 
     companion object {
 
         fun getInstance(): ConfigCatNodeDataService {
-            return ApplicationManager.getApplication().getService(ConfigCatNodeDataService()::class.java)
+            return ApplicationManager.getApplication().getService(ConfigCatNodeDataService::class.java)
         }
     }
 
@@ -78,11 +79,11 @@ class ConfigCatNodeDataService {
     }
 
     fun resetConfigsFlags() {
-        configFlags = mutableMapOf()
+        configFlags = ConcurrentHashMap()
     }
 
     fun resetProductConfigsData() {
-        productConfigs = mutableMapOf()
+        productConfigs = ConcurrentHashMap()
     }
 }
 

@@ -12,7 +12,7 @@ class ConfigCatPropertiesService {
         const val CONFIGCAT_CONNECTED_CONFIG_ID = "CONFIGCAT_CONNECTED_CONFIG_ID"
 
         fun getInstance(): ConfigCatPropertiesService {
-            return ApplicationManager.getApplication().getService(ConfigCatPropertiesService()::class.java)
+            return ApplicationManager.getApplication().getService(ConfigCatPropertiesService::class.java)
         }
     }
 

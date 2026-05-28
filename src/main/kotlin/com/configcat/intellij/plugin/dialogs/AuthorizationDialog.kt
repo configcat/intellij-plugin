@@ -2,14 +2,10 @@ package com.configcat.intellij.plugin.dialogs
 
 import com.configcat.intellij.plugin.ConfigCatNotifier
 import com.configcat.intellij.plugin.Constants
-import com.configcat.intellij.plugin.ErrorHandler
-import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
-import com.configcat.intellij.plugin.services.PublicApiConfiguration
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.intellij.plugin.webview.AppData
 import com.configcat.intellij.plugin.webview.ViewType
 import com.configcat.intellij.plugin.webview.WebViewPanelContainer
-import com.configcat.publicapi.java.client.ApiException
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.ui.DialogWrapper
 import com.jetbrains.rd.util.remove
@@ -66,13 +62,16 @@ class AuthorizationDialog : DialogWrapper(true) {
                 ConfigCatNotifier.Notify.info("Logged out from ConfigCat.")
                 authorizationModel = null
             } else {
-                authorizationModel = Constants.json.decodeFromString(response)
-                val newAuthConfig = PublicApiConfiguration(
-                    authorizationModel?.basicAuthUsername ?: "" ,
-                    authorizationModel?.basicAuthPassword ?: ""
-                )
+                try {
+                    authorizationModel = Constants.json.decodeFromString(response)
+                } catch (e: Exception) {
+                    thisLogger().error("Failed to parse authorization response.", e)
+                    ConfigCatNotifier.Notify.error("Authorization failed: invalid response from the server.")
+                    invokeLater { close(CANCEL_EXIT_CODE) }
+                    return
+                }
                 ConfigCatNotifier.Notify.info("Logged in to ConfigCat. Email: ${authorizationModel?.email}")
-                thisLogger().info("Authorization successful for user: $newAuthConfig")
+                thisLogger().info("Authorization successful for user: ${authorizationModel?.basicAuthUsername}")
             }
         }
 
