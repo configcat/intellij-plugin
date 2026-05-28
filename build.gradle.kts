@@ -114,6 +114,7 @@ sonarqube {
         property("sonar.sources", "src/main/kotlin/com/configcat")
         property("sonar.tests", "src/test/kotlin/com/configcat")
         property("sonar.kotlin.detekt.reportPaths", "detekt.xml")
+        property("sonar.coverage.jacoco.xmlReportPaths", "report.xml")
     }
 }
 
