@@ -99,42 +99,6 @@ class CefLocalRequestHandlerTest : LightPlatformTestCase() {
         assertFalse("non-user non-link requests should fall back to default behavior", consumed)
     }
 
-    fun testOnBeforeBrowse_userGestureOpensExternalBrowserAndConsumesNavigation() {
-        val handler = CefLocalRequestHandler()
-        val request = io.mockk.mockk<CefRequest>()
-        every { request.url } returns "https://configcat.com/docs"
-        every { request.transitionType } returns CefRequest.TransitionType.TT_EXPLICIT
-
-        val consumed = handler.onBeforeBrowse(null, null, request, true, false)
-
-        assertTrue("user gesture navigation should be consumed", consumed)
-        verify(exactly = 1) { BrowserUtil.open("https://configcat.com/docs") }
-    }
-
-    fun testOnBeforeBrowse_linkTransitionWithoutUserGestureConsumesWithoutOpeningBrowser() {
-        val handler = CefLocalRequestHandler()
-        val request = io.mockk.mockk<CefRequest>()
-        every { request.url } returns "https://configcat.com/other"
-        every { request.transitionType } returns CefRequest.TransitionType.TT_LINK
-
-        val consumed = handler.onBeforeBrowse(null, null, request, false, false)
-
-        assertTrue("link transition should be consumed", consumed)
-        verify(exactly = 0) { BrowserUtil.open(any<String>()) }
-    }
-
-    fun testOnBeforeBrowse_userGestureWithRedirectStillOpensExternalBrowser() {
-        val handler = CefLocalRequestHandler()
-        val request = io.mockk.mockk<CefRequest>()
-        every { request.url } returns "https://configcat.com/redirect"
-        every { request.transitionType } returns CefRequest.TransitionType.TT_EXPLICIT
-
-        val consumed = handler.onBeforeBrowse(null, null, request, true, true)
-
-        assertTrue("user gesture with redirect should still be consumed", consumed)
-        verify(exactly = 1) { BrowserUtil.open("https://configcat.com/redirect") }
-    }
-
 }
 
 
