@@ -41,6 +41,9 @@ object FlagViewOpenHandler {
             return false
         }
         val selectedEnvironment = dialog.selectedEnvironment
+        if(selectedEnvironment == null || selectedEnvironment.id.isEmpty()) {
+            return false
+        }
 
         val authConf = Constants.decodePublicApiConfiguration(state.authConfiguration)
         val isAuthorized = authConf.basicAuthUserName.isEmpty().not() && authConf.basicAuthPassword.isEmpty().not()
@@ -55,7 +58,7 @@ object FlagViewOpenHandler {
             "",
             configModel.configId.toString(),
             "",
-            selectedEnvironment?.id ?: "",
+            selectedEnvironment.id,
             configModel.evaluationVersion.toString(),
             settingId.toString()
         )
