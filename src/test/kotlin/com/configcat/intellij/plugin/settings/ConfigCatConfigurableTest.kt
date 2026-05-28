@@ -47,7 +47,7 @@ class ConfigCatConfigurableTest : LightPlatformTestCase() {
     fun testGetDisplayName_returnsExpectedLabel() {
         val configurable = ConfigCatConfigurable()
 
-        assertEquals("Config Cat Plugin Settings", configurable.displayName)
+        assertEquals("ConfigCat Plugin Settings", configurable.displayName)
     }
 
     fun testReset_updatesAuthenticationUiFromState_andIsModifiedIsFalse() {

@@ -17,7 +17,7 @@ import javax.swing.JLabel
 import javax.swing.JTextField
 
 
-class ConfigCatConfigurable : BoundConfigurable(displayName = "ConfigCat Feature Flags") {
+class ConfigCatConfigurable : BoundConfigurable(displayName = "ConfigCat Plugin Settings") {
 
     private var stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigState =
         ConfigCatApplicationConfig.getInstance().state
