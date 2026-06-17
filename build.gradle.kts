@@ -1,6 +1,11 @@
+import com.github.gradle.node.npm.task.NpmTask
+import io.gitlab.arturbosch.detekt.Detekt
 import org.jetbrains.changelog.Changelog
-import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
+import org.jetbrains.changelog.markdownToHTML
+import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+import org.jetbrains.intellij.platform.gradle.models.ProductRelease
+import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 
 plugins {
     id("java") // Java support
@@ -9,6 +14,9 @@ plugins {
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
     alias(libs.plugins.kover) // Gradle Kover Plugin
     alias(libs.plugins.serialization) // Kotlin serialization
+    alias(libs.plugins.node) //node-gradle.node
+    alias(libs.plugins.sonarqube)
+    alias(libs.plugins.detekt)
 }
 
 group = providers.gradleProperty("pluginGroup").get()
@@ -24,11 +32,35 @@ repositories {
     }
 }
 
+node {
+    download = true
+    version = "20.19.0"
+    nodeProjectDir = file("$projectDir/webpanel")
+}
+
+tasks.register("npmBuild", NpmTask::class) {
+    dependsOn("npmInstall")
+    args.set(listOf("run", "build"))
+    workingDir = file("$projectDir/webpanel")
+}
+
+tasks.named("buildPlugin") {
+    dependsOn("npmBuild")
+}
+
 dependencies {
     implementation(libs.configcat.java)
     implementation(libs.serialization.core)
     implementation(libs.serialization.json)
+    implementation(libs.okhttp)
 
+    testImplementation(libs.mockk) {
+        // Exclude kotlinx-coroutines modules to avoid version conflicts with coroutines
+        // bundled with the IntelliJ Platform.
+        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
+        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core-jvm")
+    }
+    testImplementation(libs.junit)
 
     intellijPlatform {
         create(providers.gradleProperty("platformType"), providers.gradleProperty("platformVersion"))
@@ -39,15 +71,51 @@ dependencies {
         // Plugin Dependencies. Uses `platformPlugins` property from the gradle.properties file for plugin from JetBrains Marketplace.
         plugins(providers.gradleProperty("platformPlugins").map { it.split(',') })
 
-        instrumentationTools()
         pluginVerifier()
         zipSigner()
+        testFramework(TestFrameworkType.Platform)
     }
 }
 
 // Set the JVM language level used to build the project.
 kotlin {
     jvmToolchain(17)
+    compilerOptions {
+        // Avoid generating compatibility bridges for default interface methods.
+        // This keeps ToolWindowFactory bytecode free from synthetic overrides of internal APIs.
+        jvmDefault = JvmDefaultMode.NO_COMPATIBILITY
+    }
+}
+
+detekt {
+    config.setFrom("$rootDir/detekt.yml")
+    buildUponDefaultConfig = true
+    parallel = true
+}
+
+tasks.withType<Detekt>().configureEach {
+    setSource(project.files(project.projectDir.resolve("src/main/kotlin")))
+    include("**/*.kt")
+    reports {
+        html.required.set(true)
+        xml.required.set(true)
+        txt.required.set(true)
+        sarif.required.set(true)
+    }
+}
+
+sonarqube {
+    properties {
+        property("sonar.projectKey", "configcat_intellij-plugin")
+        property("sonar.projectName", "intellij-plugin")
+        property("sonar.projectVersion", "$version")
+        property("sonar.organization", "configcat")
+        property("sonar.host.url", "https://sonarcloud.io")
+        property("sonar.sources", "src/main/kotlin/com/configcat")
+        property("sonar.tests", "src/test/kotlin/com/configcat")
+        property("sonar.kotlin.detekt.reportPaths", "detekt.xml")
+        property("sonar.coverage.jacoco.xmlReportPaths", "report.xml")
+    }
 }
 
 // Configure IntelliJ Platform Gradle Plugin - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-extension.html
@@ -98,17 +166,28 @@ intellijPlatform {
         // The pluginVersion is based on the SemVer (https://semver.org) and supports pre-release labels, like 2.1.7-alpha.3
         // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
         // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
-        channels = providers.gradleProperty("pluginVersion").map { listOf(it.substringAfter('-', "").substringBefore('.').ifEmpty { "default" }) }
+        channels = providers.gradleProperty("pluginVersion")
+            .map { listOf(it.substringAfter('-', "").substringBefore('.').ifEmpty { "default" }) }
     }
 
     pluginVerification {
         ides {
-                val productReleases = ProductReleasesValueSource().get()
-                val reducedProductReleases =
-                    if (productReleases.size > 2) listOf(productReleases.first(), productReleases.last())
-                    else productReleases
-                ides(reducedProductReleases)
-       }
+            create(IntelliJPlatformType.IntellijIdea, providers.gradleProperty("platformVersion").get())
+            // To ease the load on GitHub WF we only verify on the first and last supported versions
+            // Update the version based on the gradle.properties changes
+            select {
+                types = listOf(IntelliJPlatformType.IntellijIdea)
+                channels = listOf(ProductRelease.Channel.RELEASE)
+                sinceBuild = "241.1"
+                untilBuild = "241.2"
+            }
+            select {
+                types = listOf(IntelliJPlatformType.IntellijIdea)
+                channels = listOf(ProductRelease.Channel.RELEASE)
+                sinceBuild = "261"
+                untilBuild = "261.*"
+            }
+        }
     }
 }
 
@@ -130,6 +209,10 @@ kover {
 }
 
 tasks {
+    test {
+        useJUnit()
+    }
+
     wrapper {
         gradleVersion = providers.gradleProperty("gradleVersion").get()
     }
@@ -142,8 +225,8 @@ tasks {
 intellijPlatformTesting {
     runIde {
         register("runIdeForUiTests") {
-            type = IntelliJPlatformType.IntellijIdeaUltimate
-            version = "251.25410.59"
+            type = IntelliJPlatformType.IntellijIdea
+            version = "2026.1"
             task {
                 jvmArgumentProviders += CommandLineArgumentProvider {
                     listOf(

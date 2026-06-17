@@ -11,81 +11,79 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 @Service(Service.Level.APP)
 class ConfigCatNodeDataService {
 
-    private val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigSate = ConfigCatApplicationConfig.getInstance().state
+    private val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigState =
+        ConfigCatApplicationConfig.getInstance().state
 
-    private var productConfigs: MutableMap<UUID, List<ConfigModel>> = mutableMapOf()
-    private var configFlags: MutableMap<UUID, List<SettingModel>> = mutableMapOf()
+    private var productConfigs: MutableMap<UUID, List<ConfigModel>> = ConcurrentHashMap()
+    private var configFlags: MutableMap<UUID, List<SettingModel>> = ConcurrentHashMap()
 
 
     companion object {
 
         fun getInstance(): ConfigCatNodeDataService {
-            return ApplicationManager.getApplication().getService(ConfigCatNodeDataService()::class.java)
+            return ApplicationManager.getApplication().getService(ConfigCatNodeDataService::class.java)
         }
     }
 
-    fun checkAndLoadConfigs(productId: UUID?) : Boolean {
-        if(productId == null){
+    fun checkAndLoadConfigs(productId: UUID?): Boolean {
+        if (productId == null) {
             ConfigCatNotifier.Notify.error("Couldn't load the configs: Missing product ID.")
             thisLogger().error("Couldn't load the configs: Missing product ID.")
             return false
         }
-        if(!productConfigs.containsKey(productId)){
+        if (!productConfigs.containsKey(productId)) {
             loadConfigs(productId)
         }
         return true
     }
 
     fun loadConfigs(productId: UUID) {
-        val configsService = ConfigCatService.createConfigsService(Constants.decodePublicApiConfiguration(stateConfig.authConfiguration), stateConfig.publicApiBaseUrl)
+        val configsService = ConfigCatService.createConfigsService(
+            Constants.decodePublicApiConfiguration(stateConfig.authConfiguration),
+            stateConfig.publicApiBaseUrl
+        )
         val configs = try {
             configsService.getConfigs(productId)
         } catch (exception: ApiException) {
-            ErrorHandler.errorNotify(exception)
+            ErrorHandler.errorNotify(
+                exception,
+                "Failed to load configs list. For more information check the logs.",
+                null
+            )
             return
         }
         productConfigs[productId] = configs
     }
 
-    fun getProductConfigs(productId: UUID) : List<ConfigModel>? {
+    fun getProductConfigs(productId: UUID): List<ConfigModel>? {
         return productConfigs[productId]
     }
 
-    fun checkAndLoadFlags(configId: UUID?) : Boolean {
-        if(configId == null){
-            ConfigCatNotifier.Notify.error("Couldn't load the flags: Missing config ID.")
-            thisLogger().error("Couldn't load the flags: Missing config ID.")
-            return false
-        }
-        if(!configFlags.containsKey(configId)){
-            loadFlags(configId)
-        }
-        return true
-
-    }
-
     fun loadFlags(configId: UUID) {
-        val featureFlagsSettingsService = ConfigCatService.createFeatureFlagsSettingsService(Constants.decodePublicApiConfiguration(stateConfig.authConfiguration), stateConfig.publicApiBaseUrl)
+        val featureFlagsSettingsService = ConfigCatService.createFeatureFlagsSettingsService(
+            Constants.decodePublicApiConfiguration(stateConfig.authConfiguration),
+            stateConfig.publicApiBaseUrl
+        )
         val settings = try {
             featureFlagsSettingsService.getSettings(configId)
         } catch (exception: ApiException) {
-            ErrorHandler.errorNotify(exception)
+            ErrorHandler.errorNotify(exception, "Failed to load flags list. For more information check the logs.", null)
             return
         }
         configFlags[configId] = settings
     }
 
-    fun getConfigFlags(configId: UUID) : List<SettingModel>? {
-        return configFlags[configId]
+    fun resetConfigsFlags() {
+        configFlags = ConcurrentHashMap()
     }
 
-
-    fun resetData(){
-        productConfigs = mutableMapOf()
-        configFlags = mutableMapOf()
+    fun resetProductConfigsData() {
+        productConfigs = ConcurrentHashMap()
     }
 }
+
