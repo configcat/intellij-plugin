@@ -1,0 +1,14 @@
+<div>
+  @if (this.viewData.view === "createfeatureflag") {
+    <configcat-intellij-create-feature-flag />
+  }
+  @if (this.viewData.view === "createconfig") {
+    <configcat-intellij-create-config />
+  }
+  @if (this.viewData.view === "featureflagsetting") {
+    <configcat-intellij-feature-flag-setting />
+  }
+  @if (this.viewData.view === "authorization") {
+    <configcat-intellij-authorization />
+  }
+</div>

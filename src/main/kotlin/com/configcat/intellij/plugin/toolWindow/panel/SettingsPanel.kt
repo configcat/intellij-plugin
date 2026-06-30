@@ -1,0 +1,377 @@
+package com.configcat.intellij.plugin.toolWindow.panel
+
+import com.configcat.intellij.plugin.Constants
+import com.configcat.intellij.plugin.ErrorHandler
+import com.configcat.intellij.plugin.actions.*
+import com.configcat.intellij.plugin.messaging.ConfigChangeNotifier
+import com.configcat.intellij.plugin.messaging.ConnectedConfigChangeNotifier
+import com.configcat.intellij.plugin.messaging.SettingsTreeChangeNotifier
+import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
+import com.configcat.intellij.plugin.services.ConfigCatPropertiesService
+import com.configcat.intellij.plugin.services.ConfigCatService
+import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
+import com.configcat.intellij.plugin.toolWindow.tree.ConfigRootNode
+import com.configcat.intellij.plugin.toolWindow.tree.FlagNode
+import com.configcat.intellij.plugin.toolWindow.tree.FlagTreeStructure
+import com.configcat.publicapi.java.client.ApiException
+import com.configcat.publicapi.java.client.model.ConfigModel
+import com.intellij.icons.AllIcons
+import com.intellij.openapi.Disposable
+import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.openapi.actionSystem.ActionPlaces
+import com.intellij.openapi.actionSystem.ActionToolbar
+import com.intellij.openapi.actionSystem.DefaultActionGroup
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.EDT
+import com.intellij.openapi.components.Service
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.SimpleToolWindowPanel
+import com.intellij.ui.PopupHandler
+import com.intellij.ui.ScrollPaneFactory
+import com.intellij.ui.SearchTextField
+import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.tree.AsyncTreeModel
+import com.intellij.ui.tree.StructureTreeModel
+import com.intellij.ui.treeStructure.Tree
+import com.intellij.util.ui.tree.TreeUtil
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.awt.BorderLayout
+import java.awt.CardLayout
+import java.awt.FlowLayout
+import java.awt.GridBagLayout
+import java.util.*
+import javax.swing.JComponent
+import javax.swing.JPanel
+import javax.swing.JSeparator
+import javax.swing.event.DocumentEvent
+import javax.swing.event.DocumentListener
+import javax.swing.event.TreeModelEvent
+import javax.swing.event.TreeModelListener
+import javax.swing.tree.DefaultMutableTreeNode
+import javax.swing.tree.TreePath
+import javax.swing.tree.TreeSelectionModel
+
+@Service(Service.Level.PROJECT)
+class SettingsPanel(
+    private val cs: CoroutineScope,
+) : SimpleToolWindowPanel(false, false), Disposable {
+
+    companion object {
+        fun getInstance(project: Project): SettingsPanel =
+            project.getService(SettingsPanel::class.java)
+    }
+
+    private val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigState =
+        ConfigCatApplicationConfig.getInstance().state
+
+    private val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
+    private val configCatPropertiesService = ConfigCatPropertiesService.getInstance()
+    private var tree: Tree? = null
+    private var treeModel: StructureTreeModel<FlagTreeStructure>? = null
+    private var configRootNode: ConfigRootNode? = null
+    private var searchTextField: SearchTextField? = null
+    private var connectedConfig: ConfigModel? = null
+    private var pendingSelectionFlagId: Int? = null
+    private var pendingSelectionConfigRootSelection: Boolean = false
+    val toolbarActionGroup = DefaultActionGroup()
+    val actionPopup = DefaultActionGroup()
+
+    init {
+        initToolbar(this)
+        initContent()
+
+        // Configure notifiers
+        val handleConfigChange = object : ConfigChangeNotifier {
+            override fun notifyConfigChange() {
+                initContent()
+            }
+        }
+        ApplicationManager.getApplication().messageBus.connect()
+            .subscribe(ConfigChangeNotifier.CONFIG_CHANGE_TOPIC, handleConfigChange)
+
+        val handleConnectedConfigChange = object : ConnectedConfigChangeNotifier {
+            override fun notifyConnectedConfigChange() {
+                initContent()
+            }
+        }
+        ApplicationManager.getApplication().messageBus.connect()
+            .subscribe(ConnectedConfigChangeNotifier.CONNECTED_CONFIG_CHANGE_TOPIC, handleConnectedConfigChange)
+
+        val handleTreeNotify = object : SettingsTreeChangeNotifier {
+            override fun notifyTreeRefresh(flagIdToSelect: Int?) {
+                refreshTree(flagIdToSelect)
+            }
+
+            override fun notifyTreeNodeRefresh(node: DefaultMutableTreeNode) {
+                refreshTreeNode(node)
+            }
+        }
+        ApplicationManager.getApplication().messageBus.connect()
+            .subscribe(SettingsTreeChangeNotifier.TREE_REFRESH_TOPIC, handleTreeNotify)
+    }
+
+    private fun initContent() {
+        val centeredInfoPanel = JPanel(GridBagLayout())
+        val infoPanel = panel {
+            row {
+                icon(AllIcons.General.Information)
+                label("ConfigCat Plugin is loading.")
+            }
+        }
+        centeredInfoPanel.add(infoPanel)
+        setContent(centeredInfoPanel)
+
+        if (!stateConfig.isConfigured()) {
+            setContent(ConfigurePluginPanel())
+            resetTreeView()
+        } else {
+            initTreeContent()
+        }
+    }
+
+    private fun initTreeContent() {
+        cs.launch(Dispatchers.Default) {
+            val connectedConfig = loadConnectedConfig()
+            if (connectedConfig == null) {
+                cs.launch(Dispatchers.EDT) {
+                    val centeredNoConfigPanel = JPanel(GridBagLayout())
+                    val noConfigPanel = panel {
+                        row {
+                            icon(AllIcons.General.Information)
+                            label("No config connected!")
+                        }
+                        row {
+                            text("Please connect a config on the 'Products & Configs' tab.")
+                        }
+                    }
+                    centeredNoConfigPanel.add(noConfigPanel)
+                    setContent(centeredNoConfigPanel)
+                }
+            } else {
+                tree = initTree(connectedConfig)
+                cs.launch(Dispatchers.EDT) {
+                    if (tree != null) {
+                        val loadedContent = JPanel(BorderLayout())
+//                         add action popup to the tree
+                        PopupHandler.installPopupMenu(
+                            tree!!, actionPopup, ActionPlaces.POPUP
+                        )
+
+                        val currentFilter = searchTextField?.text ?: ""
+                        val searchField = SearchTextField(true)
+                        searchField.text = currentFilter
+                        searchField.textEditor.emptyText.text = "Search flags by name or key"
+                        searchField.textEditor.columns = 25
+                        searchTextField = searchField
+                        // Re-apply any existing filter text to the freshly built root node
+                        configRootNode?.filterQuery = currentFilter
+
+                        searchField.addDocumentListener(object : DocumentListener {
+                            override fun insertUpdate(e: DocumentEvent?) = applyFilter()
+                            override fun removeUpdate(e: DocumentEvent?) = applyFilter()
+                            override fun changedUpdate(e: DocumentEvent?) = applyFilter()
+                            private fun applyFilter() {
+                                configRootNode?.filterQuery = searchField.text
+                                treeModel?.invalidate()
+                            }
+                        })
+
+                        val filterPanel = JPanel(FlowLayout(FlowLayout.LEFT, 4, 3))
+                        filterPanel.add(searchField)
+                        val filterContainer = JPanel(BorderLayout())
+                        filterContainer.add(filterPanel, BorderLayout.CENTER)
+                        filterContainer.add(JSeparator(), BorderLayout.SOUTH)
+
+                        loadedContent.add(filterContainer, BorderLayout.NORTH)
+                        loadedContent.add(ScrollPaneFactory.createScrollPane(tree, true), BorderLayout.CENTER)
+                        setContent(loadedContent)
+                    } else {
+                        val loadedContent: JComponent = JPanel(CardLayout())
+                        val centeredErrorPanel = JPanel(GridBagLayout())
+                        val errorPanel = panel {
+                            row {
+                                icon(AllIcons.General.Error)
+                                label("Something went wrong!")
+                            }
+                            row {
+                                text("Try to refresh the panel. For more information check the logs.")
+                            }
+                        }
+                        centeredErrorPanel.add(errorPanel)
+                        loadedContent.add(centeredErrorPanel)
+                        setContent(loadedContent)
+                    }
+                }
+
+            }
+        }
+    }
+
+    private fun initToolbar(panel: JComponent) {
+        val actionManager: ActionManager = ActionManager.getInstance()
+        val actionToolbar: ActionToolbar =
+            actionManager.createActionToolbar("CONFIGCAT_PANEL_ACTION_TOOLBAR", toolbarActionGroup, false)
+        actionToolbar.targetComponent = panel
+        toolbar = actionToolbar.component
+
+        val refreshAction = actionManager.getAction(FlagRefreshAction.CONFIGCAT_FLAG_REFRESH_ACTION_ID)
+        val createAction = actionManager.getAction(FlagCreateAction.CONFIGCAT_FLAG_CREATE_ACTION_ID)
+        val openDashboardAction =
+            actionManager.getAction(FlagOpenInBrowserAction.CONFIGCAT_FLAG_OPEN_CONFIG_IN_BROWSER_ACTION_ID)
+        val searchFlagKeyAction = actionManager.getAction(FlagKeySearchAction.CONFIGCAT_SEARCH_FLAG_KEY_ACTION_ID)
+        val copyFlagKeyAction = actionManager.getAction(FlagKeyCopyAction.CONFIGCAT_COPY_FLAG_KEY_ACTION_ID)
+        val openFeatureFlagAction = actionManager.getAction(FlagViewOpenAction.CONFIGCAT_OPEN_FF_ACTION_ID)
+        val openHelpAction = actionManager.getAction(HelpAction.CONFIGCAT_HELP_ACTION_ID)
+
+        toolbarActionGroup.add(refreshAction)
+        toolbarActionGroup.add(createAction)
+        toolbarActionGroup.add(openDashboardAction)
+        toolbarActionGroup.add(searchFlagKeyAction)
+        toolbarActionGroup.add(copyFlagKeyAction)
+        toolbarActionGroup.add(openFeatureFlagAction)
+        toolbarActionGroup.add(openHelpAction)
+
+        actionPopup.apply {
+            add(refreshAction)
+            add(createAction)
+            add(openDashboardAction)
+            add(searchFlagKeyAction)
+            add(copyFlagKeyAction)
+            add(openFeatureFlagAction)
+        }
+    }
+
+    private fun initTree(connectedConfig: ConfigModel): Tree? {
+
+        val featureFlagsSettingsService = ConfigCatService.createFeatureFlagsSettingsService(
+            Constants.decodePublicApiConfiguration(stateConfig.authConfiguration), stateConfig.publicApiBaseUrl
+        )
+        val settings = try {
+            featureFlagsSettingsService.getSettings(connectedConfig.configId)
+        } catch (exception: ApiException) {
+            ErrorHandler.errorNotify(exception, "Failed to load flags list. For more information check the logs.", null)
+            return null
+        }
+
+        configCatNodeDataService.resetConfigsFlags()
+
+        val rootNode = ConfigRootNode(settings, connectedConfig.name)
+        configRootNode = rootNode
+        val treeStructure = FlagTreeStructure(rootNode)
+        val treeModel: StructureTreeModel<FlagTreeStructure> = StructureTreeModel(treeStructure, this)
+        this.treeModel = treeModel
+        val treeBuilder = AsyncTreeModel(treeModel, this)
+        
+        // Listen for flag node insertions to enable auto-selection of newly created flags
+        treeBuilder.addTreeModelListener(object : TreeModelListener {
+            override fun treeNodesChanged(e: TreeModelEvent?) = Unit
+
+            override fun treeNodesInserted(e: TreeModelEvent?) {
+                e?.children?.forEach { child ->
+                    val childTreeNode = child as DefaultMutableTreeNode
+                    val childUserObject = childTreeNode.userObject
+                    if (childUserObject is FlagNode) {
+                        val flagId = childUserObject.setting.settingId
+                        if (flagId == pendingSelectionFlagId) {
+                            selectNodeIfPresent(childTreeNode)
+                        }
+                    }
+                }
+            }
+
+            override fun treeNodesRemoved(e: TreeModelEvent?) = Unit
+
+            override fun treeStructureChanged(e: TreeModelEvent?) = Unit
+        })
+
+
+
+        val tree = Tree()
+        tree.model = treeBuilder
+
+        if (pendingSelectionConfigRootSelection) {
+            TreeUtil.promiseSelectFirst(tree).onSuccess {
+                pendingSelectionConfigRootSelection = false
+            }
+        }
+
+        tree.setRootVisible(true)
+        tree.selectionModel.selectionMode = TreeSelectionModel.SINGLE_TREE_SELECTION
+        return tree
+    }
+
+    private fun resetTreeView() {
+        tree = null
+        treeModel = null
+        configRootNode = null
+        searchTextField = null
+    }
+
+    override fun dispose() = Unit
+
+    private fun refreshTree(flagIdToSelect: Int?) {
+        if (flagIdToSelect != null) {
+            // Explicit new-item selection: use it directly and clear any restore flag.
+            pendingSelectionFlagId = flagIdToSelect
+            pendingSelectionConfigRootSelection = false
+        } else {
+            // Snapshot current selection so it can be restored after reload.
+            val selectedUserObject = getSelectedNode()?.userObject
+
+            when (selectedUserObject) {
+                is FlagNode -> pendingSelectionFlagId = selectedUserObject.setting.settingId
+                is ConfigRootNode -> {
+                    pendingSelectionFlagId = null
+                    pendingSelectionConfigRootSelection = true
+                }
+                else -> {
+                    pendingSelectionFlagId = null
+                    pendingSelectionConfigRootSelection = false
+                }
+            }
+        }
+        initTreeContent()
+    }
+
+    private fun refreshTreeNode(node: DefaultMutableTreeNode) {
+        treeModel?.invalidate(TreePath(node), true)
+    }
+
+    private fun selectNodeIfPresent(treeNode: DefaultMutableTreeNode) {
+        tree?.selectionPath = TreeUtil.getPathFromRoot(treeNode)
+        pendingSelectionFlagId = null
+        pendingSelectionConfigRootSelection = false
+    }
+
+    fun loadConnectedConfig(): ConfigModel? {
+        val connectedConfigId = configCatPropertiesService.getConnectedConfig()
+        if (connectedConfigId == null) {
+            return null
+        }
+        val configsService = ConfigCatService.createConfigsService(
+            Constants.decodePublicApiConfiguration(stateConfig.authConfiguration),
+            stateConfig.publicApiBaseUrl
+        )
+        try {
+            connectedConfig = configsService.getConfig(UUID.fromString(connectedConfigId))
+        } catch (exception: ApiException) {
+            ErrorHandler.errorNotify(exception, "Failed to load config. For more information check the logs.", null)
+            return null
+        }
+        return connectedConfig
+    }
+
+    fun getConnectedConfig(): ConfigModel? {
+        return connectedConfig
+    }
+
+    fun getSelectedNode(): DefaultMutableTreeNode? {
+        val paths: Array<TreePath>? = tree?.selectionPaths
+        if (paths == null || paths.size != 1) return null
+        val treeNode = paths[0].lastPathComponent as DefaultMutableTreeNode
+        return treeNode
+    }
+}
+
