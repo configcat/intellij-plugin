@@ -2,12 +2,13 @@ package com.configcat.intellij.plugin.dialogs
 
 import com.configcat.intellij.plugin.ConfigCatNotifier
 import com.configcat.intellij.plugin.ErrorHandler
+import com.configcat.intellij.plugin.TestUtils.safeDispose
+import com.configcat.intellij.plugin.TestUtils.suppressLogErrors
 import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.publicapi.java.client.ApiException
 import com.configcat.publicapi.java.client.model.ConfigModel
 import com.configcat.publicapi.java.client.model.ProductModel
-import com.intellij.openapi.util.Disposer
 import com.intellij.testFramework.LightPlatformTestCase
 import com.intellij.ui.jcef.JBCefApp
 import io.mockk.every
@@ -96,7 +97,7 @@ class CreateFlagDialogTest : LightPlatformTestCase() {
     fun testSaveSuccess_setsCreatedFlagIdWhenReturnIdIsValidInt() {
         val dialog = buildDialog()
         try {
-            dialog.saveSuccess("12345")
+            dialog.saveSuccess("""{"type":"ff-create","data":"12345"}""")
 
             assertEquals("createdFlagId must capture the settingId from returnId", 12345, dialog.createdFlagId)
         } finally {
@@ -107,7 +108,7 @@ class CreateFlagDialogTest : LightPlatformTestCase() {
     fun testSaveSuccess_invalidIntReturnId_keepsCreatedFlagIdNull() {
         val dialog = buildDialog()
         try {
-            dialog.saveSuccess("not-a-number")
+            dialog.saveSuccess("""{"type":"ff-create","data":"not-a-number"}""")
 
             assertNull("createdFlagId must remain null when returnId is not a valid integer", dialog.createdFlagId)
         } finally {
@@ -133,7 +134,7 @@ class CreateFlagDialogTest : LightPlatformTestCase() {
     fun testSaveSuccess_notifiesInfoMessage() {
         val dialog = buildDialog()
         try {
-            dialog.saveSuccess("new-flag-id")
+            dialog.saveSuccess("""{"type":"ff-create","data":"new-flag-id"}""")
 
             verify(exactly = 1) { ConfigCatNotifier.Notify.info("Feature Flag Successfully created.") }
         } finally {
@@ -144,7 +145,7 @@ class CreateFlagDialogTest : LightPlatformTestCase() {
     fun testSaveSuccess_callsLoadFlagsWithConfigId() {
         val dialog = buildDialog()
         try {
-            dialog.saveSuccess("new-flag-id")
+            dialog.saveSuccess("""{"type":"ff-create","data":"new-flag-id"}""")
 
             verify(exactly = 1) { mockNodeDataService.loadFlags(configId) }
         } finally {
@@ -173,7 +174,7 @@ class CreateFlagDialogTest : LightPlatformTestCase() {
 
         val dialog = buildDialog()
         try {
-            dialog.saveSuccess("some-flag-id")
+            dialog.saveSuccess("""{"type":"ff-create","data":"some-flag-id"}""")
 
             verify(exactly = 1) { ErrorHandler.errorNotify(any<ApiException>(), any(), any()) }
         } finally {
@@ -186,9 +187,72 @@ class CreateFlagDialogTest : LightPlatformTestCase() {
 
         val dialog = buildDialog()
         try {
-            dialog.saveSuccess("some-flag-id")
+            dialog.saveSuccess("""{"type":"ff-create","data":"some-flag-id"}""")
 
             verify(exactly = 1) { ConfigCatNotifier.Notify.info("Feature Flag Successfully created.") }
+        } finally {
+            safeDispose(dialog)
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // saveSuccess – webview-fail type
+    // -------------------------------------------------------------------------
+
+    fun testSaveSuccess_webviewFail_notifiesError_andDoesNotCreate() {
+        val dialog = buildDialog()
+        try {
+            suppressLogErrors {
+                dialog.saveSuccess(
+                    """{"type":"webview-fail","data":{"message":"Something went wrong","status":500}}"""
+                )
+            }
+
+            assertNull(dialog.createdFlagId)
+            verify(exactly = 1) { ConfigCatNotifier.Notify.error("Flag create failed: Something went wrong") }
+            verify(exactly = 0) { ConfigCatNotifier.Notify.info(any()) }
+            verify(exactly = 0) { mockNodeDataService.loadFlags(any()) }
+        } finally {
+            safeDispose(dialog)
+        }
+    }
+
+    fun testSaveSuccess_webviewFail401_callsUnAuthenticate() {
+        val dialog = buildDialog()
+        try {
+            suppressLogErrors {
+                dialog.saveSuccess(
+                    """{"type":"webview-fail","data":{"message":"Unauthorized","status":401}}"""
+                )
+            }
+
+            assertNull(dialog.createdFlagId)
+            verify(exactly = 1) { mockState.unAuthenticate() }
+            verify(exactly = 1) { ConfigCatNotifier.Notify.error("Logged out from ConfigCat. Please re-authenticate to continue.") }
+            verify(exactly = 0) { ConfigCatNotifier.Notify.info(any()) }
+            verify(exactly = 0) { mockNodeDataService.loadFlags(any()) }
+        } finally {
+            safeDispose(dialog)
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // saveSuccess – none type (else branch)
+    // -------------------------------------------------------------------------
+
+    fun testSaveSuccess_noneType_treatsAsInvalidResponse() {
+        val dialog = buildDialog()
+        try {
+            suppressLogErrors {
+                dialog.saveSuccess(
+                    """{"type":"none","data":null}"""
+                )
+            }
+
+            assertNull(dialog.createdFlagId)
+            verify(exactly = 1) { ConfigCatNotifier.Notify.error("Flag create failed: invalid response from webview.") }
+            verify(exactly = 0) { ConfigCatNotifier.Notify.info(any()) }
+            verify(exactly = 0) { mockNodeDataService.loadFlags(any()) }
         } finally {
             safeDispose(dialog)
         }
@@ -209,12 +273,5 @@ class CreateFlagDialogTest : LightPlatformTestCase() {
         every { config.product } returns product
 
         return CreateFlagDialog(project = null, config = config)
-    }
-
-    private fun safeDispose(dialog: CreateFlagDialog) {
-        try {
-            Disposer.dispose(dialog.disposable)
-        } catch (_: Exception) {
-        }
     }
 }

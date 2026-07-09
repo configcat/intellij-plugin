@@ -1,5 +1,6 @@
 package com.configcat.intellij.plugin.settings
 
+import com.configcat.intellij.plugin.messaging.ConfigChangeNotifier
 import com.intellij.credentialStore.CredentialAttributes
 import com.intellij.credentialStore.Credentials
 import com.intellij.credentialStore.generateServiceName
@@ -32,6 +33,8 @@ open class ConfigCatApplicationConfig :
     override fun loadState(state: ConfigCatApplicationConfigState) {
         appState = state
     }
+
+
 
     data class ConfigCatApplicationConfigState(
         override var dashboardBaseUrl: String = DEFAULT_DASHBOARD_BASE_URL,
@@ -79,12 +82,22 @@ open class ConfigCatApplicationConfig :
                 PasswordSafe.instance.set(credentialAttributes, credentials)
             }
 
-
         override fun isConfigured(): Boolean {
             return authConfiguration.isNotEmpty() &&
                 authConfiguration != EMPTY_CREDENTIALS &&
                 dashboardBaseUrl.isNotEmpty() &&
                 publicApiBaseUrl.isNotEmpty()
+        }
+
+        override fun unAuthenticate() {
+            authConfiguration = EMPTY_CREDENTIALS
+            configChangedPublish()
+        }
+
+        private fun configChangedPublish() {
+            val publisher: ConfigChangeNotifier =
+                ApplicationManager.getApplication().messageBus.syncPublisher(ConfigChangeNotifier.CONFIG_CHANGE_TOPIC)
+            publisher.notifyConfigChange()
         }
 
     }

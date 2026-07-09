@@ -1,7 +1,7 @@
 package com.configcat.intellij.plugin.dialogs
 
+import com.configcat.intellij.plugin.TestUtils.safeDispose
 import com.configcat.publicapi.java.client.model.EnvironmentModel
-import com.intellij.openapi.util.Disposer
 import com.intellij.testFramework.LightPlatformTestCase
 import io.mockk.every
 import io.mockk.mockk
@@ -213,10 +213,4 @@ class EnvironmentSelectDialogTest : LightPlatformTestCase() {
             environments = environments,
         )
 
-    private fun safeDispose(dialog: EnvironmentSelectDialog) {
-        try {
-            Disposer.dispose(dialog.disposable)
-        } catch (_: Exception) {
-        }
-    }
 }

@@ -6,6 +6,9 @@ import com.configcat.intellij.plugin.ErrorHandler
 import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.intellij.plugin.webview.AppData
+import com.configcat.intellij.plugin.webview.ConfigCatResponseData
+import com.configcat.intellij.plugin.webview.ConfigCatResponseType
+import com.configcat.intellij.plugin.webview.ConfigCatWebViewFailData
 import com.configcat.intellij.plugin.webview.ViewType
 import com.configcat.intellij.plugin.webview.WebViewPanelContainer
 import com.configcat.publicapi.java.client.ApiException
@@ -13,6 +16,10 @@ import com.configcat.publicapi.java.client.model.ConfigModel
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.jetbrains.rd.util.remove
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.jsonPrimitive
 import java.awt.EventQueue.invokeLater
 import javax.swing.Action
 import javax.swing.JComponent
@@ -59,8 +66,35 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel) : DialogW
         return WebViewPanelContainer(appData, ViewType.CREATE_FLAG, { returnId -> saveSuccess(returnId) })
     }
 
-    fun saveSuccess(returnId: String?) {
-        createdFlagId = returnId?.toIntOrNull()
+    fun saveSuccess(jsonString: String?) {
+        val responseData = Constants.decodeConfigCatResponse(jsonString)
+        if (responseData != null) {
+            when (responseData.type) {
+                ConfigCatResponseType.FF_CREATE -> {
+                    createdFlagId = responseData.data?.jsonPrimitive?.contentOrNull?.toIntOrNull()
+                }
+                ConfigCatResponseType.WEBVIEW_FAIL -> {
+                    val webViewErrorData = parseWebViewFailData(responseData)
+                    if (webViewErrorData != null && webViewErrorData.status == 401) {
+                        ConfigCatApplicationConfig.getInstance().state.unAuthenticate()
+                        ConfigCatNotifier.Notify.error("Logged out from ConfigCat. Please re-authenticate to continue.")
+                    } else {
+                        ConfigCatNotifier.Notify.error("Flag create failed: ${webViewErrorData?.message ?:
+                            "Unknown error"}")
+                    }
+                    invokeLater { close(CANCEL_EXIT_CODE) }
+                    return
+                }
+                else -> {
+                    ConfigCatNotifier.Notify.error("Flag create failed: invalid response from webview.")
+                    invokeLater { close(CANCEL_EXIT_CODE) }
+                    return
+                }
+            }
+        } else {
+            createdFlagId = null
+        }
+
         val configId = config.configId
         try {
             ConfigCatNotifier.Notify.info("Feature Flag Successfully created.")
@@ -74,5 +108,13 @@ class CreateFlagDialog(val project: Project?, val config: ConfigModel) : DialogW
             close(OK_EXIT_CODE)
         }
     }
-}
 
+    private fun parseWebViewFailData(response: ConfigCatResponseData): ConfigCatWebViewFailData? {
+        val responseData = response.data ?: return null
+        return try {
+            Constants.json.decodeFromJsonElement<ConfigCatWebViewFailData>(responseData)
+        } catch (_: SerializationException) {
+            null
+        }
+    }
+}

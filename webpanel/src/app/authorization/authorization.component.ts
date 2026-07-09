@@ -3,6 +3,7 @@ import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { MatButton } from "@angular/material/button";
 import { AuthorizationComponent, AuthorizationModel } from "ng-configcat-publicapi-ui";
 import { AppData } from "../app-data";
+import type { ConfigCatResponseData } from "../cc-response-data";
 
 @Component({
   selector: "configcat-intellij-authorization",
@@ -20,11 +21,14 @@ export class AuthComponent {
   loading = true;
 
   login(authorizationParameters: AuthorizationModel) {
-    window["configCatSuccessMethod"].call(this, JSON.stringify(authorizationParameters));
+    const responseData: ConfigCatResponseData = { type: "authorization", data: authorizationParameters };
+    console.log("authorization: " + responseData);
+    window["configCatResponseMethod"].call(this, JSON.stringify(responseData));
   }
 
   unauthorize() {
-    window["configCatSuccessMethod"].call(this, "unauthorize");
+    const responseData: ConfigCatResponseData = { type: "authorization", data: "unauthorize" };
+    window["configCatResponseMethod"].call(this, JSON.stringify(responseData));
   }
 
 }

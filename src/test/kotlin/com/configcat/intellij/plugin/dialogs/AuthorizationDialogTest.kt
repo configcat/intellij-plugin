@@ -1,8 +1,9 @@
 package com.configcat.intellij.plugin.dialogs
 
 import com.configcat.intellij.plugin.ConfigCatNotifier
+import com.configcat.intellij.plugin.TestUtils.safeDispose
+import com.configcat.intellij.plugin.TestUtils.suppressLogErrors
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
-import com.intellij.openapi.util.Disposer
 import com.intellij.testFramework.LightPlatformTestCase
 import com.intellij.ui.jcef.JBCefApp
 import io.mockk.Runs
@@ -34,6 +35,7 @@ class AuthorizationDialogTest : LightPlatformTestCase() {
 
         mockkObject(ConfigCatNotifier.Notify)
         every { ConfigCatNotifier.Notify.info(any()) } just Runs
+        every { ConfigCatNotifier.Notify.error(any<String>()) } just Runs
 
         mockkStatic(JBCefApp::class)
         every { JBCefApp.isSupported() } returns false
@@ -70,7 +72,7 @@ class AuthorizationDialogTest : LightPlatformTestCase() {
         val dialog = buildDialog()
         try {
             dialog.processAuthorizationResponse(
-                """{"basicAuthUsername":"demo-user","basicAuthPassword":"demo-pass","email":"demo@example.com","fullName":"Demo User"}"""
+                """{"type":"authorization","data":{"basicAuthUsername":"demo-user","basicAuthPassword":"demo-pass","email":"demo@example.com","fullName":"Demo User"}}"""
             )
 
             assertEquals(
@@ -101,7 +103,7 @@ class AuthorizationDialogTest : LightPlatformTestCase() {
                 ),
             )
 
-            dialog.processAuthorizationResponse("unauthorize")
+            dialog.processAuthorizationResponse("""{"type":"authorization","data":"unauthorize"}""")
 
             assertNull(dialog.authorizationModel)
             verify(exactly = 1) { ConfigCatNotifier.Notify.info("Logged out from ConfigCat.") }
@@ -110,7 +112,7 @@ class AuthorizationDialogTest : LightPlatformTestCase() {
         }
     }
 
-    fun testProcessAuthorizationResponse_null_keepsAuthorizationModel_andDoesNotNotify() {
+    fun testProcessAuthorizationResponse_null_treatsAsError_keepsAuthorizationModel() {
         val dialog = buildDialog()
         try {
             val existingModel = AuthorizationDialog.AuthorizationModel(
@@ -121,10 +123,12 @@ class AuthorizationDialogTest : LightPlatformTestCase() {
             )
             setAuthorizationModel(dialog, existingModel)
 
-            dialog.processAuthorizationResponse(null)
+            suppressLogErrors {
+                dialog.processAuthorizationResponse(null)
+            }
 
             assertEquals(existingModel, dialog.authorizationModel)
-            verify(exactly = 0) { ConfigCatNotifier.Notify.info(any()) }
+            verify(exactly = 1) { ConfigCatNotifier.Notify.error("Authorization failed: invalid response from the server.") }
         } finally {
             safeDispose(dialog)
         }
@@ -141,10 +145,81 @@ class AuthorizationDialogTest : LightPlatformTestCase() {
         field.set(dialog, authorizationModel)
     }
 
-    private fun safeDispose(dialog: AuthorizationDialog) {
+    // -------------------------------------------------------------------------
+    // processResponseData – webview-fail type
+    // -------------------------------------------------------------------------
+
+    fun testProcessAuthorizationResponse_webviewFail_notifiesError_andKeepsModel() {
+        val dialog = buildDialog()
         try {
-            Disposer.dispose(dialog.disposable)
-        } catch (_: Exception) {
+            val existingModel = AuthorizationDialog.AuthorizationModel(
+                basicAuthUsername = "demo-user",
+                basicAuthPassword = "demo-pass",
+                email = "demo@example.com",
+                fullName = "Demo User",
+            )
+            setAuthorizationModel(dialog, existingModel)
+
+            suppressLogErrors {
+                dialog.processAuthorizationResponse(
+                    """{"type":"webview-fail","data":{"message":"Something went wrong","status":500}}"""
+                )
+            }
+
+            assertEquals(existingModel, dialog.authorizationModel)
+            verify(exactly = 1) { ConfigCatNotifier.Notify.error("Authorization failed: Something went wrong") }
+        } finally {
+            safeDispose(dialog)
         }
     }
+
+    fun testProcessAuthorizationResponse_webviewFail401_callsUnAuthenticate() {
+        val dialog = buildDialog()
+        try {
+            val existingModel = AuthorizationDialog.AuthorizationModel(
+                basicAuthUsername = "demo-user",
+                basicAuthPassword = "demo-pass",
+                email = "demo@example.com",
+                fullName = "Demo User",
+            )
+            setAuthorizationModel(dialog, existingModel)
+
+            suppressLogErrors {
+                dialog.processAuthorizationResponse(
+                    """{"type":"webview-fail","data":{"message":"Unauthorized","status":401}}"""
+                )
+            }
+
+            assertEquals(existingModel, dialog.authorizationModel)
+            verify(exactly = 1) { mockState.unAuthenticate() }
+            verify(exactly = 1) { ConfigCatNotifier.Notify.error("Authorization failed: Unauthorized") }
+        } finally {
+            safeDispose(dialog)
+        }
+    }
+
+    fun testProcessAuthorizationResponse_noneType_treatsAsUnexpected() {
+        val dialog = buildDialog()
+        try {
+            val existingModel = AuthorizationDialog.AuthorizationModel(
+                basicAuthUsername = "demo-user",
+                basicAuthPassword = "demo-pass",
+                email = "demo@example.com",
+                fullName = "Demo User",
+            )
+            setAuthorizationModel(dialog, existingModel)
+
+            suppressLogErrors {
+                dialog.processAuthorizationResponse(
+                    """{"type":"none","data":null}"""
+                )
+            }
+
+            assertEquals(existingModel, dialog.authorizationModel)
+            verify(exactly = 1) { ConfigCatNotifier.Notify.error("Authorization failed: invalid response from the server.") }
+        } finally {
+            safeDispose(dialog)
+        }
+    }
+
 }

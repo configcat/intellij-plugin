@@ -2,11 +2,12 @@ package com.configcat.intellij.plugin.dialogs
 
 import com.configcat.intellij.plugin.ConfigCatNotifier
 import com.configcat.intellij.plugin.ErrorHandler
+import com.configcat.intellij.plugin.TestUtils.safeDispose
+import com.configcat.intellij.plugin.TestUtils.suppressLogErrors
 import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.publicapi.java.client.ApiException
 import com.configcat.publicapi.java.client.model.ProductModel
-import com.intellij.openapi.util.Disposer
 import com.intellij.testFramework.LightPlatformTestCase
 import com.intellij.ui.jcef.JBCefApp
 import io.mockk.every
@@ -94,7 +95,7 @@ class CreateConfigDialogTest : LightPlatformTestCase() {
     fun testSaveSuccess_notifiesInfoMessage() {
         val dialog = buildDialog()
         try {
-            dialog.saveSuccess("new-config-id")
+            dialog.saveSuccess("""{"type":"config-create","data":"new-config-id"}""")
 
             verify(exactly = 1) { ConfigCatNotifier.Notify.info("Config Successfully created.") }
         } finally {
@@ -105,7 +106,7 @@ class CreateConfigDialogTest : LightPlatformTestCase() {
     fun testSaveSuccess_callsLoadConfigsWithProductId() {
         val dialog = buildDialog()
         try {
-            dialog.saveSuccess("new-config-id")
+            dialog.saveSuccess("""{"type":"config-create","data":"new-config-id"}""")
 
             verify(exactly = 1) { mockNodeDataService.loadConfigs(productId) }
         } finally {
@@ -116,7 +117,7 @@ class CreateConfigDialogTest : LightPlatformTestCase() {
     fun testSaveSuccess_setsCreatedConfigIdWhenReturnIdIsNotBlank() {
         val dialog = buildDialog()
         try {
-            dialog.saveSuccess("new-config-id")
+            dialog.saveSuccess("""{"type":"config-create","data":"new-config-id"}""")
 
             assertEquals("new-config-id", dialog.createdConfigId)
         } finally {
@@ -127,7 +128,7 @@ class CreateConfigDialogTest : LightPlatformTestCase() {
     fun testSaveSuccess_blankReturnId_keepsCreatedConfigIdNull() {
         val dialog = buildDialog()
         try {
-            dialog.saveSuccess("   ")
+            dialog.saveSuccess("""{"type":"config-create","data":"   "}""")
 
             assertNull(dialog.createdConfigId)
         } finally {
@@ -156,7 +157,7 @@ class CreateConfigDialogTest : LightPlatformTestCase() {
 
         val dialog = buildDialog()
         try {
-            dialog.saveSuccess("some-id")
+            dialog.saveSuccess("""{"type":"config-create","data":"some-id"}""")
 
             verify(exactly = 1) { ErrorHandler.errorNotify(any<ApiException>(), any(), any()) }
         } finally {
@@ -169,9 +170,72 @@ class CreateConfigDialogTest : LightPlatformTestCase() {
 
         val dialog = buildDialog()
         try {
-            dialog.saveSuccess("some-id")
+            dialog.saveSuccess("""{"type":"config-create","data":"some-id"}""")
 
             verify(exactly = 1) { ConfigCatNotifier.Notify.info("Config Successfully created.") }
+        } finally {
+            safeDispose(dialog)
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // saveSuccess – webview-fail type
+    // -------------------------------------------------------------------------
+
+    fun testSaveSuccess_webviewFail_notifiesError_andDoesNotCreate() {
+        val dialog = buildDialog()
+        try {
+            suppressLogErrors {
+                dialog.saveSuccess(
+                    """{"type":"webview-fail","data":{"message":"Something went wrong","status":500}}"""
+                )
+            }
+
+            assertNull(dialog.createdConfigId)
+            verify(exactly = 1) { ConfigCatNotifier.Notify.error("Config create failed: Something went wrong") }
+            verify(exactly = 0) { ConfigCatNotifier.Notify.info(any()) }
+            verify(exactly = 0) { mockNodeDataService.loadConfigs(any()) }
+        } finally {
+            safeDispose(dialog)
+        }
+    }
+
+    fun testSaveSuccess_webviewFail401_callsUnAuthenticate() {
+        val dialog = buildDialog()
+        try {
+            suppressLogErrors {
+                dialog.saveSuccess(
+                    """{"type":"webview-fail","data":{"message":"Unauthorized","status":401}}"""
+                )
+            }
+
+            assertNull(dialog.createdConfigId)
+            verify(exactly = 1) { mockState.unAuthenticate() }
+            verify(exactly = 1) { ConfigCatNotifier.Notify.error("Logged out from ConfigCat. Please re-authenticate to continue.") }
+            verify(exactly = 0) { ConfigCatNotifier.Notify.info(any()) }
+            verify(exactly = 0) { mockNodeDataService.loadConfigs(any()) }
+        } finally {
+            safeDispose(dialog)
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // saveSuccess – none type (else branch)
+    // -------------------------------------------------------------------------
+
+    fun testSaveSuccess_noneType_treatsAsInvalidResponse() {
+        val dialog = buildDialog()
+        try {
+            suppressLogErrors {
+                dialog.saveSuccess(
+                    """{"type":"none","data":null}"""
+                )
+            }
+
+            assertNull(dialog.createdConfigId)
+            verify(exactly = 1) { ConfigCatNotifier.Notify.error("Config create failed: invalid response from webview.") }
+            verify(exactly = 0) { ConfigCatNotifier.Notify.info(any()) }
+            verify(exactly = 0) { mockNodeDataService.loadConfigs(any()) }
         } finally {
             safeDispose(dialog)
         }
@@ -186,12 +250,5 @@ class CreateConfigDialogTest : LightPlatformTestCase() {
         every { product.productId } returns productId
         every { product.name } returns "Test Product"
         return CreateConfigDialog(project = null, product = product)
-    }
-
-    private fun safeDispose(dialog: CreateConfigDialog) {
-        try {
-            Disposer.dispose(dialog.disposable)
-        } catch (_: Exception) {
-        }
     }
 }

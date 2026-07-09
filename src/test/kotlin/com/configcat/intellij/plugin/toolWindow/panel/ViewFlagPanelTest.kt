@@ -1,13 +1,21 @@
 package com.configcat.intellij.plugin.toolWindow.panel
 
+import com.configcat.intellij.plugin.ConfigCatNotifier
+import com.configcat.intellij.plugin.TestUtils.suppressLogErrors
+import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.intellij.plugin.webview.AppData
 import com.configcat.intellij.plugin.webview.WebViewPanelContainer
 import com.intellij.openapi.util.Disposer
 import com.intellij.testFramework.LightPlatformTestCase
 import com.intellij.ui.jcef.JBCefApp
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
+import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
+import io.mockk.verify
 import java.awt.Component
 import java.awt.Container
 import javax.swing.JEditorPane
@@ -15,10 +23,23 @@ import javax.swing.JLabel
 
 class ViewFlagPanelTest : LightPlatformTestCase() {
 
+    private lateinit var mockState: ConfigCatApplicationConfig.ConfigCatApplicationConfigState
+
     override fun setUp() {
         super.setUp()
         mockkStatic(JBCefApp::class)
         every { JBCefApp.isSupported() } returns false
+
+        mockState = mockk(relaxed = true)
+        val mockConfig = mockk<ConfigCatApplicationConfig>(relaxed = true)
+        every { mockConfig.state } returns mockState
+
+        mockkObject(ConfigCatApplicationConfig.Companion)
+        every { ConfigCatApplicationConfig.getInstance() } returns mockConfig
+
+        mockkObject(ConfigCatNotifier.Notify)
+        every { ConfigCatNotifier.Notify.error(any<String>()) } just Runs
+        every { ConfigCatNotifier.Notify.info(any()) } just Runs
     }
 
     override fun tearDown() {
@@ -53,6 +74,78 @@ class ViewFlagPanelTest : LightPlatformTestCase() {
         val panel = buildPanel()
 
         panel.dispose()
+    }
+
+    // -------------------------------------------------------------------------
+    // processViewFlagResponse tests
+    // -------------------------------------------------------------------------
+
+    fun testProcessViewFlagResponse_invalidJson_notifiesError() {
+        val panel = buildPanel()
+
+        suppressLogErrors {
+            panel.processViewFlagResponse("not valid json")
+        }
+
+        verify(exactly = 1) { ConfigCatNotifier.Notify.error("View Flag failed: invalid response from the server.") }
+    }
+
+    fun testProcessViewFlagResponse_null_notifiesError() {
+        val panel = buildPanel()
+
+        suppressLogErrors {
+            panel.processViewFlagResponse(null)
+        }
+
+        verify(exactly = 1) { ConfigCatNotifier.Notify.error("View Flag failed: invalid response from the server.") }
+    }
+
+    fun testProcessViewFlagResponse_emptyString_notifiesError() {
+        val panel = buildPanel()
+
+        suppressLogErrors {
+            panel.processViewFlagResponse("")
+        }
+
+        verify(exactly = 1) { ConfigCatNotifier.Notify.error("View Flag failed: invalid response from the server.") }
+    }
+
+    fun testProcessViewFlagResponse_webviewFail_notifiesErrorWithMessage() {
+        val panel = buildPanel()
+
+        suppressLogErrors {
+            panel.processViewFlagResponse(
+                """{"type":"webview-fail","data":{"message":"Component loading failed","status":500}}"""
+            )
+        }
+
+        verify(exactly = 1) { ConfigCatNotifier.Notify.error("View Flag failed: Component loading failed") }
+    }
+
+    fun testProcessViewFlagResponse_noneType_notifiesInvalidResponse() {
+        val panel = buildPanel()
+
+        suppressLogErrors {
+            panel.processViewFlagResponse(
+                """{"type":"none","data":null}"""
+            )
+        }
+
+        verify(exactly = 1) { ConfigCatNotifier.Notify.error("View Flag failed: invalid response from the server.") }
+    }
+
+    fun testProcessViewFlagResponse_webviewFail401_callsUnAuthenticate() {
+        val panel = buildPanel()
+
+        suppressLogErrors {
+            panel.processViewFlagResponse(
+                """{"type":"webview-fail","data":{"message":"Unauthorized","status":401}}"""
+            )
+        }
+
+        verify(exactly = 1) { mockState.unAuthenticate() }
+        verify(exactly = 1) { ConfigCatNotifier.Notify.error("Logged out from ConfigCat. Please re-authenticate to continue.") }
+        verify(exactly = 1) { ConfigCatNotifier.Notify.error("View Flag failed: Unauthorized") }
     }
 
     private fun buildPanel(): ViewFlagPanel {

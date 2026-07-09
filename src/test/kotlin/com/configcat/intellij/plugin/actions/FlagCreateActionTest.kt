@@ -1,6 +1,7 @@
 package com.configcat.intellij.plugin.actions
 
 import com.configcat.intellij.plugin.ConfigCatNotifier
+import com.configcat.intellij.plugin.TestUtils.suppressLogErrors
 import com.configcat.intellij.plugin.dialogs.CreateFlagDialog
 import com.configcat.intellij.plugin.messaging.SettingsTreeChangeNotifier
 import com.configcat.intellij.plugin.services.ConfigCatService
@@ -13,7 +14,6 @@ import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.Presentation
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.testFramework.LoggedErrorProcessor
 import com.intellij.testFramework.LightPlatformTestCase
 import io.mockk.*
 import java.util.UUID
@@ -241,15 +241,4 @@ class FlagCreateActionTest : LightPlatformTestCase() {
         method.invoke(action, configModel, createdFlagId, event)
     }
 
-    private fun suppressLogErrors(action: () -> Unit) {
-        val noOpProcessor = object : LoggedErrorProcessor() {
-            override fun processError(
-                category: String,
-                message: String,
-                details: Array<String>,
-                t: Throwable?,
-            ): Set<Action> = emptySet()
-        }
-        LoggedErrorProcessor.executeWith<Throwable>(noOpProcessor) { action() }
-    }
 }

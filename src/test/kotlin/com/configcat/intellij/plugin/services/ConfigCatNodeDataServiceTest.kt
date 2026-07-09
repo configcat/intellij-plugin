@@ -2,13 +2,13 @@ package com.configcat.intellij.plugin.services
 
 import com.configcat.intellij.plugin.ConfigCatNotifier
 import com.configcat.intellij.plugin.ErrorHandler
+import com.configcat.intellij.plugin.TestUtils.suppressLogErrors
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.publicapi.java.client.ApiException
 import com.configcat.publicapi.java.client.api.ConfigsApi
 import com.configcat.publicapi.java.client.api.FeatureFlagsSettingsApi
 import com.configcat.publicapi.java.client.model.ConfigModel
 import com.configcat.publicapi.java.client.model.SettingModel
-import com.intellij.testFramework.LoggedErrorProcessor
 import com.intellij.testFramework.LightPlatformTestCase
 import io.mockk.every
 import io.mockk.just
@@ -409,22 +409,6 @@ class ConfigCatNodeDataServiceTest : LightPlatformTestCase() {
     // Helpers
     // -------------------------------------------------------------------------
 
-    /**
-     * Runs [action] with a no-op [LoggedErrorProcessor] so that expected
-     * `thisLogger().error(...)` calls inside production code do not convert
-     * into test failures under [LightPlatformTestCase].
-     */
-    private fun suppressLogErrors(action: () -> Unit) {
-        val noOpProcessor = object : LoggedErrorProcessor() {
-            override fun processError(
-                category: String,
-                message: String,
-                details: Array<String>,
-                t: Throwable?,
-            ): Set<LoggedErrorProcessor.Action> = emptySet()
-        }
-        LoggedErrorProcessor.executeWith<Throwable>(noOpProcessor) { action() }
-    }
 
     @Suppress("UNCHECKED_CAST")
     private fun configFlagsField(service: ConfigCatNodeDataService): Map<UUID, List<SettingModel>> {

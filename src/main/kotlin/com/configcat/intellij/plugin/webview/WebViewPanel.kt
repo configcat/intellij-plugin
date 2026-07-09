@@ -79,7 +79,7 @@ class WebViewPanel(
     private val jBCefBrowser: JBCefBrowser = JBCefBrowserBuilder()
         .setClient(cefClient)
         .setUrl(appData.publicApiBaseUrl)
-        .setEnableOpenDevToolsMenuItem(true)
+//        .setEnableOpenDevToolsMenuItem(true)
         .setMouseWheelEventEnable(true)
         .build()
     private val jSQuery: JBCefJSQuery = checkNotNull(JBCefJSQuery.create(jBCefBrowser as JBCefBrowserBase))
@@ -177,8 +177,9 @@ class WebViewPanel(
         }, jBCefBrowser.cefBrowser)
     }
 
-    private fun receiveHandler(returnId: String?): JBCefJSQuery.Response? {
-        jsReceiverCallbackFunction?.invoke(returnId)
+    private fun receiveHandler(jsonResponse: String?): JBCefJSQuery.Response? {
+
+        jsReceiverCallbackFunction?.invoke(jsonResponse)
         return null
     }
 
@@ -194,8 +195,9 @@ class WebViewPanel(
                     transitionType: CefRequest.TransitionType?,
                 ) {
                     // enable this if you need the devtools on load.
-                    // jBCefBrowser.openDevtools()
+//                     jBCefBrowser.openDevtools()
                 }
+
 
                 override fun onLoadEnd(browser: CefBrowser?, frame: CefFrame?, httpStatusCode: Int) {
                     if (browser == null || frame?.isMain != true) return
@@ -203,8 +205,8 @@ class WebViewPanel(
                     //override CONFIGCAT_SUCCESS_METHOD to make jsQuery calls
                     browser.executeJavaScript(
                         "document.dispatchEvent(new Event('startNgLoad'));" +
-                                "window['configCatSuccessMethod'] = function(returnId) {" +
-                                jSQuery.inject("returnId") +
+                                "window['configCatResponseMethod'] = function(jsonResponse) {" +
+                                jSQuery.inject("jsonResponse") +
                                 "};",
                         browser.url,
                         0,
