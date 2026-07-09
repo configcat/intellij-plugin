@@ -18,7 +18,7 @@ object TestUtils {
                 message: String,
                 details: Array<String>,
                 t: Throwable?,
-            ): Set<LoggedErrorProcessor.Action> = emptySet()
+            ): Set<Action> = emptySet()
         }
         LoggedErrorProcessor.executeWith<Throwable>(noOpProcessor) { action() }
     }

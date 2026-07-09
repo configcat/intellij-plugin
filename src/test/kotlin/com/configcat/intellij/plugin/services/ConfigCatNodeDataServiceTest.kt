@@ -20,7 +20,6 @@ import io.mockk.verify
 import java.lang.reflect.Field
 import java.util.UUID
 
-@Suppress("UnstableApiUsage")
 class ConfigCatNodeDataServiceTest : LightPlatformTestCase() {
 
     private lateinit var mockState: ConfigCatApplicationConfig.ConfigCatApplicationConfigState
