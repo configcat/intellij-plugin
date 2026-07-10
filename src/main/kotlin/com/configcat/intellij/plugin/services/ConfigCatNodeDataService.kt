@@ -10,6 +10,7 @@ import com.configcat.publicapi.java.client.model.SettingModel
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
+import kotlinx.collections.immutable.toImmutableList
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -48,7 +49,7 @@ class ConfigCatNodeDataService {
             stateConfig.publicApiBaseUrl
         )
         val configs = try {
-            configsService.getConfigs(productId)
+            configsService.getConfigs(productId).toImmutableList()
         } catch (exception: ApiException) {
             ErrorHandler.errorNotify(
                 exception,
@@ -70,7 +71,7 @@ class ConfigCatNodeDataService {
             stateConfig.publicApiBaseUrl
         )
         val settings = try {
-            featureFlagsSettingsService.getSettings(configId)
+            featureFlagsSettingsService.getSettings(configId).toImmutableList()
         } catch (exception: ApiException) {
             ErrorHandler.errorNotify(exception, "Failed to load flags list. For more information check the logs.", null)
             return

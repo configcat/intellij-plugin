@@ -39,7 +39,7 @@ class EnvironmentSelectDialog(
 
         sortedComboBoxModel.addAll(environmentDropDownList)
         environmentsDropDown.model = sortedComboBoxModel
-        if (!environmentDropDownList.isEmpty()) {
+        if (environmentDropDownList.isNotEmpty()) {
             environmentsDropDown.selectedItem = environmentDropDownList[0]
         }
 

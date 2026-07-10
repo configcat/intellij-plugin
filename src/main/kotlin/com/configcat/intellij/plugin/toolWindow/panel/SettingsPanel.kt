@@ -9,6 +9,7 @@ import com.configcat.intellij.plugin.messaging.SettingsTreeChangeNotifier
 import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
 import com.configcat.intellij.plugin.services.ConfigCatPropertiesService
 import com.configcat.intellij.plugin.services.ConfigCatService
+import com.configcat.intellij.plugin.services.DispatcherProvider
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.intellij.plugin.toolWindow.tree.ConfigRootNode
 import com.configcat.intellij.plugin.toolWindow.tree.FlagNode
@@ -22,7 +23,6 @@ import com.intellij.openapi.actionSystem.ActionPlaces
 import com.intellij.openapi.actionSystem.ActionToolbar
 import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.application.EDT
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
@@ -34,9 +34,10 @@ import com.intellij.ui.tree.AsyncTreeModel
 import com.intellij.ui.tree.StructureTreeModel
 import com.intellij.ui.treeStructure.Tree
 import com.intellij.util.ui.tree.TreeUtil
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.awt.BorderLayout
 import java.awt.CardLayout
 import java.awt.FlowLayout
@@ -68,11 +69,13 @@ class SettingsPanel(
 
     private val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
     private val configCatPropertiesService = ConfigCatPropertiesService.getInstance()
+    private val dispatchers: DispatcherProvider = DispatcherProvider.getInstance()
     private var tree: Tree? = null
     private var treeModel: StructureTreeModel<FlagTreeStructure>? = null
     private var configRootNode: ConfigRootNode? = null
     private var searchTextField: SearchTextField? = null
-    private var connectedConfig: ConfigModel? = null
+    var connectedConfig: ConfigModel? = null
+        private set
     private var pendingSelectionFlagId: Int? = null
     private var pendingSelectionConfigRootSelection: Boolean = false
     val toolbarActionGroup = DefaultActionGroup()
@@ -132,10 +135,10 @@ class SettingsPanel(
     }
 
     private fun initTreeContent() {
-        cs.launch(Dispatchers.Default) {
+        cs.launch(dispatchers.default()) {
             val connectedConfig = loadConnectedConfig()
             if (connectedConfig == null) {
-                cs.launch(Dispatchers.EDT) {
+                withContext(dispatchers.edt()) {
                     val centeredNoConfigPanel = JPanel(GridBagLayout())
                     val noConfigPanel = panel {
                         row {
@@ -151,7 +154,7 @@ class SettingsPanel(
                 }
             } else {
                 tree = initTree(connectedConfig)
-                cs.launch(Dispatchers.EDT) {
+                withContext(dispatchers.edt()) {
                     if (tree != null) {
                         val loadedContent = JPanel(BorderLayout())
 //                         add action popup to the tree
@@ -174,7 +177,7 @@ class SettingsPanel(
                             override fun changedUpdate(e: DocumentEvent?) = applyFilter()
                             private fun applyFilter() {
                                 configRootNode?.filterQuery = searchField.text
-                                treeModel?.invalidate()
+                                treeModel?.invalidateAsync()
                             }
                         })
 
@@ -249,7 +252,7 @@ class SettingsPanel(
             Constants.decodePublicApiConfiguration(stateConfig.authConfiguration), stateConfig.publicApiBaseUrl
         )
         val settings = try {
-            featureFlagsSettingsService.getSettings(connectedConfig.configId)
+            featureFlagsSettingsService.getSettings(connectedConfig.configId).toImmutableList()
         } catch (exception: ApiException) {
             ErrorHandler.errorNotify(exception, "Failed to load flags list. For more information check the logs.", null)
             return null
@@ -363,9 +366,6 @@ class SettingsPanel(
         return connectedConfig
     }
 
-    fun getConnectedConfig(): ConfigModel? {
-        return connectedConfig
-    }
 
     fun getSelectedNode(): DefaultMutableTreeNode? {
         val paths: Array<TreePath>? = tree?.selectionPaths

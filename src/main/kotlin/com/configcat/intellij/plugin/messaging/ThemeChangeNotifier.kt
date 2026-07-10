@@ -2,7 +2,7 @@ package com.configcat.intellij.plugin.messaging
 
 import com.intellij.util.messages.Topic
 
-interface ThemeChangeNotifier {
+fun interface ThemeChangeNotifier {
 
     fun notifyThemeChange()
 

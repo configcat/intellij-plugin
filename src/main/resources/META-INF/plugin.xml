@@ -15,6 +15,7 @@
                                  id="com.configcat.intellij.plugin.settings.ConfigCatConfigurable"
                                  displayName="ConfigCat Feature Flags"/>
         <applicationService serviceImplementation="com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig"/>
+        <applicationService serviceImplementation="com.configcat.intellij.plugin.services.DispatcherProvider"/>
     </extensions>
 
     <applicationListeners>

@@ -21,7 +21,7 @@ class FlagCreateAction : ConfigCatBaseAnAction() {
     }
 
     override fun actionPerformed(e: AnActionEvent) {
-        val configModel = e.project?.service<SettingsPanel>()?.getConnectedConfig()
+        val configModel = e.project?.service<SettingsPanel>()?.connectedConfig
 
         if (configModel == null) {
             ConfigCatNotifier.Notify.error(e.project, "Create action could not be executed without a connected Config.")

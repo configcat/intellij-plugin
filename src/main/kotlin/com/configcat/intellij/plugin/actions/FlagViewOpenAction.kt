@@ -26,7 +26,7 @@ class FlagViewOpenAction : ConfigCatBaseAnAction() {
             return
         }
 
-        val configModel = e.project?.service<SettingsPanel>()?.getConnectedConfig()
+        val configModel = e.project?.service<SettingsPanel>()?.connectedConfig
         if (configModel == null) {
             ConfigCatNotifier.Notify.error(
                 e.project,
@@ -46,7 +46,7 @@ class FlagViewOpenAction : ConfigCatBaseAnAction() {
 
     override fun update(e: AnActionEvent) {
         val selectedElement: DefaultMutableTreeNode? = e.project?.service<SettingsPanel>()?.getSelectedNode()
-        val configModel = e.project?.service<SettingsPanel>()?.getConnectedConfig()
+        val configModel = e.project?.service<SettingsPanel>()?.connectedConfig
 
         val isEnabled = selectedElement?.userObject is FlagNode && configModel != null
         updateVisibility(e, isEnabled)

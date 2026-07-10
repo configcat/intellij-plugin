@@ -7,7 +7,7 @@ interface ProductsConfigsTreeChangeNotifier {
 
     fun notifyTreeRefresh()
 
-    fun notifyTreeNodeRefresh(node: DefaultMutableTreeNode, configIdToSelect: String? = null) {}
+    fun notifyTreeNodeRefresh(node: DefaultMutableTreeNode, configIdToSelect: String? = null)
 
     companion object {
         @Topic.AppLevel

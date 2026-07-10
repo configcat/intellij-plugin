@@ -79,7 +79,7 @@ open class ConfigCatApplicationConfig :
             set(value) {
                 authConfigurationCache = value
                 val credentials = Credentials("", value)
-                PasswordSafe.instance.set(credentialAttributes, credentials)
+                PasswordSafe.instance[credentialAttributes] = credentials
             }
 
         override fun isConfigured(): Boolean {

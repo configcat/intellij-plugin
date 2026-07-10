@@ -22,7 +22,7 @@ class FlagOpenInBrowserAction : ConfigCatBaseAnAction() {
 
     override fun actionPerformed(e: AnActionEvent) {
         val selectedElement: DefaultMutableTreeNode? = e.project?.service<SettingsPanel>()?.getSelectedNode()
-        val configModel = e.project?.service<SettingsPanel>()?.getConnectedConfig()
+        val configModel = e.project?.service<SettingsPanel>()?.connectedConfig
 
         val selectedNode = selectedElement?.userObject
         if ((selectedNode == null || selectedNode !is FlagNode) || configModel == null) {
@@ -50,7 +50,7 @@ class FlagOpenInBrowserAction : ConfigCatBaseAnAction() {
         }
         val evaluationVersion = configModel.evaluationVersion
         val orgId = productModel.organization.organizationId
-        val url = if (!environments.isEmpty()) {
+        val url = if (environments.isNotEmpty()) {
             if (evaluationVersion == EvaluationVersion.V1) {
                 state.dashboardBaseUrl + '/' + productModel.productId + '/' + configModel.configId +
                     '/' + environments[0].environmentId + "?settingId=" + selectedNode.setting.settingId
@@ -72,7 +72,7 @@ class FlagOpenInBrowserAction : ConfigCatBaseAnAction() {
 
     override fun update(e: AnActionEvent) {
         val selectedElement: DefaultMutableTreeNode? = e.project?.service<SettingsPanel>()?.getSelectedNode()
-        val configModel = e.project?.service<SettingsPanel>()?.getConnectedConfig()
+        val configModel = e.project?.service<SettingsPanel>()?.connectedConfig
 
         val isEnabled = selectedElement?.userObject is FlagNode && configModel != null
         updateVisibility(e, isEnabled)

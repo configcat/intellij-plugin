@@ -82,7 +82,7 @@ class WebViewPanel(
 //        .setEnableOpenDevToolsMenuItem(true)
         .setMouseWheelEventEnable(true)
         .build()
-    private val jSQuery: JBCefJSQuery = checkNotNull(JBCefJSQuery.create(jBCefBrowser as JBCefBrowserBase))
+    private val jSQuery: JBCefJSQuery = JBCefJSQuery.create(jBCefBrowser as JBCefBrowserBase)
 
     init {
         val handleThemeChange = object : ThemeChangeNotifier {
@@ -160,12 +160,12 @@ class WebViewPanel(
             override fun onBeforePopup(
                 browser: CefBrowser?,
                 frame: CefFrame?,
-                target_url: String?,
-                target_frame_name: String?,
+                targetUrl: String?,
+                targetFrameName: String?,
             ): Boolean {
                 // Return true to cancel the popup and use BrowserUtil.open for external links.
-                if (target_url != null) {
-                    BrowserUtil.open(target_url)
+                if (targetUrl != null) {
+                    BrowserUtil.open(targetUrl)
                 } else {
                     ConfigCatNotifier.Notify.error(
                         null,

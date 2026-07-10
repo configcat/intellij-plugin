@@ -7,6 +7,7 @@ import com.configcat.intellij.plugin.messaging.ConfigChangeNotifier
 import com.configcat.intellij.plugin.messaging.ProductsConfigsTreeChangeNotifier
 import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
 import com.configcat.intellij.plugin.services.ConfigCatService
+import com.configcat.intellij.plugin.services.DispatcherProvider
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.intellij.plugin.toolWindow.tree.ConfigNode
 import com.configcat.intellij.plugin.toolWindow.tree.FlagTreeStructure
@@ -21,7 +22,6 @@ import com.intellij.openapi.actionSystem.ActionPlaces
 import com.intellij.openapi.actionSystem.ActionToolbar
 import com.intellij.openapi.actionSystem.DefaultActionGroup
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.application.EDT
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
@@ -63,6 +63,7 @@ class ProductsConfigsPanel(
     private val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigState =
         ConfigCatApplicationConfig.getInstance().state
     private val configCatNodeDataService: ConfigCatNodeDataService = ConfigCatNodeDataService.getInstance()
+    private val dispatchers: DispatcherProvider = DispatcherProvider.getInstance()
     private var tree: Tree? = null
     private var treeModel: StructureTreeModel<FlagTreeStructure>? = null
     private var productRootNode: ProductRootNode? = null
@@ -119,10 +120,10 @@ class ProductsConfigsPanel(
     }
 
     private fun initTreeContent() {
-        cs.launch(Dispatchers.Default) {
+        cs.launch(dispatchers.default()) {
             tree = initTree()
 
-            cs.launch(Dispatchers.EDT) {
+            withContext(dispatchers.edt()) {
                 if (tree != null) {
                     val loadedContent = JPanel(BorderLayout())
                     // add action popup to the tree
@@ -145,7 +146,7 @@ class ProductsConfigsPanel(
                         override fun changedUpdate(e: DocumentEvent?) = applyFilter()
                         private fun applyFilter() {
                             productRootNode?.filterQuery = searchField.text
-                            treeModel?.invalidate()
+                            treeModel?.invalidateAsync()
                         }
                     })
 
@@ -245,10 +246,10 @@ class ProductsConfigsPanel(
 
                 if (userObject is ProductNode) {
                     val productId = userObject.product.productId
-                    cs.launch(Dispatchers.Default) {
+                    cs.launch(dispatchers.default()) {
                         val reload = configCatNodeDataService.checkAndLoadConfigs(productId)
                         if (reload) {
-                            withContext(Dispatchers.EDT) {
+                            withContext(dispatchers.edt()) {
                                 refreshTreeNode(treeNode)
                             }
                         }
@@ -350,11 +351,9 @@ class ProductsConfigsPanel(
 
     private fun refreshTreeNode(node: DefaultMutableTreeNode, configIdToSelect: String?) {
         val productNode = node.userObject as? ProductNode
-        if (productNode != null) {
-            if (!configIdToSelect.isNullOrBlank()) {
+        if (productNode != null && !configIdToSelect.isNullOrBlank()) {
                 pendingSelectionConfigId = configIdToSelect
                 pendingSelectionProductId = null
-            }
         }
 
         treeModel?.invalidate(TreePath(node), true)

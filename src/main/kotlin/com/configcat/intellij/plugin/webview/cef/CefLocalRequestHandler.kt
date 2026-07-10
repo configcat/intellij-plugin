@@ -1,7 +1,6 @@
 package com.configcat.intellij.plugin.webview.cef
 
 import com.intellij.ide.BrowserUtil
-import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.diagnostic.thisLogger
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
@@ -96,20 +95,20 @@ class CefLocalRequestHandler : CefRequestHandlerAdapter() {
         browser: CefBrowser?,
         frame: CefFrame?,
         request: CefRequest?,
-        user_gesture: Boolean,
-        is_redirect: Boolean,
+        userGesture: Boolean,
+        isRedirect: Boolean,
     ): Boolean {
         if (request == null) {
-            return super.onBeforeBrowse(browser, frame, null, user_gesture, is_redirect)
+            return super.onBeforeBrowse(browser, frame, null, userGesture, isRedirect)
         }
 
-        if (shouldConsumeNavigation(user_gesture, request.transitionType)) {
-            if (user_gesture) {
+        if (shouldConsumeNavigation(userGesture, request.transitionType)) {
+            if (userGesture) {
                 BrowserUtil.open(request.url.toString())
             }
             return true
         }
 
-        return super.onBeforeBrowse(browser, frame, request, user_gesture, is_redirect)
+        return super.onBeforeBrowse(browser, frame, request, userGesture, isRedirect)
     }
 }

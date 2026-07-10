@@ -7,7 +7,7 @@ interface SettingsTreeChangeNotifier {
 
     fun notifyTreeRefresh(flagIdToSelect: Int? = null)
 
-    fun notifyTreeNodeRefresh(node: DefaultMutableTreeNode) {}
+    fun notifyTreeNodeRefresh(node: DefaultMutableTreeNode)
 
     companion object {
         @Topic.AppLevel

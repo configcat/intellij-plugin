@@ -11,6 +11,7 @@ import com.configcat.publicapi.java.client.model.ConfigModel
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.ui.content.ContentFactory
+import kotlinx.collections.immutable.toImmutableList
 
 object FlagViewOpenHandler {
 
@@ -26,7 +27,7 @@ object FlagViewOpenHandler {
             state.publicApiBaseUrl
         )
         val environments = try {
-            environmentsService.getEnvironments(configModel.product.productId)
+            environmentsService.getEnvironments(configModel.product.productId).toImmutableList()
         } catch (exception: ApiException) {
             ErrorHandler.errorNotify(
                 exception,
@@ -70,7 +71,7 @@ object FlagViewOpenHandler {
         val featureFlagsViewPanel = ConfigCatToolWindowFactory.ConfigCatFeatureFlagsViewToolWindow(appData)
         val content = ContentFactory.getInstance().createContent(
             featureFlagsViewPanel.getContent(),
-            "$settingName (${selectedEnvironment?.name})",
+            "$settingName (${selectedEnvironment.name})",
             false
         )
         content.isCloseable = true

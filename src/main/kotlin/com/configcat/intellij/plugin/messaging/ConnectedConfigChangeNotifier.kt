@@ -2,8 +2,7 @@ package com.configcat.intellij.plugin.messaging
 
 import com.intellij.util.messages.Topic
 
-interface ConnectedConfigChangeNotifier {
-
+fun interface ConnectedConfigChangeNotifier {
 
     fun notifyConnectedConfigChange()
 

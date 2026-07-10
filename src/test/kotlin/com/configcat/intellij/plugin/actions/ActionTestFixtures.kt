@@ -43,7 +43,7 @@ object ActionTestFixtures {
         every { event.project } returns mockProject
         every { mockProject.getService(SettingsPanel::class.java) } returns settingsPanel
         every { settingsPanel.getSelectedNode() } returns selectedNode
-        every { settingsPanel.getConnectedConfig() } returns configModel
+        every { settingsPanel.connectedConfig } returns configModel
         return event
     }
 
