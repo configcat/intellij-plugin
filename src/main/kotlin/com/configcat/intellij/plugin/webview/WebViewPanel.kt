@@ -85,13 +85,9 @@ class WebViewPanel(
     private val jSQuery: JBCefJSQuery = JBCefJSQuery.create(jBCefBrowser as JBCefBrowserBase)
 
     init {
-        val handleThemeChange = object : ThemeChangeNotifier {
-            override fun notifyThemeChange() {
-                lookAndFeelChanged()
-            }
-        }
         ApplicationManager.getApplication().messageBus.connect(this)
-            .subscribe(ThemeChangeNotifier.THEME_CHANGE_TOPIC, handleThemeChange)
+            .subscribe(ThemeChangeNotifier.THEME_CHANGE_TOPIC,
+                ThemeChangeNotifier ({lookAndFeelChanged()}))
 
         layout = CardLayout().apply {
             alignmentX = LEFT_ALIGNMENT

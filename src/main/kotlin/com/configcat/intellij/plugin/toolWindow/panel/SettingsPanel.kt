@@ -94,13 +94,9 @@ class SettingsPanel(
         ApplicationManager.getApplication().messageBus.connect()
             .subscribe(ConfigChangeNotifier.CONFIG_CHANGE_TOPIC, handleConfigChange)
 
-        val handleConnectedConfigChange = object : ConnectedConfigChangeNotifier {
-            override fun notifyConnectedConfigChange() {
-                initContent()
-            }
-        }
         ApplicationManager.getApplication().messageBus.connect()
-            .subscribe(ConnectedConfigChangeNotifier.CONNECTED_CONFIG_CHANGE_TOPIC, handleConnectedConfigChange)
+            .subscribe(ConnectedConfigChangeNotifier.CONNECTED_CONFIG_CHANGE_TOPIC,
+                ConnectedConfigChangeNotifier { initContent() })
 
         val handleTreeNotify = object : SettingsTreeChangeNotifier {
             override fun notifyTreeRefresh(flagIdToSelect: Int?) {
