@@ -17,6 +17,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.testFramework.LightPlatformTestCase
 import io.mockk.*
 import java.util.UUID
+import javax.swing.tree.DefaultMutableTreeNode
 
 class FlagCreateActionTest : LightPlatformTestCase() {
 
@@ -146,6 +147,10 @@ class FlagCreateActionTest : LightPlatformTestCase() {
                     published = flagIdToSelect
                     publishedCount++
                 }
+
+                override fun notifyTreeNodeRefresh(node: DefaultMutableTreeNode) {
+                    // test is only concerned with notifyTreeRefresh, so this can be a no-op
+                }
             }
         )
         val action = FlagCreateAction()
@@ -165,6 +170,10 @@ class FlagCreateActionTest : LightPlatformTestCase() {
                 override fun notifyTreeRefresh(flagIdToSelect: Int?) {
                     published = flagIdToSelect
                     publishedCount++
+                }
+
+                override fun notifyTreeNodeRefresh(node: DefaultMutableTreeNode) {
+                    // test is only concerned with notifyTreeRefresh, so this can be a no-op
                 }
             }
         )
