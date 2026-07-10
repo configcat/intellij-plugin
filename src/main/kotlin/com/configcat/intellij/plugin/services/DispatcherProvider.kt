@@ -1,5 +1,6 @@
 package com.configcat.intellij.plugin.services
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.EDT
 import com.intellij.openapi.components.Service
 import kotlinx.coroutines.CoroutineDispatcher
@@ -11,7 +12,7 @@ class DispatcherProvider {
 
     companion object {
         fun getInstance(): DispatcherProvider =
-            com.intellij.openapi.application.ApplicationManager.getApplication().getService(DispatcherProvider::class.java)
+            ApplicationManager.getApplication().getService(DispatcherProvider::class.java)
     }
 
     open fun default(): CoroutineDispatcher = Dispatchers.Default
