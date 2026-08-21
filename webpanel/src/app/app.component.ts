@@ -1,10 +1,10 @@
-import { Component, inject, OnDestroy, OnInit, ChangeDetectionStrategy } from "@angular/core";
+import { ChangeDetectionStrategy, Component, inject, OnDestroy, OnInit } from "@angular/core";
 import { Theme, ThemeService } from "ng-configcat-publicapi-ui";
 import { ViewData } from "./app.config";
+import { AuthComponent } from "./authorization/authorization.component";
 import { ConfigCreateComponent } from "./create-config/create-config.component";
 import { CreateFeatureFlagSettingComponent } from "./create-feature-flag/create-feature-flag-setting.component";
 import { FeatureFlagSettingComponent } from "./feature-flag-setting/feature-flag-setting.component";
-import { AuthComponent } from "./authorization/authorization.component";
 
 @Component({
   selector: "configcat-intellij-root",
