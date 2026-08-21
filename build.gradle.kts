@@ -34,7 +34,7 @@ repositories {
 
 node {
     download = true
-    version = "20.19.0"
+    version = "24.15.0"
     nodeProjectDir = file("$projectDir/webpanel")
 }
 
