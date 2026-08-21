@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from "@angular/common/http";
-import { Component, inject, OnInit } from "@angular/core";
+import { Component, inject, OnInit, ChangeDetectionStrategy } from "@angular/core";
 import { EvaluationVersion } from "ng-configcat-publicapi";
 import { FeatureFlagItemComponent, SettingItemComponent } from "ng-configcat-publicapi-ui";
 import { AppData } from "../app-data";
@@ -8,6 +8,7 @@ import type { ConfigCatResponseData } from "../cc-response-data";
 @Component({
   selector: "configcat-intellij-feature-flag-setting",
   imports: [SettingItemComponent, FeatureFlagItemComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: "./feature-flag-setting.component.html",
 })
 export class FeatureFlagSettingComponent implements OnInit {

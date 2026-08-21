@@ -1,4 +1,4 @@
-import { Component, inject } from "@angular/core";
+import { Component, inject, ChangeDetectionStrategy } from "@angular/core";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { MatButton } from "@angular/material/button";
 import { AuthorizationComponent, AuthorizationModel } from "ng-configcat-publicapi-ui";
@@ -9,12 +9,8 @@ import type { ConfigCatResponseData } from "../cc-response-data";
   selector: "configcat-intellij-authorization",
   templateUrl: "./authorization.component.html",
   styleUrls: ["./authorization.component.scss"],
-  imports: [
-    FormsModule,
-    ReactiveFormsModule,
-    MatButton,
-    AuthorizationComponent,
-  ],
+  changeDetection: ChangeDetectionStrategy.Eager,
+  imports: [FormsModule, ReactiveFormsModule, MatButton, AuthorizationComponent],
 })
 export class AuthComponent {
   appData = inject(AppData);
@@ -30,5 +26,4 @@ export class AuthComponent {
     const responseData: ConfigCatResponseData = { type: "authorization", data: "unauthorize" };
     window["configCatResponseMethod"].call(this, JSON.stringify(responseData));
   }
-
 }

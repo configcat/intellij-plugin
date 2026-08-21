@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from "@angular/common/http";
-import { Component, inject } from "@angular/core";
+import { Component, inject, ChangeDetectionStrategy } from "@angular/core";
 import { CreateFeatureFlagComponent, LinkFeatureFlagParameters } from "ng-configcat-publicapi-ui";
 import { AppData } from "../app-data";
 import type { ConfigCatResponseData } from "../cc-response-data";
@@ -7,6 +7,7 @@ import type { ConfigCatResponseData } from "../cc-response-data";
 @Component({
   selector: "configcat-intellij-create-feature-flag",
   imports: [CreateFeatureFlagComponent],
+  changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: "./create-feature-flag-setting.component.html",
 })
 export class CreateFeatureFlagSettingComponent {

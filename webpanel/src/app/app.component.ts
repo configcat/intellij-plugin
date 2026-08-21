@@ -1,24 +1,23 @@
-import { Component, inject, OnDestroy, OnInit } from "@angular/core";
+import { Component, inject, OnDestroy, OnInit, ChangeDetectionStrategy } from "@angular/core";
 import { Theme, ThemeService } from "ng-configcat-publicapi-ui";
 import { ViewData } from "./app.config";
 import { ConfigCreateComponent } from "./create-config/create-config.component";
 import { CreateFeatureFlagSettingComponent } from "./create-feature-flag/create-feature-flag-setting.component";
 import { FeatureFlagSettingComponent } from "./feature-flag-setting/feature-flag-setting.component";
-import {AuthComponent} from "./authorization/authorization.component";
+import { AuthComponent } from "./authorization/authorization.component";
 
 @Component({
   selector: "configcat-intellij-root",
   templateUrl: "./app.component.html",
   styles: [],
+  changeDetection: ChangeDetectionStrategy.Eager,
   imports: [CreateFeatureFlagSettingComponent, FeatureFlagSettingComponent, ConfigCreateComponent, AuthComponent],
-
 })
 export class AppComponent implements OnInit, OnDestroy {
-
   private readonly themeService = inject(ThemeService);
   viewData = inject(ViewData);
 
-  postThemeChange = (event: MessageEvent<({ command: string; value: string })>) => {
+  postThemeChange = (event: MessageEvent<{ command: string; value: string }>) => {
     const message = event.data;
     if (message.command === "themeChange") {
       const turnOn = message.value === "dark";
@@ -37,5 +36,4 @@ export class AppComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     window.removeEventListener("message", this.postThemeChange);
   }
-
 }
