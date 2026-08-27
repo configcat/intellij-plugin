@@ -12,9 +12,125 @@ concurrency:
 
 jobs:
 
+  # Run tests, analysis and coverage first; build/publish proceed only if this passes
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+
+      # Free GitHub Actions Environment Disk Space
+      - name: Maximize Build Space
+        # jlumbroso/free-disk-space@v1.3.1:
+        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
+        with:
+          tool-cache: false
+          large-packages: false
+
+      # Check out the current repository
+      - name: Fetch Sources
+        uses: actions/checkout@v6
+
+      # Validate wrapper
+      - name: Gradle Wrapper Validation
+        uses: gradle/actions/wrapper-validation@v6
+
+      # Set up Java environment for the next steps
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: zulu
+          java-version: 17
+
+      # Setup Gradle
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      # Gradle permission
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      # Run test suite
+      - name: Run tests
+        run: ./gradlew test
+
+  analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: zulu
+          java-version: 17
+      - name: Run code analysis
+        run: ./gradlew detekt --stacktrace
+        shell: bash
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: build/reports/detekt/detekt.sarif
+      - name: Upload analysis report
+        uses: actions/upload-artifact@v7
+        with:
+          name: analysis-report
+          path: build/reports/detekt
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: zulu
+          java-version: 17
+      - name: Calculate coverage
+        run: ./gradlew koverXmlReport --stacktrace
+        shell: bash
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-report
+          path: build/reports/kover
+
+  upload-reports:
+    needs: [ test, analysis, coverage ]
+    runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      BUILD_NUMBER: ${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          java-version: 17
+          distribution: zulu
+      - name: SonarCloud cache
+        uses: actions/cache@v5
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+      - name: Download coverage report
+        uses: actions/download-artifact@v8
+        with:
+          name: coverage-report
+      - name: Download analysis report
+        uses: actions/download-artifact@v8
+        with:
+          name: analysis-report
+      - name: Upload reports to SonarCloud
+        run: ./gradlew sonar --stacktrace
+        shell: bash
+
   # Prepare environment and build the plugin
   build:
     name: Build
+    needs: [ test, analysis, coverage ]
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.properties.outputs.version }}
@@ -61,6 +177,7 @@ jobs:
 
       # Build plugin
       - name: Build plugin
+        # buildPlugin depends on npmBuild; Node is provisioned by the Gradle Node plugin (download=true)
         run: ./gradlew buildPlugin
 
       # Prepare plugin archive content for creating artifact

@@ -1,0 +1,45 @@
+package com.configcat.intellij.plugin.actions
+
+import com.configcat.intellij.plugin.ConfigCatNotifier
+import com.configcat.intellij.plugin.toolWindow.panel.SettingsPanel
+import com.configcat.intellij.plugin.toolWindow.tree.FlagNode
+import com.intellij.find.FindManager
+import com.intellij.find.FindModel
+import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.components.service
+import javax.swing.tree.DefaultMutableTreeNode
+
+
+class FlagKeySearchAction : ConfigCatBaseAnAction() {
+    companion object {
+        const val CONFIGCAT_SEARCH_FLAG_KEY_ACTION_ID = "CONFIGCAT_SEARCH_FLAG_KEY_ACTION_ID"
+    }
+
+    override fun actionPerformed(e: AnActionEvent) {
+        val selectedElement: DefaultMutableTreeNode? = e.project?.service<SettingsPanel>()?.getSelectedNode()
+
+        val selectedNode = selectedElement?.userObject
+        if (selectedNode == null || selectedNode !is FlagNode) {
+            ConfigCatNotifier.Notify.error(
+                e.project,
+                "Search Flag key action could not be executed without a selected Flag Node."
+            )
+            return
+        }
+        val settingKey = selectedNode.setting.key
+        val findModel = FindModel()
+
+        findModel.stringToFind = settingKey
+        findModel.isCaseSensitive = true
+        findModel.isFindAll = true
+        FindManager.getInstance(e.project).showFindDialog(findModel) {}
+    }
+
+    override fun update(e: AnActionEvent) {
+        val selectedElement: DefaultMutableTreeNode? = e.project?.service<SettingsPanel>()?.getSelectedNode()
+
+        updateVisibility(e, selectedElement?.userObject is FlagNode)
+    }
+
+
+}
