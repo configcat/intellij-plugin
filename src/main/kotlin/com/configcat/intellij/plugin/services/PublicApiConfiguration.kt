@@ -5,5 +5,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class PublicApiConfiguration(
     val basicAuthUserName: String,
-    val basicAuthPassword: String
+    val basicAuthPassword: String,
 )
