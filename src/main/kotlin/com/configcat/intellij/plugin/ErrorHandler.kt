@@ -1,5 +1,6 @@
 package com.configcat.intellij.plugin
 
+import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.publicapi.java.client.ApiException
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.project.Project
@@ -13,9 +14,11 @@ internal object ErrorHandler {
     }
 
     fun errorNotify(exception: ApiException, message: String?, project: Project?) {
-        val errorMessage: String = if(exception.code == 401) {
+        val errorMessage: String = if (exception.code == 401) {
+            ConfigCatApplicationConfig.getInstance().state.unAuthenticate()
+            ConfigCatNotifier.Notify.error("Logged out from ConfigCat. Please re-authenticate to continue.")
             DEFAULT_AUTH_ERROR_MESSAGE
-        } else if(message.isNullOrEmpty()) {
+        } else if (message.isNullOrEmpty()) {
             thisLogger().error(DEFAULT_ERROR_MESSAGE, exception)
             DEFAULT_ERROR_MESSAGE
         } else {
