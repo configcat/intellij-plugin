@@ -39,7 +39,7 @@ class ConfigCatToolWindowFactory : ToolWindowFactory {
 
         fun getContent() = JBPanel<JBPanel<*>>().apply {
             layout = BorderLayout()
-            toolTipText = "Manage products abd configs."
+            toolTipText = "Manage products and configs."
             add(configCatPanel, BorderLayout.CENTER)
         }
     }
