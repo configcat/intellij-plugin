@@ -133,7 +133,7 @@ class ConfigCatToolWindowFactoryTest : LightPlatformTestCase() {
         val content = toolWindow.getContent()
 
         assertTrue("Content must use BorderLayout", content.layout is BorderLayout)
-        assertEquals("Manage products abd configs.", content.toolTipText)
+        assertEquals("Manage products and configs.", content.toolTipText)
         assertEquals("Content must have exactly one child", 1, content.componentCount)
         assertTrue(
             "Child must be a ProductsConfigsPanel",
