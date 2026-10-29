@@ -10,6 +10,7 @@ import com.intellij.ide.ui.LafManager
 import com.intellij.ide.ui.LafManagerListener
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.util.Disposer
 import com.intellij.ui.JBColor
 import com.intellij.ui.jcef.*
 import kotlinx.serialization.Serializable
@@ -59,6 +60,7 @@ class WebViewPanel(
     appData: AppData,
     viewType: ViewType,
     val jsReceiverCallbackFunction: ((returnId: String?) -> Unit)?,
+    parentDisposable: Disposable
 ) : JPanel(), Disposable {
 
     companion object {
@@ -104,6 +106,8 @@ class WebViewPanel(
 
             add(jBCefBrowser.component, BorderLayout.CENTER)
         }
+        Disposer.register(parentDisposable, this);
+
     }
 
     private fun initiateCefRequestHandler(viewData: ViewData, appData: AppData) {

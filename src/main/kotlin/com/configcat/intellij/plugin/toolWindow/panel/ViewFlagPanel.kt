@@ -12,19 +12,21 @@ import com.configcat.intellij.plugin.webview.WebViewPanelContainer
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.ui.SimpleToolWindowPanel
+import com.intellij.openapi.util.Disposer
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
 
-class ViewFlagPanel(appData: AppData) : SimpleToolWindowPanel(false, false), Disposable {
+class ViewFlagPanel(appData: AppData, parentDisposable: Disposable) : SimpleToolWindowPanel(false, false), Disposable {
 
     init {
         alignmentX = LEFT_ALIGNMENT
         alignmentY = TOP_ALIGNMENT
         val webViewPanel = WebViewPanelContainer(appData, ViewType.VIEW_FLAG, {
                 returnValue -> processViewFlagResponse(returnValue)
-        })
+        }, this)
         add(webViewPanel)
+        Disposer.register(parentDisposable, this)
     }
 
     fun processViewFlagResponse(response: String?) {
@@ -68,4 +70,3 @@ class ViewFlagPanel(appData: AppData) : SimpleToolWindowPanel(false, false), Dis
         // no-op
     }
 }
-

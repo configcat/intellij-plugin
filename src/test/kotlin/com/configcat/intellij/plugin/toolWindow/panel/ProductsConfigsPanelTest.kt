@@ -81,6 +81,17 @@ class ProductsConfigsPanelTest : LightPlatformTestCase() {
         assertNull("treeModel must be null when plugin is not configured", treeModelField(panel))
     }
 
+    fun testDisposedPanel_doesNotReceiveConfigChanges() {
+        every { mockState.isConfigured() } returns false
+        val panel = buildPanel()
+
+        Disposer.dispose(panel)
+        ApplicationManager.getApplication().messageBus
+            .syncPublisher(ConfigChangeNotifier.CONFIG_CHANGE_TOPIC).notifyConfigChange()
+
+        verify(exactly = 1) { mockState.isConfigured() }
+    }
+
     fun testInitTree_api401Unauthorized_treeRemainsNull() {
         every { mockState.isConfigured() } returns true
         every { mockState.authConfiguration } returns """{"basicAuthUserName":"user","basicAuthPassword":"pass"}"""
@@ -628,5 +639,4 @@ class ProductsConfigsPanelTest : LightPlatformTestCase() {
         return field.get(panel) as ProductRootNode?
     }
 }
-
 

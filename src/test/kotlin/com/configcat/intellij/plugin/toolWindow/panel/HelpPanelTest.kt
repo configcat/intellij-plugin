@@ -1,6 +1,5 @@
 package com.configcat.intellij.plugin.toolWindow.panel
 
-import com.intellij.openapi.util.Disposer
 import com.intellij.testFramework.LightPlatformTestCase
 import java.awt.Component
 import java.awt.Container
@@ -60,9 +59,7 @@ class HelpPanelTest : LightPlatformTestCase() {
     }
 
     private fun buildPanel(): HelpPanel {
-        val panel = HelpPanel()
-        Disposer.register(testRootDisposable, panel)
-        return panel
+        return HelpPanel(testRootDisposable)
     }
 
     private fun allText(container: Container): List<String> {
@@ -80,4 +77,3 @@ class HelpPanelTest : LightPlatformTestCase() {
         return result
     }
 }
-

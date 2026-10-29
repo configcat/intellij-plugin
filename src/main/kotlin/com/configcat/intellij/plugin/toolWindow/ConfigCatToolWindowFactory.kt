@@ -5,6 +5,7 @@ import com.configcat.intellij.plugin.toolWindow.panel.ProductsConfigsPanel
 import com.configcat.intellij.plugin.toolWindow.panel.SettingsPanel
 import com.configcat.intellij.plugin.toolWindow.panel.ViewFlagPanel
 import com.configcat.intellij.plugin.webview.AppData
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
@@ -19,12 +20,12 @@ class ConfigCatToolWindowFactory : ToolWindowFactory {
     }
 
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        val productsConfigsPanel = ProductsConfigsTreeToolWindow(project)
+        val productsConfigsPanel = ProductsConfigsTreeToolWindow(project, toolWindow.disposable)
         val productsConfigsContent =
             ContentFactory.getInstance().createContent(productsConfigsPanel.getContent(), "Products & Configs", false)
         productsConfigsContent.isCloseable = false
         toolWindow.contentManager.addContent(productsConfigsContent)
-        val settingsPanel = FeatureFlagsTreeToolWindow(project)
+        val settingsPanel = FeatureFlagsTreeToolWindow(project, toolWindow.disposable)
         val settingsContent =
             ContentFactory.getInstance().createContent(settingsPanel.getContent(), "Feature Flags & Settings", false)
         settingsContent.isCloseable = false
@@ -33,9 +34,9 @@ class ConfigCatToolWindowFactory : ToolWindowFactory {
 
     override fun shouldBeAvailable(project: Project) = true
 
-    class ProductsConfigsTreeToolWindow(project: Project) {
+    class ProductsConfigsTreeToolWindow(project: Project, parentDisposable: Disposable) {
 
-        private val configCatPanel = ProductsConfigsPanel.getInstance(project)
+        private val configCatPanel = ProductsConfigsPanel.getInstance(project, parentDisposable)
 
         fun getContent() = JBPanel<JBPanel<*>>().apply {
             layout = BorderLayout()
@@ -44,9 +45,9 @@ class ConfigCatToolWindowFactory : ToolWindowFactory {
         }
     }
 
-    class FeatureFlagsTreeToolWindow(project: Project) {
+    class FeatureFlagsTreeToolWindow(project: Project, parentDisposable: Disposable) {
 
-        private val configCatPanel = SettingsPanel.getInstance(project)
+        private val configCatPanel = SettingsPanel.getInstance(project, parentDisposable)
 
         fun getContent() = JBPanel<JBPanel<*>>().apply {
             layout = BorderLayout()
@@ -55,9 +56,9 @@ class ConfigCatToolWindowFactory : ToolWindowFactory {
         }
     }
 
-    class HelpToolWindow {
+    class HelpToolWindow(parentDisposable: Disposable) {
 
-        private val helpPanel = HelpPanel()
+        private val helpPanel = HelpPanel(parentDisposable)
 
         fun getContent() = JBPanel<JBPanel<*>>().apply {
             layout = BorderLayout()
@@ -66,9 +67,9 @@ class ConfigCatToolWindowFactory : ToolWindowFactory {
         }
     }
 
-    class ConfigCatFeatureFlagsViewToolWindow(appData: AppData) {
+    class ConfigCatFeatureFlagsViewToolWindow(appData: AppData, parentDisposable: Disposable) {
 
-        private val viewFlagPanel = ViewFlagPanel(appData)
+        private val viewFlagPanel = ViewFlagPanel(appData, parentDisposable)
         fun getContent() = JBPanel<JBPanel<*>>().apply {
             layout = BorderLayout()
             add(viewFlagPanel, BorderLayout.CENTER)

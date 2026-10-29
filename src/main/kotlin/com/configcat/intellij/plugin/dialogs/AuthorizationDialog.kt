@@ -59,9 +59,9 @@ class AuthorizationDialog : DialogWrapper(true) {
             ""
         )
 
-        return WebViewPanelContainer(appData, ViewType.AUTHORIZATION, ) {
+        return WebViewPanelContainer(appData, ViewType.AUTHORIZATION,  {
             returnValue -> processAuthorizationResponse(returnValue)
-        }
+        }, this.disposable)
     }
 
     fun processAuthorizationResponse(response: String?) {

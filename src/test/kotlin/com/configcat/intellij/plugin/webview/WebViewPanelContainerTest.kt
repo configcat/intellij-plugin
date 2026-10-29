@@ -108,6 +108,7 @@ class WebViewPanelContainerTest : LightPlatformTestCase() {
             appData = testAppData,
             viewType = viewType,
             jsReceiverCallbackFunction = callback,
+            parentDisposable = testRootDisposable,
         )
 
     private fun createTestAppData() = AppData(
@@ -155,5 +156,4 @@ class WebViewPanelContainerTest : LightPlatformTestCase() {
         return result
     }
 }
-
 

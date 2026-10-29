@@ -26,6 +26,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
+import com.intellij.openapi.util.Disposer
 import com.intellij.ui.PopupHandler
 import com.intellij.ui.ScrollPaneFactory
 import com.intellij.ui.SearchTextField
@@ -37,7 +38,6 @@ import com.intellij.util.ui.tree.TreeUtil
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.awt.BorderLayout
 import java.awt.CardLayout
 import java.awt.FlowLayout
@@ -60,8 +60,10 @@ class SettingsPanel(
 ) : SimpleToolWindowPanel(false, false), Disposable {
 
     companion object {
-        fun getInstance(project: Project): SettingsPanel =
-            project.getService(SettingsPanel::class.java)
+        fun getInstance(project: Project, parentDisposable: Disposable): SettingsPanel =
+            project.getService(SettingsPanel::class.java).also {
+                Disposer.register(parentDisposable, it)
+            }
     }
 
     private val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigState =
@@ -91,10 +93,10 @@ class SettingsPanel(
                 initContent()
             }
         }
-        ApplicationManager.getApplication().messageBus.connect()
+        ApplicationManager.getApplication().messageBus.connect(this)
             .subscribe(ConfigChangeNotifier.CONFIG_CHANGE_TOPIC, handleConfigChange)
 
-        ApplicationManager.getApplication().messageBus.connect()
+        ApplicationManager.getApplication().messageBus.connect(this)
             .subscribe(ConnectedConfigChangeNotifier.CONNECTED_CONFIG_CHANGE_TOPIC,
                 ConnectedConfigChangeNotifier { initContent() })
 
@@ -107,7 +109,7 @@ class SettingsPanel(
                 refreshTreeNode(node)
             }
         }
-        ApplicationManager.getApplication().messageBus.connect()
+        ApplicationManager.getApplication().messageBus.connect(this)
             .subscribe(SettingsTreeChangeNotifier.TREE_REFRESH_TOPIC, handleTreeNotify)
     }
 
@@ -134,7 +136,7 @@ class SettingsPanel(
         cs.launch(dispatchers.default()) {
             val connectedConfig = loadConnectedConfig()
             if (connectedConfig == null) {
-                withContext(dispatchers.edt()) {
+                ApplicationManager.getApplication().invokeLater {
                     val centeredNoConfigPanel = JPanel(GridBagLayout())
                     val noConfigPanel = panel {
                         row {
@@ -150,7 +152,7 @@ class SettingsPanel(
                 }
             } else {
                 tree = initTree(connectedConfig)
-                withContext(dispatchers.edt()) {
+                ApplicationManager.getApplication().invokeLater {
                     if (tree != null) {
                         val loadedContent = JPanel(BorderLayout())
 //                         add action popup to the tree
@@ -370,4 +372,3 @@ class SettingsPanel(
         return treeNode
     }
 }
-

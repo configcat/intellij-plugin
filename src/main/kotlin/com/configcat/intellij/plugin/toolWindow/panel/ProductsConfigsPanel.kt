@@ -25,6 +25,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.SimpleToolWindowPanel
+import com.intellij.openapi.util.Disposer
 import com.intellij.ui.PopupHandler
 import com.intellij.ui.ScrollPaneFactory
 import com.intellij.ui.dsl.builder.panel
@@ -33,7 +34,8 @@ import com.intellij.ui.tree.StructureTreeModel
 import com.intellij.ui.treeStructure.Tree
 import com.intellij.util.ui.tree.TreeUtil
 import com.intellij.util.ui.tree.TreeUtil.collectExpandedPaths
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import java.awt.BorderLayout
 import java.awt.CardLayout
 import java.awt.FlowLayout
@@ -57,7 +59,10 @@ class ProductsConfigsPanel(
 ) : SimpleToolWindowPanel(false, false), Disposable {
 
     companion object {
-        fun getInstance(project: Project): ProductsConfigsPanel = project.getService(ProductsConfigsPanel::class.java)
+        fun getInstance(project: Project, parentDisposable: Disposable): ProductsConfigsPanel =
+            project.getService(ProductsConfigsPanel::class.java).also {
+                Disposer.register(parentDisposable, it)
+            }
     }
 
     private val stateConfig: ConfigCatApplicationConfig.ConfigCatApplicationConfigState =
@@ -123,7 +128,7 @@ class ProductsConfigsPanel(
         cs.launch(dispatchers.default()) {
             tree = initTree()
 
-            withContext(dispatchers.edt()) {
+            ApplicationManager.getApplication().invokeLater {
                 if (tree != null) {
                     val loadedContent = JPanel(BorderLayout())
                     // add action popup to the tree
@@ -249,7 +254,7 @@ class ProductsConfigsPanel(
                     cs.launch(dispatchers.default()) {
                         val reload = configCatNodeDataService.checkAndLoadConfigs(productId)
                         if (reload) {
-                            withContext(dispatchers.edt()) {
+                            ApplicationManager.getApplication().invokeLater {
                                 refreshTreeNode(treeNode)
                             }
                         }
@@ -365,4 +370,3 @@ class ProductsConfigsPanel(
         pendingSelectionProductId = null
     }
 }
-

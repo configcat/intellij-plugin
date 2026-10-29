@@ -9,6 +9,7 @@ import com.configcat.intellij.plugin.webview.AppData
 import com.configcat.publicapi.java.client.ApiException
 import com.configcat.publicapi.java.client.model.ConfigModel
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.ui.content.ContentFactory
 import kotlinx.collections.immutable.toImmutableList
@@ -68,12 +69,16 @@ object FlagViewOpenHandler {
             ToolWindowManager.getInstance(it).getToolWindow(ConfigCatToolWindowFactory.CONFIGCAT_TOOL_WINDOW_ID)
         } ?: return false
 
-        val featureFlagsViewPanel = ConfigCatToolWindowFactory.ConfigCatFeatureFlagsViewToolWindow(appData)
+        val parentDisposable = Disposer.newDisposable("ConfigCat Flag tab")
+        Disposer.register(toolWindow.disposable, parentDisposable)
+        val featureFlagsViewPanel =
+            ConfigCatToolWindowFactory.ConfigCatFeatureFlagsViewToolWindow(appData, parentDisposable)
         val content = ContentFactory.getInstance().createContent(
             featureFlagsViewPanel.getContent(),
             "$settingName (${selectedEnvironment.name})",
             false
         )
+        content.setDisposer(parentDisposable)
         content.isCloseable = true
         toolWindow.contentManager.addContent(content)
         toolWindow.contentManager.setSelectedContent(content)
@@ -81,4 +86,3 @@ object FlagViewOpenHandler {
         return true
     }
 }
-

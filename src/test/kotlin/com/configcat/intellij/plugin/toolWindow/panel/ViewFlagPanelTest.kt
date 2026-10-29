@@ -5,7 +5,6 @@ import com.configcat.intellij.plugin.TestUtils.suppressLogErrors
 import com.configcat.intellij.plugin.settings.ConfigCatApplicationConfig
 import com.configcat.intellij.plugin.webview.AppData
 import com.configcat.intellij.plugin.webview.WebViewPanelContainer
-import com.intellij.openapi.util.Disposer
 import com.intellij.testFramework.LightPlatformTestCase
 import com.intellij.ui.jcef.JBCefApp
 import io.mockk.Runs
@@ -149,8 +148,7 @@ class ViewFlagPanelTest : LightPlatformTestCase() {
     }
 
     private fun buildPanel(): ViewFlagPanel {
-        val panel = ViewFlagPanel(createTestAppData())
-        Disposer.register(testRootDisposable, panel)
+        val panel = ViewFlagPanel(createTestAppData(), testRootDisposable)
         return panel
     }
 
@@ -184,4 +182,3 @@ class ViewFlagPanelTest : LightPlatformTestCase() {
         return result
     }
 }
-

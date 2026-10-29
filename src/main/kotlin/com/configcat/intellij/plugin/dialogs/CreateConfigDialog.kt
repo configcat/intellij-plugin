@@ -64,7 +64,8 @@ class CreateConfigDialog(val project: Project?, private val product: ProductMode
             ""
         )
 
-        return WebViewPanelContainer(appData, ViewType.CREATE_CONFIG) { returnId -> saveSuccess(returnId) }
+        return WebViewPanelContainer(appData, ViewType.CREATE_CONFIG, { returnId -> saveSuccess(returnId) },
+            this.disposable)
     }
 
     fun saveSuccess(jsonString: String?) {

@@ -14,6 +14,7 @@ import com.configcat.publicapi.java.client.api.ConfigsApi
 import com.configcat.publicapi.java.client.api.FeatureFlagsSettingsApi
 import com.configcat.publicapi.java.client.api.ProductsApi
 import com.intellij.openapi.wm.ToolWindow
+import com.intellij.openapi.util.Disposer
 import com.intellij.testFramework.LightPlatformTestCase
 import com.intellij.ui.content.ContentManager
 import com.intellij.ui.jcef.JBCefApp
@@ -86,6 +87,7 @@ class ConfigCatToolWindowFactoryTest : LightPlatformTestCase() {
         val mockContentManager = mockk<ContentManager>(relaxed = true)
         val mockToolWindow = mockk<ToolWindow>(relaxed = true)
         every { mockToolWindow.contentManager } returns mockContentManager
+        every { mockToolWindow.disposable } returns testRootDisposable
 
         factory.createToolWindowContent(project, mockToolWindow)
 
@@ -100,6 +102,7 @@ class ConfigCatToolWindowFactoryTest : LightPlatformTestCase() {
         every { mockContentManager.addContent(capture(addedContents)) } just Runs
         val mockToolWindow = mockk<ToolWindow>(relaxed = true)
         every { mockToolWindow.contentManager } returns mockContentManager
+        every { mockToolWindow.disposable } returns testRootDisposable
 
         factory.createToolWindowContent(project, mockToolWindow)
 
@@ -116,6 +119,7 @@ class ConfigCatToolWindowFactoryTest : LightPlatformTestCase() {
         every { mockContentManager.addContent(capture(addedContents)) } just Runs
         val mockToolWindow = mockk<ToolWindow>(relaxed = true)
         every { mockToolWindow.contentManager } returns mockContentManager
+        every { mockToolWindow.disposable } returns testRootDisposable
 
         factory.createToolWindowContent(project, mockToolWindow)
 
@@ -129,7 +133,7 @@ class ConfigCatToolWindowFactoryTest : LightPlatformTestCase() {
     // -------------------------------------------------------------------------
 
     fun testProductsConfigsTreeToolWindow_getContent_layoutAndTooltip() {
-        val toolWindow = ConfigCatToolWindowFactory.ProductsConfigsTreeToolWindow(project)
+        val toolWindow = ConfigCatToolWindowFactory.ProductsConfigsTreeToolWindow(project, testRootDisposable)
         val content = toolWindow.getContent()
 
         assertTrue("Content must use BorderLayout", content.layout is BorderLayout)
@@ -146,7 +150,7 @@ class ConfigCatToolWindowFactoryTest : LightPlatformTestCase() {
     // -------------------------------------------------------------------------
 
     fun testFeatureFlagsTreeToolWindow_getContent_layoutAndTooltip() {
-        val toolWindow = ConfigCatToolWindowFactory.FeatureFlagsTreeToolWindow(project)
+        val toolWindow = ConfigCatToolWindowFactory.FeatureFlagsTreeToolWindow(project, testRootDisposable)
         val content = toolWindow.getContent()
 
         assertTrue("Content must use BorderLayout", content.layout is BorderLayout)
@@ -163,7 +167,7 @@ class ConfigCatToolWindowFactoryTest : LightPlatformTestCase() {
     // -------------------------------------------------------------------------
 
     fun testHelpToolWindow_getContent_layoutAndTooltip() {
-        val toolWindow = ConfigCatToolWindowFactory.HelpToolWindow()
+        val toolWindow = ConfigCatToolWindowFactory.HelpToolWindow(testRootDisposable)
         val content = toolWindow.getContent()
 
         assertTrue("Content must use BorderLayout", content.layout is BorderLayout)
@@ -180,7 +184,7 @@ class ConfigCatToolWindowFactoryTest : LightPlatformTestCase() {
     // -------------------------------------------------------------------------
 
     fun testFeatureFlagsViewToolWindow_getContent_layoutAndChild() {
-        val toolWindow = ConfigCatToolWindowFactory.ConfigCatFeatureFlagsViewToolWindow(createTestAppData())
+        val toolWindow = ConfigCatToolWindowFactory.ConfigCatFeatureFlagsViewToolWindow(createTestAppData(), testRootDisposable)
         val content = toolWindow.getContent()
 
         assertTrue("Content must use BorderLayout", content.layout is BorderLayout)
@@ -194,6 +198,28 @@ class ConfigCatToolWindowFactoryTest : LightPlatformTestCase() {
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
+
+    fun testParentDisposal_disposesManagedPanels() {
+        val parentDisposable = Disposer.newDisposable()
+        Disposer.register(testRootDisposable, parentDisposable)
+        val productsPanel = ConfigCatToolWindowFactory.ProductsConfigsTreeToolWindow(project, parentDisposable)
+            .getContent().getComponent(0) as ProductsConfigsPanel
+        val settingsPanel = ConfigCatToolWindowFactory.FeatureFlagsTreeToolWindow(project, parentDisposable)
+            .getContent().getComponent(0) as SettingsPanel
+        val helpPanel = ConfigCatToolWindowFactory.HelpToolWindow(parentDisposable)
+            .getContent().getComponent(0) as HelpPanel
+        val viewFlagPanel = ConfigCatToolWindowFactory.ConfigCatFeatureFlagsViewToolWindow(
+            createTestAppData(), parentDisposable
+        ).getContent().getComponent(0) as ViewFlagPanel
+
+        Disposer.dispose(parentDisposable)
+
+        assertTrue(Disposer.isDisposed(productsPanel))
+        assertTrue(Disposer.isDisposed(settingsPanel))
+        assertTrue(Disposer.isDisposed(helpPanel))
+        assertTrue(Disposer.isDisposed(viewFlagPanel))
+        assertTrue(Disposer.isDisposed(viewFlagPanel.getComponent(0) as com.intellij.openapi.Disposable))
+    }
 
     private fun createTestAppData() = AppData(
         publicApiBaseUrl = "https://api.configcat.com",

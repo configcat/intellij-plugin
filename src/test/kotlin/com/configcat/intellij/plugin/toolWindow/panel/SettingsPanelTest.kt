@@ -92,6 +92,21 @@ class SettingsPanelTest : LightPlatformTestCase() {
         assertNull("treeModel must be null when plugin is not configured", treeModelField(panel))
     }
 
+    fun testDisposedPanel_doesNotReceiveConfigChanges() {
+        every { mockState.isConfigured() } returns false
+        val panel = buildPanel()
+
+        Disposer.dispose(panel)
+        val messageBus = ApplicationManager.getApplication().messageBus
+        messageBus.syncPublisher(ConfigChangeNotifier.CONFIG_CHANGE_TOPIC).notifyConfigChange()
+        messageBus.syncPublisher(ConnectedConfigChangeNotifier.CONNECTED_CONFIG_CHANGE_TOPIC)
+            .notifyConnectedConfigChange()
+        messageBus.syncPublisher(SettingsTreeChangeNotifier.TREE_REFRESH_TOPIC).notifyTreeRefresh(null)
+
+        verify(exactly = 1) { mockState.isConfigured() }
+        verify(exactly = 0) { mockPropertiesService.getConnectedConfig() }
+    }
+
     // -------------------------------------------------------------------------
     // initTree failure – loadConnectedConfig returns null
     // -------------------------------------------------------------------------

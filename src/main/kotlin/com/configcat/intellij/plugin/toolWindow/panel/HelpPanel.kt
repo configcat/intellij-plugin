@@ -2,12 +2,13 @@ package com.configcat.intellij.plugin.toolWindow.panel
 
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.ui.SimpleToolWindowPanel
+import com.intellij.openapi.util.Disposer
 import com.intellij.ui.dsl.builder.panel
 import java.awt.GridBagLayout
 import javax.swing.JPanel
 
 
-class HelpPanel : SimpleToolWindowPanel(false, false), Disposable {
+class HelpPanel(parentDisposable: Disposable) : SimpleToolWindowPanel(false, false), Disposable {
 
     init {
         val centeredInfoPanel = JPanel(GridBagLayout())
@@ -34,10 +35,10 @@ class HelpPanel : SimpleToolWindowPanel(false, false), Disposable {
         }
         centeredInfoPanel.add(panel)
         add(centeredInfoPanel)
+        Disposer.register(parentDisposable, this)
     }
 
     override fun dispose() {
         // no-op
     }
 }
-

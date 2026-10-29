@@ -109,7 +109,7 @@ class WebViewPanelTest : LightPlatformTestCase() {
 
         var callbackInvoked = false
         val callback: (String?) -> Unit = { callbackInvoked = true }
-        val panel = WebViewPanel(createTestAppData(), ViewType.CREATE_FLAG, callback)
+        val panel = WebViewPanel(createTestAppData(), ViewType.CREATE_FLAG, callback, testRootDisposable)
         try {
             assertNotNull("jsReceiverCallbackFunction must be set", panel.jsReceiverCallbackFunction)
         } finally {
@@ -121,7 +121,7 @@ class WebViewPanelTest : LightPlatformTestCase() {
         if (!JBCefApp.isSupported()) return
 
         for (viewType in ViewType.entries) {
-            val panel = WebViewPanel(createTestAppData(), viewType, null)
+            val panel = WebViewPanel(createTestAppData(), viewType, null, testRootDisposable)
             try {
                 assertTrue(
                     "WebViewPanel must be created for VIEW_TYPE.$viewType",
@@ -136,7 +136,7 @@ class WebViewPanelTest : LightPlatformTestCase() {
     fun testWebViewPanel_lookAndFeelChanged_doesNotThrow() {
         if (!JBCefApp.isSupported()) return
 
-        val panel = WebViewPanel(createTestAppData(), ViewType.CREATE_FLAG, null)
+        val panel = WebViewPanel(createTestAppData(), ViewType.CREATE_FLAG, null, testRootDisposable)
         try {
             // Should not throw even without a loaded page
             panel.lookAndFeelChanged()
@@ -148,7 +148,7 @@ class WebViewPanelTest : LightPlatformTestCase() {
     fun testWebViewPanel_dispose_doesNotThrow() {
         if (!JBCefApp.isSupported()) return
 
-        val panel = WebViewPanel(createTestAppData(), ViewType.CREATE_CONFIG, null)
+        val panel = WebViewPanel(createTestAppData(), ViewType.CREATE_CONFIG, null, testRootDisposable)
         // dispose should clean up resources without throwing
         Disposer.dispose(panel)
     }
@@ -156,7 +156,7 @@ class WebViewPanelTest : LightPlatformTestCase() {
     fun testWebViewPanel_themeChangeViaMessageBus_triggersLookAndFeelChanged() {
         if (!JBCefApp.isSupported()) return
 
-        val panel = WebViewPanel(createTestAppData(), ViewType.CREATE_FLAG, null)
+        val panel = WebViewPanel(createTestAppData(), ViewType.CREATE_FLAG, null, testRootDisposable)
         try {
             val publisher = com.intellij.openapi.application.ApplicationManager.getApplication()
                 .messageBus.syncPublisher(ThemeChangeNotifier.THEME_CHANGE_TOPIC)
@@ -187,7 +187,6 @@ class WebViewPanelTest : LightPlatformTestCase() {
         settingId = "test-setting-id",
     )
 }
-
 
 
 

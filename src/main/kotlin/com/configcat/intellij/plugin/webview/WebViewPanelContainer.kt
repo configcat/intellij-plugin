@@ -1,6 +1,8 @@
 package com.configcat.intellij.plugin.webview
 
 import com.intellij.icons.AllIcons
+import com.intellij.openapi.Disposable
+import com.intellij.openapi.util.Disposer
 import com.intellij.ui.dsl.builder.panel
 import com.intellij.ui.jcef.*
 import com.intellij.util.ui.JBFont
@@ -11,7 +13,13 @@ class WebViewPanelContainer(
     appData: AppData,
     viewType: ViewType,
     val jsReceiverCallbackFunction: ((returnId: String?) -> Unit)?,
-) : JPanel() {
+    parentDisposable: Disposable
+) : JPanel(), Disposable {
+
+    override fun dispose() {
+    // no-op, the parentDisposable will handle disposal of this panel and its children
+    }
+
 
     init {
 
@@ -19,7 +27,7 @@ class WebViewPanelContainer(
             alignmentX = LEFT_ALIGNMENT
             alignmentY = TOP_ALIGNMENT
             if (JBCefApp.isSupported()) {
-                add(WebViewPanel(appData, viewType, jsReceiverCallbackFunction))
+                add(WebViewPanel(appData, viewType, jsReceiverCallbackFunction, this@WebViewPanelContainer));
             } else {
                 add(
                     panel {
@@ -45,5 +53,6 @@ class WebViewPanelContainer(
                 )
             }
         }
+        Disposer.register(parentDisposable, this);
     }
 }
