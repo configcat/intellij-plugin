@@ -16,6 +16,14 @@ class WebViewPanelContainerTest : LightPlatformTestCase() {
 
     private lateinit var testAppData: AppData
 
+    fun testJcefAvailable_inBaselinePlatform() {
+        assertTrue(isJcefAvailable(javaClass.classLoader))
+    }
+
+    fun testJcefUnavailable_withoutPlatformOrPluginClasses() {
+        assertFalse(isJcefAvailable(object : ClassLoader(null) {}))
+    }
+
     override fun setUp() {
         super.setUp()
         testAppData = createTestAppData()
@@ -156,4 +164,3 @@ class WebViewPanelContainerTest : LightPlatformTestCase() {
         return result
     }
 }
-

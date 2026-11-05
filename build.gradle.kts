@@ -4,7 +4,6 @@ import org.jetbrains.changelog.Changelog
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
 import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.TestFrameworkType
-import org.jetbrains.intellij.platform.gradle.models.ProductRelease
 import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 
 plugins {
@@ -66,10 +65,20 @@ dependencies {
         create(providers.gradleProperty("platformType"), providers.gradleProperty("platformVersion"))
 
         // Plugin Dependencies. Uses `platformBundledPlugins` property from the gradle.properties file for bundled IntelliJ Platform plugins.
-        bundledPlugins(providers.gradleProperty("platformBundledPlugins").map { it.split(',') })
+        bundledPlugins(providers.gradleProperty("platformBundledPlugins").map {
+            it.split(',').map(String::trim).filter(String::isNotEmpty)
+        })
+
+        // JCEF was extracted from the platform into a bundled plugin in 2026.2.
+        val (platformYear, platformRelease) = providers.gradleProperty("platformVersion").get().split('.')
+        if (platformYear.toInt() > 2026 || (platformYear.toInt() == 2026 && platformRelease.toInt() >= 2)) {
+            bundledPlugin("com.intellij.modules.jcef")
+        }
 
         // Plugin Dependencies. Uses `platformPlugins` property from the gradle.properties file for plugin from JetBrains Marketplace.
-        plugins(providers.gradleProperty("platformPlugins").map { it.split(',') })
+        plugins(providers.gradleProperty("platformPlugins").map {
+            it.split(',').map(String::trim).filter(String::isNotEmpty)
+        })
 
         pluginVerifier()
         zipSigner()
@@ -172,21 +181,11 @@ intellijPlatform {
 
     pluginVerification {
         ides {
-            create(IntelliJPlatformType.IntellijIdea, providers.gradleProperty("platformVersion").get())
-            // To ease the load on GitHub WF we only verify on the first and last supported versions
-            // Update the version based on the gradle.properties changes
-            select {
-                types = listOf(IntelliJPlatformType.IntellijIdea)
-                channels = listOf(ProductRelease.Channel.RELEASE)
-                sinceBuild = "241.1"
-                untilBuild = "241.2"
-            }
-            select {
-                types = listOf(IntelliJPlatformType.IntellijIdea)
-                channels = listOf(ProductRelease.Channel.RELEASE)
-                sinceBuild = "261"
-                untilBuild = "261.*"
-            }
+            create(
+                providers.gradleProperty("platformType"),
+                providers.gradleProperty("platformVersion"),
+            )
+            create(IntelliJPlatformType.IntellijIdea, providers.gradleProperty("runtimePlatformVersion").get())
         }
     }
 }
@@ -224,9 +223,17 @@ tasks {
 
 intellijPlatformTesting {
     runIde {
+        register("runIde2026_2") {
+            type = IntelliJPlatformType.IntellijIdea
+            version = providers.gradleProperty("runtimePlatformVersion")
+            plugins {
+                bundledPlugin("com.intellij.modules.jcef")
+            }
+        }
+
         register("runIdeForUiTests") {
             type = IntelliJPlatformType.IntellijIdea
-            version = "2026.1"
+            version = providers.gradleProperty("runtimePlatformVersion")
             task {
                 jvmArgumentProviders += CommandLineArgumentProvider {
                     listOf(
@@ -240,6 +247,7 @@ intellijPlatformTesting {
             }
 
             plugins {
+                bundledPlugin("com.intellij.modules.jcef")
                 robotServerPlugin()
             }
         }

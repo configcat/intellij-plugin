@@ -3,7 +3,7 @@ package com.configcat.intellij.plugin.webview
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.util.Disposer
-import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.dsl.builder.*
 import com.intellij.ui.jcef.*
 import com.intellij.util.ui.JBFont
 import java.awt.CardLayout
@@ -26,7 +26,7 @@ class WebViewPanelContainer(
         layout = CardLayout().apply {
             alignmentX = LEFT_ALIGNMENT
             alignmentY = TOP_ALIGNMENT
-            if (JBCefApp.isSupported()) {
+            if (isJcefAvailable(this@WebViewPanelContainer.javaClass.classLoader) && JBCefApp.isSupported()) {
                 add(WebViewPanel(appData, viewType, jsReceiverCallbackFunction, this@WebViewPanelContainer));
             } else {
                 add(
@@ -40,7 +40,7 @@ class WebViewPanelContainer(
                         row {
                             text(
                                 "This plugin requires JCEF to load web views. " +
-                                    "JCEF can be unsupported when the IDE started with an alternative JDK."
+                                    "Enable the Web Browser (JCEF) plugin if available and use the IDE's bundled runtime."
                             )
                         }
                         row {
@@ -56,3 +56,6 @@ class WebViewPanelContainer(
         Disposer.register(parentDisposable, this);
     }
 }
+
+internal fun isJcefAvailable(classLoader: ClassLoader): Boolean =
+    classLoader.getResource("com/intellij/ui/jcef/JBCefApp.class") != null

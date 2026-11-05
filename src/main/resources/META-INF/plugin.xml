@@ -5,6 +5,7 @@
     <vendor url="https://www.configcat.com" email="developer@configcat.com">ConfigCat Kft.</vendor>
 
     <depends>com.intellij.modules.platform</depends>
+    <depends optional="true" config-file="configcat-jcef.xml">com.intellij.modules.jcef</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <notificationGroup id="ConfigCat Notification Group" displayType="BALLOON" isLogByDefault="true"/>

@@ -14,7 +14,6 @@ import com.intellij.openapi.util.Disposer
 import com.intellij.ui.JBColor
 import com.intellij.ui.jcef.*
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
 import org.cef.handler.CefLifeSpanHandlerAdapter
