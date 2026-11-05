@@ -1,6 +1,10 @@
+import com.github.gradle.node.npm.task.NpmTask
+import io.gitlab.arturbosch.detekt.Detekt
 import org.jetbrains.changelog.Changelog
-import org.jetbrains.changelog.markdownToHTML
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
+import org.jetbrains.changelog.markdownToHTML
+import org.jetbrains.intellij.platform.gradle.TestFrameworkType
+import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 
 plugins {
     id("java") // Java support
@@ -9,6 +13,9 @@ plugins {
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
     alias(libs.plugins.kover) // Gradle Kover Plugin
     alias(libs.plugins.serialization) // Kotlin serialization
+    alias(libs.plugins.node) //node-gradle.node
+    alias(libs.plugins.sonarqube)
+    alias(libs.plugins.detekt)
 }
 
 group = providers.gradleProperty("pluginGroup").get()
@@ -24,30 +31,100 @@ repositories {
     }
 }
 
+node {
+    download = true
+    version = "24.15.0"
+    nodeProjectDir = file("$projectDir/webpanel")
+}
+
+tasks.register("npmBuild", NpmTask::class) {
+    dependsOn("npmInstall")
+    args.set(listOf("run", "build"))
+    workingDir = file("$projectDir/webpanel")
+}
+
+tasks.named("buildPlugin") {
+    dependsOn("npmBuild")
+}
+
 dependencies {
     implementation(libs.configcat.java)
     implementation(libs.serialization.core)
     implementation(libs.serialization.json)
+    implementation(libs.okhttp)
 
+    testImplementation(libs.mockk) {
+        // Exclude kotlinx-coroutines modules to avoid version conflicts with coroutines
+        // bundled with the IntelliJ Platform.
+        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core")
+        exclude(group = "org.jetbrains.kotlinx", module = "kotlinx-coroutines-core-jvm")
+    }
+    testImplementation(libs.junit)
 
     intellijPlatform {
         create(providers.gradleProperty("platformType"), providers.gradleProperty("platformVersion"))
 
         // Plugin Dependencies. Uses `platformBundledPlugins` property from the gradle.properties file for bundled IntelliJ Platform plugins.
-        bundledPlugins(providers.gradleProperty("platformBundledPlugins").map { it.split(',') })
+        bundledPlugins(providers.gradleProperty("platformBundledPlugins").map {
+            it.split(',').map(String::trim).filter(String::isNotEmpty)
+        })
+
+        // JCEF was extracted from the platform into a bundled plugin in 2026.2.
+        val (platformYear, platformRelease) = providers.gradleProperty("platformVersion").get().split('.')
+        if (platformYear.toInt() > 2026 || (platformYear.toInt() == 2026 && platformRelease.toInt() >= 2)) {
+            bundledPlugin("com.intellij.modules.jcef")
+        }
 
         // Plugin Dependencies. Uses `platformPlugins` property from the gradle.properties file for plugin from JetBrains Marketplace.
-        plugins(providers.gradleProperty("platformPlugins").map { it.split(',') })
+        plugins(providers.gradleProperty("platformPlugins").map {
+            it.split(',').map(String::trim).filter(String::isNotEmpty)
+        })
 
-        instrumentationTools()
         pluginVerifier()
         zipSigner()
+        testFramework(TestFrameworkType.Platform)
     }
 }
 
 // Set the JVM language level used to build the project.
 kotlin {
     jvmToolchain(17)
+    compilerOptions {
+        // Avoid generating compatibility bridges for default interface methods.
+        // This keeps ToolWindowFactory bytecode free from synthetic overrides of internal APIs.
+        jvmDefault = JvmDefaultMode.NO_COMPATIBILITY
+    }
+}
+
+detekt {
+    config.setFrom("$rootDir/detekt.yml")
+    buildUponDefaultConfig = true
+    parallel = true
+}
+
+tasks.withType<Detekt>().configureEach {
+    setSource(project.files(project.projectDir.resolve("src/main/kotlin")))
+    include("**/*.kt")
+    reports {
+        html.required.set(true)
+        xml.required.set(true)
+        txt.required.set(true)
+        sarif.required.set(true)
+    }
+}
+
+sonarqube {
+    properties {
+        property("sonar.projectKey", "configcat_intellij-plugin")
+        property("sonar.projectName", "intellij-plugin")
+        property("sonar.projectVersion", "$version")
+        property("sonar.organization", "configcat")
+        property("sonar.host.url", "https://sonarcloud.io")
+        property("sonar.sources", "src/main/kotlin/com/configcat")
+        property("sonar.tests", "src/test/kotlin/com/configcat")
+        property("sonar.kotlin.detekt.reportPaths", "detekt.xml")
+        property("sonar.coverage.jacoco.xmlReportPaths", "report.xml")
+    }
 }
 
 // Configure IntelliJ Platform Gradle Plugin - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-extension.html
@@ -98,17 +175,18 @@ intellijPlatform {
         // The pluginVersion is based on the SemVer (https://semver.org) and supports pre-release labels, like 2.1.7-alpha.3
         // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
         // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
-        channels = providers.gradleProperty("pluginVersion").map { listOf(it.substringAfter('-', "").substringBefore('.').ifEmpty { "default" }) }
+        channels = providers.gradleProperty("pluginVersion")
+            .map { listOf(it.substringAfter('-', "").substringBefore('.').ifEmpty { "default" }) }
     }
 
     pluginVerification {
         ides {
-                val productReleases = ProductReleasesValueSource().get()
-                val reducedProductReleases =
-                    if (productReleases.size > 2) listOf(productReleases.first(), productReleases.last())
-                    else productReleases
-                ides(reducedProductReleases)
-       }
+            create(
+                providers.gradleProperty("platformType"),
+                providers.gradleProperty("platformVersion"),
+            )
+            create(IntelliJPlatformType.IntellijIdea, providers.gradleProperty("runtimePlatformVersion").get())
+        }
     }
 }
 
@@ -130,6 +208,10 @@ kover {
 }
 
 tasks {
+    test {
+        useJUnit()
+    }
+
     wrapper {
         gradleVersion = providers.gradleProperty("gradleVersion").get()
     }
@@ -141,9 +223,17 @@ tasks {
 
 intellijPlatformTesting {
     runIde {
+        register("runIde2026_2") {
+            type = IntelliJPlatformType.IntellijIdea
+            version = providers.gradleProperty("runtimePlatformVersion")
+            plugins {
+                bundledPlugin("com.intellij.modules.jcef")
+            }
+        }
+
         register("runIdeForUiTests") {
-            type = IntelliJPlatformType.IntellijIdeaUltimate
-            version = "251.25410.59"
+            type = IntelliJPlatformType.IntellijIdea
+            version = providers.gradleProperty("runtimePlatformVersion")
             task {
                 jvmArgumentProviders += CommandLineArgumentProvider {
                     listOf(
@@ -151,11 +241,13 @@ intellijPlatformTesting {
                         "-Dide.mac.message.dialogs.as.sheets=false",
                         "-Djb.privacy.policy.text=<!--999.999-->",
                         "-Djb.consents.confirmation.enabled=false",
+                        "-Dide.browser.jcef.debug.port=9222",
                     )
                 }
             }
 
             plugins {
+                bundledPlugin("com.intellij.modules.jcef")
                 robotServerPlugin()
             }
         }

@@ -33,4 +33,17 @@ ConfigCat is a hosted feature flag service: https://configcat.com. Manage featur
   Download the [latest release](https://github.com/configcat/intellij-plugin/releases/latest) and install it manually using
   <kbd>Settings/Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
 
+## Development
 
+The plugin compiles against IntelliJ IDEA Community 2024.1 with Java 17 bytecode.
+Its declared compatibility range is 2024.1 through 2026.2.
+
+- `.\gradlew.bat runIde` starts the baseline 2024.1 IDE.
+- `.\gradlew.bat runIde2026_2` starts IntelliJ IDEA 2026.2 using its bundled JetBrains Runtime, independently of the compilation SDK.
+- `.\gradlew.bat runIdeForUiTests` starts the 2026.2 runtime with the Robot Server plugin.
+- `.\gradlew.bat test` runs against the 2024.1 compilation SDK.
+- `.\gradlew.bat verifyPlugin` checks the plugin against both versions.
+
+The newer runtime version is configured by `runtimePlatformVersion` in `gradle.properties`.
+JCEF is supplied by the platform in 2024.1 and by the optional Web Browser (JCEF) plugin in 2026.2.
+Without JCEF, web views display an explanatory message instead of preventing the plugin from loading.

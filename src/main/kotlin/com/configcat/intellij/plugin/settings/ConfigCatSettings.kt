@@ -7,4 +7,6 @@ interface ConfigCatSettings {
     var publicApiBaseUrl: String
 
     fun isConfigured(): Boolean
+
+    fun unAuthenticate()
 }
