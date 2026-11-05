@@ -39,8 +39,8 @@ class WebViewPanelContainer(
                         }
                         row {
                             text(
-                                "This plugin requires JCEF to load web views. " +
-                                    "Enable the Web Browser (JCEF) plugin if available and use the IDE's bundled runtime."
+                                "This plugin requires JCEF to load web views. Enable the Web Browser " +
+                                        "(JCEF) plugin if available and use the IDE's bundled runtime."
                             )
                         }
                         row {
