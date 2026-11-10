@@ -300,6 +300,7 @@ class SettingsPanel(
 
         tree.setRootVisible(true)
         tree.selectionModel.selectionMode = TreeSelectionModel.SINGLE_TREE_SELECTION
+        TreeDoubleClickSupport.install(tree, FlagViewOpenAction.CONFIGCAT_OPEN_FF_ACTION_ID) { it is FlagNode }
         return tree
     }
 

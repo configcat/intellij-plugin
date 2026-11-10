@@ -1,6 +1,7 @@
 package com.configcat.intellij.plugin.toolWindow.panel
 
 import com.configcat.intellij.plugin.ErrorHandler
+import com.configcat.intellij.plugin.actions.FlagViewOpenAction
 import com.configcat.intellij.plugin.messaging.ConfigChangeNotifier
 import com.configcat.intellij.plugin.messaging.ConnectedConfigChangeNotifier
 import com.configcat.intellij.plugin.messaging.SettingsTreeChangeNotifier
@@ -42,6 +43,7 @@ class SettingsPanelTest : LightPlatformTestCase() {
     private lateinit var mockPropertiesService: ConfigCatPropertiesService
     private lateinit var mockConfigsApi: ConfigsApi
     private lateinit var mockFeatureFlagsApi: FeatureFlagsSettingsApi
+    private lateinit var doubleClickHelper: TreeDoubleClickTestHelper
 
     private val connectedConfigId: String = UUID.randomUUID().toString()
 
@@ -72,11 +74,18 @@ class SettingsPanelTest : LightPlatformTestCase() {
 
         mockkObject(ErrorHandler)
         every { ErrorHandler.errorNotify(any<ApiException>(), any(), any()) } just Runs
+
+        doubleClickHelper = TreeDoubleClickTestHelper(FlagViewOpenAction.CONFIGCAT_OPEN_FF_ACTION_ID)
+        doubleClickHelper.register()
     }
 
     override fun tearDown() {
-        unmockkAll()
-        super.tearDown()
+        try {
+            doubleClickHelper.restore()
+        } finally {
+            unmockkAll()
+            super.tearDown()
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -721,8 +730,79 @@ class SettingsPanelTest : LightPlatformTestCase() {
     }
 
     // -------------------------------------------------------------------------
+    // Double click – executes FlagViewOpenAction on leaf (flag) nodes only
+    // -------------------------------------------------------------------------
+
+    fun testDoubleClick_onFlagLeaf_executesFlagViewOpenAction() {
+        val tree = buildTreeWithFlags()
+
+        doubleClickHelper.clickRow(tree, 1, 2)
+
+        assertEquals("FlagViewOpenAction must run once on flag double click", 1, doubleClickHelper.action.executions)
+        assertTrue(
+            "The double clicked flag must be selected",
+            tree.selectionPath?.lastPathComponent.let { (it as DefaultMutableTreeNode).userObject is FlagNode }
+        )
+    }
+
+    fun testDoubleClick_onRootNode_doesNotExecuteAction() {
+        val tree = buildTreeWithFlags()
+
+        doubleClickHelper.clickRow(tree, 0, 2)
+
+        assertEquals("Double click on the non-leaf root must not run the action", 0, doubleClickHelper.action.executions)
+    }
+
+    fun testSingleClick_onFlagLeaf_doesNotExecuteAction() {
+        val tree = buildTreeWithFlags()
+
+        doubleClickHelper.clickRow(tree, 1, 1)
+
+        assertEquals("Single click must not run the action", 0, doubleClickHelper.action.executions)
+    }
+
+    fun testDoubleClick_onEmptyArea_doesNotExecuteAction() {
+        val tree = buildTreeWithFlags()
+
+        doubleClickHelper.click(tree, 2, 450, 2)
+
+        assertEquals("Double click outside of any row must not run the action", 0, doubleClickHelper.action.executions)
+    }
+
+    fun testDoubleClick_onInfoLeaf_doesNotExecuteAction() {
+        configureStateAsConfigured()
+        configureConnectedConfigSuccess()
+        every { mockFeatureFlagsApi.getSettings(any()) } returns emptyList()
+        val panel = buildPanel()
+        waitForAsync()
+        val tree = treeField(panel)!!
+        doubleClickHelper.awaitRows(tree, 2)
+
+        doubleClickHelper.clickRow(tree, 1, 2)
+
+        assertEquals("Info leaf ('No flags.') must not run the action", 0, doubleClickHelper.action.executions)
+    }
+
+    // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
+    private fun buildTreeWithFlags(): Tree {
+        configureStateAsConfigured()
+        configureConnectedConfigSuccess()
+        val flag = mockk<SettingModel>(relaxed = true)
+        every { flag.settingId } returns 1
+        every { flag.name } returns "My Flag"
+        every { flag.key } returns "my_flag_key"
+        every { mockFeatureFlagsApi.getSettings(any()) } returns listOf(flag)
+
+        val panel = buildPanel()
+        waitForAsync()
+        val tree = treeField(panel)
+        assertNotNull("Pre-condition: tree must exist", tree)
+        doubleClickHelper.awaitRows(tree!!, 2)
+        assertTrue("Pre-condition: root and flag rows must be visible", tree.rowCount >= 2)
+        return tree
+    }
 
     private fun buildPanel(): SettingsPanel {
         val panel = SettingsPanel(CoroutineScope(Dispatchers.Unconfined))

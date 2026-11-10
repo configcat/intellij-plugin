@@ -242,6 +242,7 @@ class ProductsConfigsPanel(
         tree.model = treeBuilder
         tree.setRootVisible(true)
         tree.selectionModel.selectionMode = TreeSelectionModel.SINGLE_TREE_SELECTION
+        TreeDoubleClickSupport.install(tree, ConfigConnectAction.CONFIGCAT_CONNECT_ACTION_ID) { it is ConfigNode }
 
         // Lazily load configs for expanded product nodes and refresh that node.
         tree.addTreeExpansionListener(object : TreeExpansionListener {

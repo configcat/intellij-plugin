@@ -1,6 +1,7 @@
 package com.configcat.intellij.plugin.toolWindow.panel
 
 import com.configcat.intellij.plugin.ErrorHandler
+import com.configcat.intellij.plugin.actions.ConfigConnectAction
 import com.configcat.intellij.plugin.messaging.ConfigChangeNotifier
 import com.configcat.intellij.plugin.messaging.ProductsConfigsTreeChangeNotifier
 import com.configcat.intellij.plugin.services.ConfigCatNodeDataService
@@ -39,6 +40,7 @@ class ProductsConfigsPanelTest : LightPlatformTestCase() {
     private lateinit var mockState: ConfigCatApplicationConfig.ConfigCatApplicationConfigState
     private lateinit var mockNodeDataService: ConfigCatNodeDataService
     private lateinit var mockProductsApi: ProductsApi
+    private lateinit var doubleClickHelper: TreeDoubleClickTestHelper
 
     override fun setUp() {
         super.setUp()
@@ -61,11 +63,18 @@ class ProductsConfigsPanelTest : LightPlatformTestCase() {
 
         mockkObject(ErrorHandler)
         every { ErrorHandler.errorNotify(any<ApiException>(), any(), any()) } just Runs
+
+        doubleClickHelper = TreeDoubleClickTestHelper(ConfigConnectAction.CONFIGCAT_CONNECT_ACTION_ID)
+        doubleClickHelper.register()
     }
 
     override fun tearDown() {
-        unmockkAll()
-        super.tearDown()
+        try {
+            doubleClickHelper.restore()
+        } finally {
+            unmockkAll()
+            super.tearDown()
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -528,8 +537,91 @@ class ProductsConfigsPanelTest : LightPlatformTestCase() {
     }
 
     // -------------------------------------------------------------------------
+    // Double click – executes ConfigConnectAction on leaf (config) nodes only
+    // -------------------------------------------------------------------------
+
+    fun testDoubleClick_onConfigLeaf_executesConfigConnectAction() {
+        val tree = buildTreeWithConfig()
+
+        doubleClickHelper.clickRow(tree, 2, 2)
+
+        assertEquals("ConfigConnectAction must run once on config double click", 1, doubleClickHelper.action.executions)
+        assertTrue(
+            "The double clicked config must be selected",
+            (tree.selectionPath?.lastPathComponent as DefaultMutableTreeNode).userObject is ConfigNode
+        )
+    }
+
+    fun testDoubleClick_onRootNode_doesNotExecuteAction() {
+        val tree = buildTreeWithConfig()
+
+        doubleClickHelper.clickRow(tree, 0, 2)
+
+        assertEquals("Double click on the root must not run the action", 0, doubleClickHelper.action.executions)
+    }
+
+    fun testDoubleClick_onProductNode_doesNotExecuteAction() {
+        val tree = buildTreeWithConfig()
+
+        doubleClickHelper.clickRow(tree, 1, 2)
+
+        assertEquals("Double click on a product must not run the action", 0, doubleClickHelper.action.executions)
+    }
+
+    fun testSingleClick_onConfigLeaf_doesNotExecuteAction() {
+        val tree = buildTreeWithConfig()
+
+        doubleClickHelper.clickRow(tree, 2, 1)
+
+        assertEquals("Single click must not run the action", 0, doubleClickHelper.action.executions)
+    }
+
+    fun testDoubleClick_onEmptyArea_doesNotExecuteAction() {
+        val tree = buildTreeWithConfig()
+
+        doubleClickHelper.click(tree, 2, 450, 2)
+
+        assertEquals("Double click outside of any row must not run the action", 0, doubleClickHelper.action.executions)
+    }
+
+    fun testDoubleClick_onInfoLeaf_doesNotExecuteAction() {
+        val tree = buildTree(configs = emptyList())
+
+        doubleClickHelper.clickRow(tree, 2, 2)
+
+        assertEquals("Info leaf ('No configs.') must not run the action", 0, doubleClickHelper.action.executions)
+    }
+
+    // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
+    private fun buildTreeWithConfig(): Tree {
+        val configModel = mockk<ConfigModel>(relaxed = true)
+        every { configModel.configId } returns UUID.randomUUID()
+        every { configModel.name } returns "Config A"
+        return buildTree(configs = listOf(configModel))
+    }
+
+    // Builds root -> product -> [configs] and waits until the three rows are visible
+    private fun buildTree(configs: List<ConfigModel>): Tree {
+        every { mockState.isConfigured() } returns true
+        every { mockState.authConfiguration } returns """{"basicAuthUserName":"user","basicAuthPassword":"pass"}"""
+        every { mockState.publicApiBaseUrl } returns "https://api.example.com"
+        val productId = UUID.randomUUID()
+        val product = mockk<ProductModel>(relaxed = true)
+        every { product.productId } returns productId
+        every { product.name } returns "Product A"
+        every { mockProductsApi.products } returns listOf(product)
+        every { mockNodeDataService.getProductConfigs(productId) } returns configs
+
+        val panel = buildPanel()
+        waitForAsyncWithEdt()
+        val tree = treeField(panel)
+        assertNotNull("Pre-condition: tree must exist", tree)
+        doubleClickHelper.awaitRows(tree!!, 3)
+        assertTrue("Pre-condition: root, product and child rows must be visible", tree.rowCount >= 3)
+        return tree
+    }
 
     private fun buildPanel(): ProductsConfigsPanel {
         val panel = ProductsConfigsPanel(CoroutineScope(Dispatchers.Unconfined))

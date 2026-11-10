@@ -154,6 +154,10 @@ class ConfigNode(val config: ConfigModel, parent: SimpleNode) : SimpleNode(null,
         return NO_CHILDREN
     }
 
+    override fun isAlwaysLeaf(): Boolean {
+        return true
+    }
+
     override fun getName(): String {
         return config.name
     }
