@@ -226,6 +226,10 @@ intellijPlatformTesting {
         register("runIde2026_2") {
             type = IntelliJPlatformType.IntellijIdea
             version = providers.gradleProperty("runtimePlatformVersion")
+            task {
+                // Limit the test IDE memory, e.g. -PrunIdeMaxHeap=512m, to reproduce low-resource issues.
+                jvmArgs("-Xmx${providers.gradleProperty("runIdeMaxHeap").getOrElse("2g")}")
+            }
             plugins {
                 bundledPlugin("com.intellij.modules.jcef")
             }
@@ -235,7 +239,8 @@ intellijPlatformTesting {
             type = IntelliJPlatformType.IntellijIdea
             version = providers.gradleProperty("runtimePlatformVersion")
             task {
-                jvmArgumentProviders += CommandLineArgumentProvider {
+                jvmArgs("-Xmx${providers.gradleProperty("runIdeMaxHeap").getOrElse("2g")}")
+                jvmArgumentProviders +=  CommandLineArgumentProvider {
                     listOf(
                         "-Drobot-server.port=8082",
                         "-Dide.mac.message.dialogs.as.sheets=false",

@@ -1,6 +1,6 @@
 import { provideHttpClient, withInterceptorsFromDi } from "@angular/common/http";
 import { ApplicationConfig, importProvidersFrom, provideZoneChangeDetection } from "@angular/core";
-import { MatNativeDateModule } from "@angular/material/core";
+import { MATERIAL_ANIMATIONS, MatNativeDateModule } from "@angular/material/core";
 import { MatDialogModule } from "@angular/material/dialog";
 import { CONFIGCAT_PUBLICAPI_UI_CONFIGURATION, provideConfigCatPublicApiUi } from "ng-configcat-publicapi-ui";
 import { AppData } from "./app-data";
@@ -21,6 +21,9 @@ export const appConfig: ApplicationConfig = {
   providers: [
     importProvidersFrom(MatDialogModule, MatNativeDateModule),
     provideZoneChangeDetection({ eventCoalescing: true, runCoalescing: true }),
+    // Tooltips are removed on the CSS `animationend` event, which JCEF can drop/miss under load,
+    // leaving stuck tooltip fragments. Disabling animations removes that dependency.
+    { provide: MATERIAL_ANIMATIONS, useValue: { animationsDisabled: true } },
     {
       provide: AppData,
       useValue: window["CONFIGCAT_APPDATA"],

@@ -85,6 +85,9 @@ class WebViewPanel(
         .build()
     private val jSQuery: JBCefJSQuery = JBCefJSQuery.create(jBCefBrowser as JBCefBrowserBase)
 
+    @Volatile
+    private var disposed = false
+
     init {
         ApplicationManager.getApplication().messageBus.connect(this)
             .subscribe(ThemeChangeNotifier.THEME_CHANGE_TOPIC,
@@ -93,8 +96,6 @@ class WebViewPanel(
         layout = CardLayout().apply {
             alignmentX = LEFT_ALIGNMENT
             alignmentY = TOP_ALIGNMENT
-            cefClient.setProperty("JS_QUERY_POOL_SIZE", 30)
-
             val theme = getCurrentTheme()
             val viewData = ViewData(viewType.type, theme)
 
@@ -217,6 +218,7 @@ class WebViewPanel(
     }
 
     fun lookAndFeelChanged() {
+        if (disposed) return
         val theme = getCurrentTheme()
         val message = "{'command': 'themeChange', 'value': '$theme'}"
         jBCefBrowser.cefBrowser.executeJavaScript(
@@ -231,9 +233,11 @@ class WebViewPanel(
     }
 
     override fun dispose() {
+        if (disposed) return
+        disposed = true
+        jSQuery.dispose()
         jBCefBrowser.dispose()
         cefClient.dispose()
-        jSQuery.dispose()
     }
 }
 
