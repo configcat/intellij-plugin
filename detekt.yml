@@ -1,0 +1,31 @@
+style:
+  MagicNumber:
+    active: false
+  WildcardImport:
+    active: false
+  ReturnCount:
+    max: 9
+  DestructuringDeclarationWithTooManyEntries:
+    maxDestructuringEntries: 5
+  ThrowsCount:
+    max: 5
+
+complexity:
+  ComplexCondition:
+    threshold: 12
+  TooManyFunctions:
+    thresholdInClasses: 23
+    thresholdInInterfaces: 17
+  LongMethod:
+    threshold: 80
+  LongParameterList:
+    constructorThreshold: 12
+    functionThreshold: 8
+  CyclomaticComplexMethod:
+    threshold: 20
+  NestedBlockDepth:
+    threshold: 10
+
+exceptions:
+  TooGenericExceptionCaught:
+    active: false
